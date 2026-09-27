@@ -18,7 +18,7 @@ export default function App() {
     );
   }
 
-  // Native iOS / Android WebView rendering inline HTML string directly (100% Offline & Direct, no rawgit warning)
+  // Native iOS / Android WebView
   const { WebView } = require('react-native-webview');
 
   return (
