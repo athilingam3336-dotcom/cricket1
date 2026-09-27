@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cricket Federation of Virudhunagar District | Official Portal - Affiliated to TNCA</title>
+  <meta name="description" content="Official website of Cricket Federation of Virudhunagar District (CFVD), affiliated to Tamil Nadu Cricket Association (TNCA). Live cricket scores, fixtures, tournaments, clubs, and player registration.">
+  <meta name="keywords" content="CFVD, TNCA, Virudhunagar Cricket, Cricket Federation of Virudhunagar District, Tamil Nadu Cricket, Live Cricket Scores, Districts Cricket, Buchi Babu, TNPL">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo_transparent.png">
+  
+  <!-- Google Fonts: Barlow, Outfit, Roboto Mono & Cinzel (Royal Emblem Inscription Font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Sports & UI Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css?v=bright_top_v8">
+</head>
+<body class="theme-dark">
+
+  <!-- TNCA-Style Fixed Stadium & Transparent Watermark Emblem Background -->
+  <div class="tnca-site-background" aria-hidden="true">
+    <div class="tnca-bg-stadium"></div>
+    <div class="tnca-bg-overlay"></div>
+    <div class="tnca-bg-top-glow"></div>
+    <div class="tnca-bg-watermark">
+      <div class="watermark-bright-glow"></div>
+      <div class="watermark-top-bright-glow"></div>
+      <img src="assets/logo_transparent.png?v=crop_v2" alt="Cricket Federation of Virudhunagar District Crest" class="tnca-watermark-crest">
+    </div>
+  </div>
+  <div class="background-watermark" aria-hidden="true"></div>
+
+  <!-- CRICKET STADIUM FLOODLIGHTS SYSTEM (NIGHT MATCH ILLUMINATION) -->
+  <div class="stadium-floodlights" id="stadiumFloodlights" aria-hidden="true">
+    <!-- Left High-Mast Stadium Floodlight Tower (Chepauk / Wankhede Spec) -->
+    <div class="floodlight-tower floodlight-left" id="flTowerLeft">
+      <div class="floodlight-pylon">
+        <div class="pylon-pole"></div>
+        <div class="pylon-crossarm"></div>
+      </div>
+      <div class="floodlight-head">
+        <div class="floodlight-rig" title="Left Stadium High-Mast LED Floodlight Bank">
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+        </div>
+        <div class="floodlight-anamorphic-streak"></div>
+        <div class="floodlight-starburst"></div>
+        <div class="floodlight-flare"></div>
+      </div>
+      <!-- Razor-Sharp Volumetric Spotlight Shafts -->
+      <div class="floodlight-beam beam-primary-left"></div>
+      <div class="floodlight-beam beam-pitch-left"></div>
+      <div class="floodlight-beam beam-ambient-left"></div>
+    </div>
+
+    <!-- Right High-Mast Stadium Floodlight Tower (Chepauk / Wankhede Spec) -->
+    <div class="floodlight-tower floodlight-right" id="flTowerRight">
+      <div class="floodlight-pylon">
+        <div class="pylon-pole"></div>
+        <div class="pylon-crossarm"></div>
+      </div>
+      <div class="floodlight-head">
+        <div class="floodlight-rig" title="Right Stadium High-Mast LED Floodlight Bank">
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+          <div class="floodlight-bulb"></div>
+        </div>
+        <div class="floodlight-anamorphic-streak"></div>
+        <div class="floodlight-starburst"></div>
+        <div class="floodlight-flare"></div>
+      </div>
+      <!-- Razor-Sharp Volumetric Spotlight Shafts -->
+      <div class="floodlight-beam beam-primary-right"></div>
+      <div class="floodlight-beam beam-pitch-right"></div>
+      <div class="floodlight-beam beam-ambient-right"></div>
+    </div>
+
+    <!-- Center Pitch Illumination & Ground Reflection -->
+    <div class="floodlight-center-bloom"></div>
+    <div class="pitch-floodlight-pool"></div>
+    <div class="pitch-crease-glow"></div>
+
+    <!-- Floating Stadium Atmospheric Motes / Dew Particles -->
+    <div class="floodlight-dust-particles">
+      <span class="dust-particle p1"></span>
+      <span class="dust-particle p2"></span>
+      <span class="dust-particle p3"></span>
+      <span class="dust-particle p4"></span>
+      <span class="dust-particle p5"></span>
+      <span class="dust-particle p6"></span>
+      <span class="dust-particle p7"></span>
+      <span class="dust-particle p8"></span>
+    </div>
+  </div>
+
+  <!-- MAIN HEADER: Brand Emblem & Navigation (TOP OF PAGE) -->
+  <header class="main-header" id="mainHeader">
+    <div class="container header-container">
+      <!-- Association Branding with Uploaded Logo -->
+      <a href="#" class="brand-block" title="Cricket Federation of Virudhunagar District">
+        <div class="brand-logo-frame">
+          <img src="assets/logo_transparent.png?v=crop_v2" alt="Cricket Federation of Virudhunagar District Emblem" class="brand-logo-img">
+        </div>
+        <div class="brand-text">
+          <div class="association-name">
+            <span class="name-main">CRICKET FEDERATION</span>
+            <span class="name-sub">OF VIRUDHUNAGAR DISTRICT</span>
+          </div>
+          <div class="association-subline">
+            <span class="association-affiliation"><i class="fa-solid fa-certificate"></i> Affiliated to TNCA</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Menu (Consolidated & Streamlined: 5 Core Items) -->
+      <nav class="main-nav" id="mainNav" aria-label="Primary Navigation">
+        <ul class="nav-list">
+          <li class="nav-item"><a href="#hero" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a></li>
+          
+          <li class="nav-item dropdown">
+            <a href="#match-centre" class="nav-link dropdown-toggle">
+              <i class="fa-solid fa-baseball-bat-ball"></i> Match Centre <i class="fa-solid fa-chevron-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="#match-centre" onclick="filterMatches('live')"><span class="badge red">LIVE</span> Live Scores</a></li>
+              <li><a href="#match-centre" onclick="filterMatches('upcoming')">Fixtures &amp; Schedules</a></li>
+              <li><a href="#match-centre" onclick="filterMatches('results')">Recent Results</a></li>
+              <li><a href="#points-table">Points Table</a></li>
+              <li><a href="#stats">Player Stats &amp; Records</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a href="#tournaments" class="nav-link dropdown-toggle">
+              <i class="fa-solid fa-trophy"></i> Tournaments <i class="fa-solid fa-chevron-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="#tournaments">Virudhunagar 1st Division League</a></li>
+              <li><a href="#tournaments">K. Kamarajar T20 Trophy</a></li>
+              <li><a href="#tournaments">Andal Temple Inter-School Cup</a></li>
+              <li><a href="#tournaments">Rural Taluk Championship</a></li>
+              <li><a href="#tournaments">TNCA Buchi Babu District Leg</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item"><a href="#academy" class="nav-link"><i class="fa-solid fa-graduation-cap"></i> Academy</a></li>
+
+          <li class="nav-item dropdown">
+            <a href="#about" class="nav-link dropdown-toggle">
+              <i class="fa-solid fa-landmark"></i> About CFVD <i class="fa-solid fa-chevron-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="#about"><i class="fa-solid fa-landmark-dome"></i> Association History</a></li>
+              <li><a href="#office-bearers"><i class="fa-solid fa-users-gear"></i> Office Bearers &amp; Apex Council</a></li>
+              <li><a href="#grounds"><i class="fa-solid fa-shield-halved"></i> Grounds &amp; Infrastructure</a></li>
+              <li><a href="#affiliated-clubs"><i class="fa-solid fa-shield"></i> Affiliated Clubs</a></li>
+              <li><a href="#news"><i class="fa-solid fa-newspaper"></i> Media &amp; Press Releases</a></li>
+              <li><a href="#gallery"><i class="fa-solid fa-images"></i> Photo Gallery</a></li>
+              <li><a href="#contact"><i class="fa-solid fa-address-book"></i> Contact Us</a></li>
+              <li><a href="#constitution"><i class="fa-solid fa-scale-balanced"></i> Constitution &amp; Ethics</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Action Button, Theme Toggle & Mobile Hamburger -->
+      <div class="header-actions">
+        <button class="btn btn-gold btn-sm" onclick="openRegistrationModal()" title="Register as Official District Player">
+          <i class="fa-solid fa-id-card"></i> <span>Register</span>
+        </button>
+        <button id="floodlightToggleBtn" class="floodlight-toggle-btn active" title="Stadium Floodlights: Night Match Active (Click to Switch Modes)" aria-label="Toggle Stadium Floodlights">
+          <i class="fa-solid fa-bolt"></i>
+          <span>Floodlights</span>
+        </button>
+        <button id="themeToggleBtn" class="theme-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open Navigation Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LIVE MARQUEE TICKER BAR PLACED DIRECTLY BELOW NAV BAR -->
+  <aside class="top-bar marquee-ticker-bar" aria-label="Live Match Ticker">
+    <div class="container top-bar-container">
+      <div class="top-bar-left">
+        <span class="live-pulse-badge"><span class="pulse-dot"></span> LIVE TICKER</span>
+        <div class="ticker-wrapper">
+          <div class="ticker-content" id="tickerContent">
+            <span>🏆 <strong>VPL 2026 Final:</strong> Virudhunagar Strikers 164/5 (18.2 ov) vs Sivakasi Super Kings 162/8 — Need 2 runs in 4 balls</span>
+            <span class="ticker-sep">•</span>
+            <span>📢 <strong>TNCA Division 1 League:</strong> Day 2 Stumps — Rajapalayam CC 312 &amp; 45/1 vs Aruppukottai Stars 220</span>
+            <span class="ticker-sep">•</span>
+            <span>⭐ <strong>District Trials:</strong> Under-19 Virudhunagar Team selection on Oct 5 at District Sports Complex</span>
+            <span class="ticker-sep">•</span>
+            <span>🥇 <strong>Result:</strong> Srivilliputhur Warriors beat Sattur XI by 42 runs in Buchi Babu Qualifier</span>
+          </div>
+        </div>
+      </div>
+      <div class="top-bar-right">
+        <a href="#rules" class="top-link"><i class="fa-solid fa-file-shield"></i> League By-Laws</a>
+        <a href="#anti-corruption" class="top-link"><i class="fa-solid fa-handshake-slash"></i> Anti-Corruption</a>
+        <a href="https://www.tnca.cricket/" target="_blank" rel="noopener noreferrer" class="top-link tnca-badge-link">
+          <span class="tnca-tag">TNCA</span> Parent Body
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- HERO SECTION WITH TRANSPARENT EMBLEM BACKGROUND -->
+  <section class="hero-section" id="hero">
+    <!-- Stadium Backdrop Image with Gradient Overlay -->
+    <div class="hero-stadium-bg"></div>
+
+    <div class="container hero-container">
+      <div class="hero-grid">
+        <!-- Hero Text & Presentation -->
+        <div class="hero-content">
+          <div class="hero-pretitle">
+            <span class="gold-pill"><i class="fa-solid fa-shield-halved"></i> OFFICIAL DISTRICT BODY</span>
+            <span class="tnca-tag-light"><i class="fa-solid fa-certificate"></i> AFFILIATED TO TNCA</span>
+            <span class="heritage-pill"><i class="fa-solid fa-place-of-worship"></i> SRIVILLIPUTHUR TEMPLE HERITAGE</span>
+          </div>
+
+          <h1 class="hero-title">
+            <span class="hero-title-prefix">Cricket Federation of</span>
+            <span class="text-gradient-gold hero-title-main">Virudhunagar District</span>
+          </h1>
+
+          <!-- Official Golden Motto Ribbon Banner from the Emblem -->
+          <div class="emblem-motto-ribbon" title="Official Federation Motto from Emblem">
+            <span class="ribbon-tail ribbon-tail-left"></span>
+            <div class="ribbon-body">
+              <i class="fa-solid fa-star ribbon-star"></i>
+              <span class="ribbon-text">Enjoy the game and chase your dreams</span>
+              <i class="fa-solid fa-star ribbon-star"></i>
+            </div>
+            <span class="ribbon-tail ribbon-tail-right"></span>
+          </div>
+
+          <p class="hero-description">
+            Governing, developing, and fostering grassroots and competitive cricket across Srivilliputhur, Sivakasi, Rajapalayam, Sattur, Aruppukottai, and Virudhunagar under the guidance of Tamil Nadu Cricket Association.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="#match-centre" class="btn btn-primary btn-lg">
+              <span class="live-dot-pulse"></span> Match Centre Live
+            </a>
+            <a href="#tournaments" class="btn btn-outline-gold btn-lg">
+              <i class="fa-solid fa-trophy"></i> View Leagues
+            </a>
+            <button class="btn btn-glass btn-lg" onclick="openScorecardModal('match-1')">
+              <i class="fa-solid fa-satellite-dish"></i> Live Scorecard
+            </button>
+          </div>
+
+          <!-- Hero Metrics Bar -->
+          <div class="hero-metrics">
+            <div class="metric-item">
+              <span class="metric-val" data-target="42">42</span>
+              <span class="metric-label">Registered Clubs</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val" data-target="1450">1,450+</span>
+              <span class="metric-label">Active Players</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val" data-target="8">8</span>
+              <span class="metric-label">Turf &amp; Matting Grounds</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-item">
+              <span class="metric-val" data-target="16">16</span>
+              <span class="metric-label">Annual Leagues</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK ACCESS STRIP -->
+  <section class="quick-strip">
+    <div class="container quick-strip-grid">
+      <a href="#match-centre" class="quick-card">
+        <div class="quick-icon"><i class="fa-solid fa-tv"></i></div>
+        <div class="quick-details">
+          <h4>Match Centre</h4>
+          <p>Ball-by-ball score updates &amp; fixtures</p>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square quick-arrow"></i>
+      </a>
+      <a href="#points-table" class="quick-card">
+        <div class="quick-icon"><i class="fa-solid fa-list-ol"></i></div>
+        <div class="quick-details">
+          <h4>League Standings</h4>
+          <p>Official TNCA district points tables</p>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square quick-arrow"></i>
+      </a>
+      <a href="#academy" class="quick-card">
+        <div class="quick-icon"><i class="fa-solid fa-cricket-bat-ball"></i></div>
+        <div class="quick-details">
+          <h4>District Academy</h4>
+          <p>Coaching camps &amp; high performance</p>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square quick-arrow"></i>
+      </a>
+      <a href="javascript:void(0)" onclick="openRegistrationModal()" class="quick-card highlight-card">
+        <div class="quick-icon"><i class="fa-solid fa-file-signature"></i></div>
+        <div class="quick-details">
+          <h4>Player Registration</h4>
+          <p>Enroll for Season 2026-27 Trials</p>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square quick-arrow"></i>
+      </a>
+    </div>
+  </section>
+
+  <!-- MATCH CENTRE (TNCA REPLICA) -->
+  <section class="section match-centre-section" id="match-centre">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-baseball-bat-ball"></i> TNCA DISTRICT MATCH CENTRE</span>
+        <h2 class="section-title">Official Matches, Fixtures &amp; Results</h2>
+        <p class="section-subtitle">Real-time coverage of all senior, junior, and talent trophy matches sanctioned by Cricket Federation of Virudhunagar District</p>
+      </div>
+
+      <!-- Match Filter Tabs -->
+      <div class="filter-tabs-wrapper">
+        <div class="filter-tabs" role="tablist">
+          <button class="filter-tab active" data-filter="all" onclick="filterMatches('all')">
+            <i class="fa-solid fa-layer-group"></i> All Matches
+          </button>
+          <button class="filter-tab" data-filter="live" onclick="filterMatches('live')">
+            <span class="tab-pulse"></span> Live Matches <span class="badge-count">2</span>
+          </button>
+          <button class="filter-tab" data-filter="upcoming" onclick="filterMatches('upcoming')">
+            <i class="fa-regular fa-calendar-check"></i> Upcoming Fixtures <span class="badge-count">3</span>
+          </button>
+          <button class="filter-tab" data-filter="results" onclick="filterMatches('results')">
+            <i class="fa-solid fa-square-check"></i> Recent Results <span class="badge-count">4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Matches Grid -->
+      <div class="matches-grid" id="matchesGrid">
+
+        <!-- Match Card 1: LIVE T20 -->
+        <article class="match-card live-border" data-category="live">
+          <div class="card-top">
+            <span class="live-pill"><span class="pulse-red"></span> LIVE</span>
+            <span class="card-tournament">Virudhunagar Premier League • Final</span>
+            <span class="format-badge t20">T20</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item batting-now">
+              <div class="team-meta">
+                <div class="team-crest striker-crest">VS</div>
+                <span class="team-title">Virudhunagar Strikers</span>
+                <span class="batting-indicator"><i class="fa-solid fa-baseball-bat-ball"></i></span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">164/5</strong>
+                <span class="overs">(18.2 ov)</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest king-crest">SSK</div>
+                <span class="team-title">Sivakasi Super Kings</span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">162/8</strong>
+                <span class="overs">(20.0 ov)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note text-gold">
+            <i class="fa-solid fa-clock"></i> Virudhunagar Strikers need 2 runs in 4 balls
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> District Sports Complex Ground, Virudhunagar
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-primary btn-block" onclick="openScorecardModal('match-1')">
+              <i class="fa-solid fa-eye"></i> View Live Scorecard
+            </button>
+          </div>
+        </article>
+
+        <!-- Match Card 2: LIVE 3-Day Multi Day -->
+        <article class="match-card live-border" data-category="live">
+          <div class="card-top">
+            <span class="live-pill"><span class="pulse-red"></span> LIVE</span>
+            <span class="card-tournament">TNCA 1st Division League • Day 2</span>
+            <span class="format-badge multiday">3-DAY</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item batting-now">
+              <div class="team-meta">
+                <div class="team-crest rcc-crest">RCC</div>
+                <span class="team-title">Rajapalayam Cricket Club</span>
+                <span class="batting-indicator"><i class="fa-solid fa-baseball-bat-ball"></i></span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">312 &amp; 45/1</strong>
+                <span class="overs">(14 ov)</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest stars-crest">AKS</div>
+                <span class="team-title">Aruppukottai Stars CC</span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">220/10</strong>
+                <span class="overs">(68.4 ov)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note">
+            <i class="fa-solid fa-info-circle"></i> Rajapalayam CC lead by 137 runs at Stumps Day 2
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> Sivakasi Turf Cricket Ground, Sivakasi
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-primary btn-block" onclick="openScorecardModal('match-2')">
+              <i class="fa-solid fa-eye"></i> View Match Summary
+            </button>
+          </div>
+        </article>
+
+        <!-- Match Card 3: UPCOMING -->
+        <article class="match-card" data-category="upcoming">
+          <div class="card-top">
+            <span class="upcoming-pill"><i class="fa-regular fa-clock"></i> UPCOMING</span>
+            <span class="card-tournament">TNCA Inter-District Selection Cup</span>
+            <span class="format-badge oneday">50-OVERS</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest vrd-crest">VDC</div>
+                <span class="team-title">Virudhunagar District Colts</span>
+              </div>
+              <div class="team-figures">
+                <span class="yet-to-bat">Upcoming</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest mdu-crest">MDU</div>
+                <span class="team-title">Madurai District XI</span>
+              </div>
+              <div class="team-figures">
+                <span class="yet-to-bat">Upcoming</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note">
+            <i class="fa-regular fa-calendar-days text-gold"></i> Tomorrow at 09:00 AM IST (Toss at 08:30 AM)
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> Andal Temple Ground, Srivilliputhur
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-gold btn-block" onclick="alert('Match starts tomorrow at 09:00 AM. Live scorecard will be available when toss takes place.')">
+              <i class="fa-solid fa-bell"></i> Set Match Reminder
+            </button>
+          </div>
+        </article>
+
+        <!-- Match Card 4: UPCOMING U-19 -->
+        <article class="match-card" data-category="upcoming">
+          <div class="card-top">
+            <span class="upcoming-pill"><i class="fa-regular fa-clock"></i> UPCOMING</span>
+            <span class="card-tournament">Andal Trophy Inter-School Cup</span>
+            <span class="format-badge t20">T20</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest kvs-crest">KVS</div>
+                <span class="team-title">KVS Higher Secondary School</span>
+              </div>
+              <div class="team-figures">
+                <span class="yet-to-bat">Upcoming</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest pac-crest">PAC</div>
+                <span class="team-title">PACM High School, Rajapalayam</span>
+              </div>
+              <div class="team-figures">
+                <span class="yet-to-bat">Upcoming</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note">
+            <i class="fa-regular fa-calendar-days text-gold"></i> Oct 02, 2026 at 02:00 PM IST
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> District Sports Complex Ground, Virudhunagar
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-gold btn-block" onclick="alert('Fixture Details added to calendar!')">
+              <i class="fa-solid fa-calendar-plus"></i> View Squads
+            </button>
+          </div>
+        </article>
+
+        <!-- Match Card 5: RESULT -->
+        <article class="match-card" data-category="results">
+          <div class="card-top">
+            <span class="result-pill"><i class="fa-solid fa-check"></i> RESULT</span>
+            <span class="card-tournament">Kamarajar Memorial T20 Trophy</span>
+            <span class="format-badge t20">T20</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item team-winner">
+              <div class="team-meta">
+                <div class="team-crest spw-crest">SW</div>
+                <span class="team-title">Srivilliputhur Warriors <i class="fa-solid fa-trophy text-gold"></i></span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">186/6</strong>
+                <span class="overs">(20.0 ov)</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest str-crest">SXI</div>
+                <span class="team-title">Sattur Cricket XI</span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">144/9</strong>
+                <span class="overs">(20.0 ov)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note text-green">
+            <i class="fa-solid fa-award"></i> Srivilliputhur Warriors won by 42 runs
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> Sattur Town Sports Ground
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-primary btn-block" onclick="openScorecardModal('match-3')">
+              <i class="fa-solid fa-file-lines"></i> Full Scorecard &amp; Stats
+            </button>
+          </div>
+        </article>
+
+        <!-- Match Card 6: RESULT 50 OVERS -->
+        <article class="match-card" data-category="results">
+          <div class="card-top">
+            <span class="result-pill"><i class="fa-solid fa-check"></i> RESULT</span>
+            <span class="card-tournament">TNCA Buchi Babu Qualifier Leg</span>
+            <span class="format-badge oneday">50-OVERS</span>
+          </div>
+
+          <div class="card-teams-body">
+            <div class="card-team-item team-winner">
+              <div class="team-meta">
+                <div class="team-crest rcc-crest">VCC</div>
+                <span class="team-title">Virudhunagar CC <i class="fa-solid fa-trophy text-gold"></i></span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">274/8</strong>
+                <span class="overs">(50.0 ov)</span>
+              </div>
+            </div>
+
+            <div class="card-team-item">
+              <div class="team-meta">
+                <div class="team-crest thk-crest">TKC</div>
+                <span class="team-title">Thiruthangal Cricket Club</span>
+              </div>
+              <div class="team-figures">
+                <strong class="runs">198/10</strong>
+                <span class="overs">(41.3 ov)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-status-note text-green">
+            <i class="fa-solid fa-award"></i> Virudhunagar CC won by 76 runs
+          </div>
+
+          <div class="card-ground">
+            <i class="fa-solid fa-location-dot"></i> Sivakasi Turf Cricket Ground
+          </div>
+
+          <div class="card-action">
+            <button class="btn btn-outline-primary btn-block" onclick="openScorecardModal('match-4')">
+              <i class="fa-solid fa-file-lines"></i> Full Scorecard &amp; Stats
+            </button>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TOURNAMENTS & LEAGUES SHOWCASE (TNCA FORMAT) -->
+  <section class="section tournaments-section" id="tournaments">
+    <!-- Watermark Accent -->
+    <div class="section-watermark-bg"></div>
+
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-trophy"></i> LEAGUE STRUCTURE</span>
+        <h2 class="section-title">Official Sanctioned Tournaments</h2>
+        <p class="section-subtitle">Promoting multi-day red-ball traditional cricket and modern white-ball tournaments across the district</p>
+      </div>
+
+      <div class="tournaments-grid">
+        <!-- Tournament 1 -->
+        <div class="tournament-card">
+          <div class="t-badge-wrap">
+            <span class="badge gold">Premier Division</span>
+            <span class="badge blue">Multi-Day</span>
+          </div>
+          <div class="t-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3 class="t-title">Virudhunagar First Division League</h3>
+          <p class="t-subtitle">The G. Parthasarathy Rolling Trophy</p>
+          <p class="t-desc">The flagship red-ball 3-day competition with 12 affiliated first-tier clubs competing for district supremacy and state selection.</p>
+          <ul class="t-specs">
+            <li><i class="fa-solid fa-users"></i> 12 Affiliated Clubs</li>
+            <li><i class="fa-solid fa-calendar"></i> Oct 2026 - Jan 2027</li>
+            <li><i class="fa-solid fa-award"></i> ₹2,50,000 Prize Purse</li>
+          </ul>
+          <div class="t-footer">
+            <a href="#points-table" class="btn btn-sm btn-outline-gold">View Table</a>
+            <button class="btn btn-sm btn-primary" onclick="alert('Official 2026-27 Division 1 Fixtures downloaded!')">Fixtures PDF</button>
+          </div>
+        </div>
+
+        <!-- Tournament 2 -->
+        <div class="tournament-card">
+          <div class="t-badge-wrap">
+            <span class="badge red">White Ball</span>
+            <span class="badge gold">T20 Trophy</span>
+          </div>
+          <div class="t-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+          <h3 class="t-title">Kamarajar Memorial T20 Trophy</h3>
+          <p class="t-subtitle">Virudhunagar District Premier T20 Cup</p>
+          <p class="t-desc">Fast-paced night and day T20 cricket featuring franchise-mode taluk teams with colored clothing and pink/white cricket balls.</p>
+          <ul class="t-specs">
+            <li><i class="fa-solid fa-users"></i> 16 Taluk &amp; Club Teams</li>
+            <li><i class="fa-solid fa-calendar"></i> Feb 2027</li>
+            <li><i class="fa-solid fa-tv"></i> Live Streamed on YouTube</li>
+          </ul>
+          <div class="t-footer">
+            <a href="#points-table" class="btn btn-sm btn-outline-gold">Standings</a>
+            <button class="btn btn-sm btn-primary" onclick="openScorecardModal('match-1')">Latest Final</button>
+          </div>
+        </div>
+
+        <!-- Tournament 3 -->
+        <div class="tournament-card">
+          <div class="t-badge-wrap">
+            <span class="badge green">Under-16 / U-19</span>
+            <span class="badge blue">Junior Talent</span>
+          </div>
+          <div class="t-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+          <h3 class="t-title">Andal Temple Inter-School Cup</h3>
+          <p class="t-subtitle">Srivilliputhur &amp; District Schools Shield</p>
+          <p class="t-desc">The premier grassroot nursery identifying teenage talent for the Tamil Nadu State Under-16 and Under-19 state trials.</p>
+          <ul class="t-specs">
+            <li><i class="fa-solid fa-school"></i> 24 District Schools</li>
+            <li><i class="fa-solid fa-calendar"></i> Annual Summer Edition</li>
+            <li><i class="fa-solid fa-medal"></i> TNCA Academy Scholarships</li>
+          </ul>
+          <div class="t-footer">
+            <a href="#academy" class="btn btn-sm btn-outline-gold">Academy Info</a>
+            <button class="btn btn-sm btn-primary" onclick="openRegistrationModal()">School Entry</button>
+          </div>
+        </div>
+
+        <!-- Tournament 4 -->
+        <div class="tournament-card">
+          <div class="t-badge-wrap">
+            <span class="badge blue">BCCI / TNCA Pathway</span>
+            <span class="badge gold">Selection</span>
+          </div>
+          <div class="t-icon"><i class="fa-solid fa-award"></i></div>
+          <h3 class="t-title">Buchi Babu District Qualifier</h3>
+          <p class="t-subtitle">State Invitation Tournament Selection</p>
+          <p class="t-desc">Competitive matches pitting the best district players against neighboring districts for selection into the composite South Zone squad.</p>
+          <ul class="t-specs">
+            <li><i class="fa-solid fa-users"></i> Elite District XI</li>
+            <li><i class="fa-solid fa-calendar"></i> Sep - Oct 2026</li>
+            <li><i class="fa-solid fa-eye"></i> TNCA Selectors in Attendance</li>
+          </ul>
+          <div class="t-footer">
+            <a href="#stats" class="btn btn-sm btn-outline-gold">Player Stats</a>
+            <button class="btn btn-sm btn-primary" onclick="alert('Viewing Squad List for Selection trials')">Squad List</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POINTS TABLE & STANDINGS (TNCA SYSTEM) -->
+  <section class="section points-section" id="points-table">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-list-ol"></i> LEAGUE STANDINGS</span>
+        <h2 class="section-title">Official League Points Table 2026-27</h2>
+        <p class="section-subtitle">Updated in accordance with official TNCA District League points calculation rules</p>
+      </div>
+
+      <!-- Table Selection Tabs -->
+      <div class="table-switch-tabs">
+        <button class="t-switch-btn active" onclick="switchTable('div1')">First Division (3-Day)</button>
+        <button class="t-switch-btn" onclick="switchTable('t20')">Kamarajar T20 Cup</button>
+        <button class="t-switch-btn" onclick="switchTable('school')">Inter-School Shield</button>
+      </div>
+
+      <div class="table-responsive glass-table-box">
+        <table class="points-table" id="pointsTable">
+          <thead>
+            <tr>
+              <th class="text-center">Pos</th>
+              <th>Team / Club</th>
+              <th class="text-center">P</th>
+              <th class="text-center">W</th>
+              <th class="text-center">L</th>
+              <th class="text-center">D / T</th>
+              <th class="text-center">Bonus Pts</th>
+              <th class="text-center">NRR / Quot.</th>
+              <th class="text-center">PTS</th>
+              <th class="text-center">Recent Form</th>
+            </tr>
+          </thead>
+          <tbody id="pointsTableBody">
+            <!-- Dynamically populated or rich pre-rendered -->
+            <tr class="qualified-row">
+              <td class="text-center rank-num"><span class="badge-rank gold">1</span></td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest striker-crest">VS</div>
+                  <div>
+                    <strong>Virudhunagar Strikers CC</strong>
+                    <span class="table-sub">Qualified for Semis</span>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">6</td>
+              <td class="text-center">1</td>
+              <td class="text-center">0</td>
+              <td class="text-center">3</td>
+              <td class="text-center">+1.428</td>
+              <td class="text-center pts-col">27</td>
+              <td class="text-center">
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+              </td>
+            </tr>
+
+            <tr class="qualified-row">
+              <td class="text-center rank-num"><span class="badge-rank silver">2</span></td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest king-crest">SSK</div>
+                  <div>
+                    <strong>Sivakasi Super Kings</strong>
+                    <span class="table-sub">Qualified for Semis</span>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">5</td>
+              <td class="text-center">2</td>
+              <td class="text-center">0</td>
+              <td class="text-center">2</td>
+              <td class="text-center">+0.892</td>
+              <td class="text-center pts-col">22</td>
+              <td class="text-center">
+                <span class="form-pill w">W</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+              </td>
+            </tr>
+
+            <tr class="qualified-row">
+              <td class="text-center rank-num"><span class="badge-rank bronze">3</span></td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest rcc-crest">RCC</div>
+                  <div>
+                    <strong>Rajapalayam Cricket Club</strong>
+                    <span class="table-sub">In Contention</span>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">4</td>
+              <td class="text-center">2</td>
+              <td class="text-center">1</td>
+              <td class="text-center">2</td>
+              <td class="text-center">+0.510</td>
+              <td class="text-center pts-col">19</td>
+              <td class="text-center">
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill d">D</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+              </td>
+            </tr>
+
+            <tr class="qualified-row">
+              <td class="text-center rank-num">4</td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest spw-crest">SW</div>
+                  <div>
+                    <strong>Srivilliputhur Warriors</strong>
+                    <span class="table-sub">In Contention</span>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">4</td>
+              <td class="text-center">3</td>
+              <td class="text-center">0</td>
+              <td class="text-center">1</td>
+              <td class="text-center">+0.215</td>
+              <td class="text-center pts-col">17</td>
+              <td class="text-center">
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="text-center rank-num">5</td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest stars-crest">AKS</div>
+                  <div>
+                    <strong>Aruppukottai Stars CC</strong>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">3</td>
+              <td class="text-center">4</td>
+              <td class="text-center">0</td>
+              <td class="text-center">1</td>
+              <td class="text-center">-0.118</td>
+              <td class="text-center pts-col">13</td>
+              <td class="text-center">
+                <span class="form-pill l">L</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill l">L</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="text-center rank-num">6</td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest str-crest">SXI</div>
+                  <div>
+                    <strong>Sattur Cricket XI</strong>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">2</td>
+              <td class="text-center">5</td>
+              <td class="text-center">0</td>
+              <td class="text-center">0</td>
+              <td class="text-center">-0.640</td>
+              <td class="text-center pts-col">8</td>
+              <td class="text-center">
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill l">L</span>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="text-center rank-num">7</td>
+              <td>
+                <div class="team-cell">
+                  <div class="team-mini-crest thk-crest">TKC</div>
+                  <div>
+                    <strong>Thiruthangal CC</strong>
+                  </div>
+                </div>
+              </td>
+              <td class="text-center">7</td>
+              <td class="text-center text-bold">1</td>
+              <td class="text-center">5</td>
+              <td class="text-center">1</td>
+              <td class="text-center">0</td>
+              <td class="text-center">-1.204</td>
+              <td class="text-center pts-col">5</td>
+              <td class="text-center">
+                <span class="form-pill l">L</span>
+                <span class="form-pill d">D</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill l">L</span>
+                <span class="form-pill w">W</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-legend">
+        <span><i class="fa-solid fa-circle text-gold"></i> Top 4 qualify for District League Knockouts</span>
+        <span><i class="fa-solid fa-circle text-blue"></i> Points: Win = 4 pts, Tie/Draw = 2 pts, 1st Innings Lead = 1 pt</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS & LEADERBOARDS (ORANGE CAP & PURPLE CAP STYLE) -->
+  <section class="section stats-section" id="stats">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-chart-line"></i> PERFORMANCE RECORDS</span>
+        <h2 class="section-title">Season 2026-27 Top Performers</h2>
+        <p class="section-subtitle">Leading run scorers and top wicket-takers competing across official district competitions</p>
+      </div>
+
+      <div class="stats-grid">
+        <!-- Batting Leaderboard (Orange Cap) -->
+        <div class="stat-leaderboard-card">
+          <div class="card-lead-head orange-gradient">
+            <div class="lead-icon"><i class="fa-solid fa-baseball-bat-ball"></i></div>
+            <div>
+              <h3>Leading Run Scorers</h3>
+              <p>Top Batters in Virudhunagar League 2026-27</p>
+            </div>
+            <span class="stat-cap-badge orange-cap"><i class="fa-solid fa-hat-cowboy-side"></i> BATTING</span>
+          </div>
+
+          <div class="leader-table-wrap">
+            <table class="leader-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Team</th>
+                  <th class="text-center">Inns</th>
+                  <th class="text-center">Avg</th>
+                  <th class="text-center">SR</th>
+                  <th class="text-right">Runs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="top-leader">
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">1</span>
+                      <div>
+                        <strong>R. Saravanan</strong>
+                        <span class="sub-role">Top Order Batter</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Virudhunagar Strikers</td>
+                  <td class="text-center">7</td>
+                  <td class="text-center">64.50</td>
+                  <td class="text-center">148.2</td>
+                  <td class="text-right highlight-stat">387</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">2</span>
+                      <div>
+                        <strong>S. Karthik Raja</strong>
+                        <span class="sub-role">Wicketkeeper Batter</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Rajapalayam CC</td>
+                  <td class="text-center">7</td>
+                  <td class="text-center">54.20</td>
+                  <td class="text-center">132.8</td>
+                  <td class="text-right highlight-stat">325</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">3</span>
+                      <div>
+                        <strong>M. Anandhan</strong>
+                        <span class="sub-role">Opening Batter</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Sivakasi Super Kings</td>
+                  <td class="text-center">6</td>
+                  <td class="text-center">48.33</td>
+                  <td class="text-center">126.5</td>
+                  <td class="text-right highlight-stat">290</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">4</span>
+                      <div>
+                        <strong>P. Muthukumar</strong>
+                        <span class="sub-role">Middle Order</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Srivilliputhur Warriors</td>
+                  <td class="text-center">7</td>
+                  <td class="text-center">43.80</td>
+                  <td class="text-center">139.1</td>
+                  <td class="text-right highlight-stat">263</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">5</span>
+                      <div>
+                        <strong>K. Ganesan</strong>
+                        <span class="sub-role">All-Rounder</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Aruppukottai Stars</td>
+                  <td class="text-center">6</td>
+                  <td class="text-center">41.00</td>
+                  <td class="text-center">141.5</td>
+                  <td class="text-right highlight-stat">246</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bowling Leaderboard (Purple Cap) -->
+        <div class="stat-leaderboard-card">
+          <div class="card-lead-head purple-gradient">
+            <div class="lead-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <div>
+              <h3>Leading Wicket Takers</h3>
+              <p>Top Bowlers in Virudhunagar League 2026-27</p>
+            </div>
+            <span class="stat-cap-badge purple-cap"><i class="fa-solid fa-hat-cowboy-side"></i> BOWLING</span>
+          </div>
+
+          <div class="leader-table-wrap">
+            <table class="leader-table">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Team</th>
+                  <th class="text-center">Overs</th>
+                  <th class="text-center">BBI</th>
+                  <th class="text-center">Econ</th>
+                  <th class="text-right">Wkts</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="top-leader">
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">1</span>
+                      <div>
+                        <strong>K. Praveen Kumar</strong>
+                        <span class="sub-role">Right-Arm Off Spin</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Virudhunagar CC</td>
+                  <td class="text-center">26.4</td>
+                  <td class="text-center">5/18</td>
+                  <td class="text-center">5.42</td>
+                  <td class="text-right highlight-stat-purple">19</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">2</span>
+                      <div>
+                        <strong>M. Vignesh</strong>
+                        <span class="sub-role">Left-Arm Fast Medium</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Sivakasi Super Kings</td>
+                  <td class="text-center">28.0</td>
+                  <td class="text-center">4/21</td>
+                  <td class="text-center">6.10</td>
+                  <td class="text-right highlight-stat-purple">16</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">3</span>
+                      <div>
+                        <strong>D. Aravind</strong>
+                        <span class="sub-role">Right-Arm Leg Spin</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Srivilliputhur Warriors</td>
+                  <td class="text-center">24.2</td>
+                  <td class="text-center">4/16</td>
+                  <td class="text-center">5.85</td>
+                  <td class="text-right highlight-stat-purple">15</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">4</span>
+                      <div>
+                        <strong>T. Manikandan</strong>
+                        <span class="sub-role">Right-Arm Medium Fast</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Rajapalayam CC</td>
+                  <td class="text-center">27.0</td>
+                  <td class="text-center">3/19</td>
+                  <td class="text-center">6.33</td>
+                  <td class="text-right highlight-stat-purple">13</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="player-leader-cell">
+                      <span class="pos-badge">5</span>
+                      <div>
+                        <strong>S. Balamurugan</strong>
+                        <span class="sub-role">Slow Left-Arm Orthodox</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>Sattur XI</td>
+                  <td class="text-center">22.0</td>
+                  <td class="text-center">3/22</td>
+                  <td class="text-center">5.90</td>
+                  <td class="text-right highlight-stat-purple">12</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT ASSOCIATION & OFFICE BEARERS (TNCA HIERARCHY) -->
+  <section class="section about-section" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-text-col">
+          <span class="section-tag"><i class="fa-solid fa-landmark"></i> GOVERNING CRICKET BODY</span>
+          <h2 class="section-title">The Heritage of Cricket in Virudhunagar</h2>
+          <p class="about-lead">
+            The <strong>Cricket Federation of Virudhunagar District (CFVD)</strong> is the sole governing body for the sport of cricket within Virudhunagar revenue district, proudly affiliated with the <strong>Tamil Nadu Cricket Association (TNCA)</strong>.
+          </p>
+          <p class="about-body">
+            With roots deeply anchored in sportsmanship and youth development, our emblem features the world-renowned temple gopuram of <em>Srivilliputhur</em> (the state emblem of Tamil Nadu), reflecting the pride and spiritual resilience of our athletes.
+          </p>
+          <div class="values-list">
+            <div class="value-item">
+              <i class="fa-solid fa-circle-check text-gold"></i>
+              <div>
+                <h4>Fair Play &amp; Ethics</h4>
+                <p>Strict implementation of BCCI Anti-Corruption &amp; Code of Conduct rules.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <i class="fa-solid fa-circle-check text-gold"></i>
+              <div>
+                <h4>Grassroots Talent Scouting</h4>
+                <p>Annual camps identifying rural talent across 8 taluks for TNCA representation.</p>
+              </div>
+            </div>
+            <div class="value-item">
+              <i class="fa-solid fa-circle-check text-gold"></i>
+              <div>
+                <h4>First-Class Standard Pitches</h4>
+                <p>BCCI-curated turf wickets at District Sports Complex and Sivakasi.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-crest-card">
+          <div class="crest-frame">
+            <img src="assets/logo_transparent.png?v=crop_v2" alt="Cricket Federation of Virudhunagar District Official Seal" class="crest-large">
+          </div>
+          <div class="crest-caption">
+            <h3>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</h3>
+            <p class="crest-motto">"Enjoy the game and chase your dreams"</p>
+            <div class="affiliation-badge">
+              <i class="fa-solid fa-award"></i> Registered &amp; Sanctioned under TNCA
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Office Bearers Showcase -->
+      <div class="office-bearers-box" id="office-bearers">
+        <div class="bearers-head text-center">
+          <span class="badge gold">GOVERNANCE &amp; APEX COUNCIL</span>
+          <h3>Honorary Office Bearers (2025 – 2028)</h3>
+        </div>
+
+        <div class="bearers-grid">
+          <div class="bearer-card">
+            <div class="bearer-avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <h4 class="bearer-name">Thiru. S. Rajendran</h4>
+            <span class="bearer-role">President</span>
+            <span class="bearer-tenure">Apex Council Member</span>
+          </div>
+
+          <div class="bearer-card">
+            <div class="bearer-avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <h4 class="bearer-name">Thiru. K. Meenakshisundaram</h4>
+            <span class="bearer-role">Vice President</span>
+            <span class="bearer-tenure">Infrastructure &amp; Grounds</span>
+          </div>
+
+          <div class="bearer-card highlight-bearer">
+            <div class="bearer-avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <h4 class="bearer-name">Thiru. P. Senthil Kumar</h4>
+            <span class="bearer-role">Honorary Secretary</span>
+            <span class="bearer-tenure">TNCA District Representative</span>
+          </div>
+
+          <div class="bearer-card">
+            <div class="bearer-avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <h4 class="bearer-name">Thiru. M. Thangavel</h4>
+            <span class="bearer-role">Joint Secretary</span>
+            <span class="bearer-tenure">Junior Cricket &amp; Tournaments</span>
+          </div>
+
+          <div class="bearer-card">
+            <div class="bearer-avatar"><i class="fa-solid fa-user-tie"></i></div>
+            <h4 class="bearer-name">Thiru. V. Shanmuga Sundaram</h4>
+            <span class="bearer-role">Honorary Treasurer</span>
+            <span class="bearer-tenure">Finance &amp; Audits</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISTRICT GROUNDS & INFRASTRUCTURE -->
+  <section class="section grounds-section" id="grounds">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-mountain-sun"></i> PLAYING VENUES</span>
+        <h2 class="section-title">District Cricket Facilities &amp; Grounds</h2>
+        <p class="section-subtitle">State-of-the-art turf wickets, indoor practice nets, and floodlit grounds adhering to BCCI match standards</p>
+      </div>
+
+      <div class="grounds-grid">
+        <!-- Ground 1 -->
+        <div class="ground-card">
+          <div class="ground-img-wrap">
+            <img src="assets/stadium.jpg" alt="District Sports Complex Cricket Ground Virudhunagar" class="ground-img">
+            <span class="ground-badge">Headquarters</span>
+          </div>
+          <div class="ground-info">
+            <h3>District Sports Complex Stadium</h3>
+            <p class="ground-loc"><i class="fa-solid fa-location-dot"></i> Collectorate Road, Virudhunagar</p>
+            <p class="ground-desc">Featuring 3 BCCI-standard red-soil turf wickets, modern dressing rooms, electronic scoreboard, and 4 turf practice nets.</p>
+            <div class="ground-facilities">
+              <span><i class="fa-solid fa-check"></i> Turf Pitch</span>
+              <span><i class="fa-solid fa-check"></i> Floodlights</span>
+              <span><i class="fa-solid fa-check"></i> Pavillion</span>
+              <span><i class="fa-solid fa-check"></i> 5,000 Seating</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ground 2 -->
+        <div class="ground-card">
+          <div class="ground-img-wrap">
+            <img src="assets/batsman.jpg" alt="Sivakasi Turf Cricket Ground" class="ground-img">
+            <span class="ground-badge">Match Venue</span>
+          </div>
+          <div class="ground-info">
+            <h3>Sivakasi Turf Cricket Ground</h3>
+            <p class="ground-loc"><i class="fa-solid fa-location-dot"></i> PSR College Sports Enclave, Sivakasi</p>
+            <p class="ground-desc">Host to TNCA First Division and Buchi Babu District Qualifiers with natural green outfield and fast-paced pitch.</p>
+            <div class="ground-facilities">
+              <span><i class="fa-solid fa-check"></i> Dual Turf Wickets</span>
+              <span><i class="fa-solid fa-check"></i> Practice Nets</span>
+              <span><i class="fa-solid fa-check"></i> Press Box</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ground 3 -->
+        <div class="ground-card">
+          <div class="ground-img-wrap">
+            <img src="assets/champions.jpg" alt="Rajapalayam Town Club Ground" class="ground-img">
+            <span class="ground-badge">Academy Centre</span>
+          </div>
+          <div class="ground-info">
+            <h3>Rajapalayam Cricket Academy Ground</h3>
+            <p class="ground-loc"><i class="fa-solid fa-location-dot"></i> PACM Campus, Rajapalayam</p>
+            <p class="ground-desc">Center for the district high-performance coaching camp and junior age-group tournaments.</p>
+            <div class="ground-facilities">
+              <span><i class="fa-solid fa-check"></i> Indoor AstroTurf Nets</span>
+              <span><i class="fa-solid fa-check"></i> Video Analysis</span>
+              <span><i class="fa-solid fa-check"></i> Gym &amp; Physio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISTRICT CRICKET ACADEMY & COACHING -->
+  <section class="section academy-section" id="academy">
+    <div class="container">
+      <div class="academy-banner">
+        <div class="academy-content">
+          <span class="badge gold"><i class="fa-solid fa-graduation-cap"></i> CFVD HIGH PERFORMANCE</span>
+          <h2>Virudhunagar District Cricket Academy</h2>
+          <p>
+            Guided by BCCI &amp; TNCA Certified Level 2 coaches, our academy offers year-round coaching, video analysis, physical conditioning, and match simulations to prepare cricketers for state age-group trials.
+          </p>
+          <div class="academy-features-list">
+            <div class="af-item">
+              <i class="fa-solid fa-bullseye text-gold"></i>
+              <div>
+                <strong>BCCI Level 1 &amp; 2 Coaches</strong>
+                <span>Personalized batting &amp; bowling biomechanics</span>
+              </div>
+            </div>
+            <div class="af-item">
+              <i class="fa-solid fa-camera-rotate text-gold"></i>
+              <div>
+                <strong>High-Speed Video Analysis</strong>
+                <span>Real-time technical corrections and tactical coaching</span>
+              </div>
+            </div>
+            <div class="af-item">
+              <i class="fa-solid fa-dumbbell text-gold"></i>
+              <div>
+                <strong>Fitness &amp; Physiotherapy</strong>
+                <span>Yo-Yo test benchmarks and injury rehabilitation</span>
+              </div>
+            </div>
+          </div>
+          <div class="academy-btns">
+            <button class="btn btn-gold btn-lg" onclick="openRegistrationModal('academy')">
+              <i class="fa-solid fa-user-plus"></i> Apply for Academy Admission
+            </button>
+            <button class="btn btn-glass btn-lg" onclick="alert('Academy Prospectus & Fee Structure (2026-27) will open.')">
+              <i class="fa-solid fa-download"></i> Download Prospectus
+            </button>
+          </div>
+        </div>
+
+        <div class="academy-image-side">
+          <div class="academy-crest-box">
+            <img src="assets/logo_transparent.png" alt="CFVD Academy Crest" class="academy-crest-img">
+            <div class="crest-glow"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LATEST NEWS & OFFICIAL CIRCULARS -->
+  <section class="section news-section" id="news">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-bullhorn"></i> MEDIA &amp; CIRCULARS</span>
+        <h2 class="section-title">Latest News &amp; Announcements</h2>
+        <p class="section-subtitle">Official press releases, selection trial notices, and updates from the District Federation</p>
+      </div>
+
+      <div class="news-grid">
+        <!-- News Card 1 -->
+        <article class="news-card">
+          <div class="news-media">
+            <img src="assets/batsman.jpg" alt="Under-19 Selection Trials" class="news-img">
+            <span class="news-date"><i class="fa-regular fa-calendar"></i> Oct 05, 2026</span>
+          </div>
+          <div class="news-body">
+            <span class="news-cat badge blue">Selection Trials</span>
+            <h3 class="news-title">Virudhunagar District Under-19 Team Selection Trials Announced</h3>
+            <p class="news-excerpt">Players born on or after 01-09-2007 with valid digital birth certificates and TNCA player ID are eligible to attend the open selection trials.</p>
+            <div class="news-footer">
+              <a href="javascript:void(0)" onclick="openNewsModal(1)" class="read-more-link">Read Full Circular <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- News Card 2 -->
+        <article class="news-card">
+          <div class="news-media">
+            <img src="assets/champions.jpg" alt="VPL 2026 Trophy Final" class="news-img">
+            <span class="news-date"><i class="fa-regular fa-calendar"></i> Sep 24, 2026</span>
+          </div>
+          <div class="news-body">
+            <span class="news-cat badge gold">Tournament</span>
+            <h3 class="news-title">Virudhunagar Premier League 2026 Concludes with Thrilling Finale</h3>
+            <p class="news-excerpt">Virudhunagar Strikers and Sivakasi Super Kings battle in a high-octane championship climax at District Sports Complex.</p>
+            <div class="news-footer">
+              <a href="javascript:void(0)" onclick="openNewsModal(2)" class="read-more-link">Read Match Report <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- News Card 3 -->
+        <article class="news-card">
+          <div class="news-media">
+            <img src="assets/stadium.jpg" alt="TNCA Umpires Seminar" class="news-img">
+            <span class="news-date"><i class="fa-regular fa-calendar"></i> Sep 18, 2026</span>
+          </div>
+          <div class="news-body">
+            <span class="news-cat badge green">Officials Clinic</span>
+            <h3 class="news-title">TNCA Accredited Umpires &amp; Scorers Certification Clinic in October</h3>
+            <p class="news-excerpt">A three-day comprehensive seminar covering the latest MCC laws of cricket and digital live scoring systems for aspiring match officials.</p>
+            <div class="news-footer">
+              <a href="javascript:void(0)" onclick="openNewsModal(3)" class="read-more-link">Course Registration <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTO & MOMENTS GALLERY -->
+  <section class="section gallery-section" id="gallery">
+    <div class="container">
+      <div class="section-head text-center">
+        <span class="section-tag"><i class="fa-solid fa-camera"></i> VISUAL CHRONICLES</span>
+        <h2 class="section-title">District Cricket Moments</h2>
+        <p class="section-subtitle">Snapshots of passion, victory, and development across our cricket grounds</p>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-item large" onclick="previewImage('assets/stadium.jpg', 'District Sports Complex Floodlit Final')">
+          <img src="assets/stadium.jpg" alt="Floodlit Stadium Match">
+          <div class="gallery-overlay">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            <h4>Floodlight Grand Finale</h4>
+            <p>District Sports Complex Stadium</p>
+          </div>
+        </div>
+
+        <div class="gallery-item" onclick="previewImage('assets/batsman.jpg', 'Cover Drive Masterclass - 1st Division')">
+          <img src="assets/batsman.jpg" alt="Match Action">
+          <div class="gallery-overlay">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            <h4>Cover Drive Execution</h4>
+            <p>First Division League Match</p>
+          </div>
+        </div>
+
+        <div class="gallery-item" onclick="previewImage('assets/champions.jpg', 'Championship Trophy Celebration 2026')">
+          <img src="assets/champions.jpg" alt="Champions Trophy Presentation">
+          <div class="gallery-overlay">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            <h4>Trophy Presentation</h4>
+            <p>Young Stars Academy Champions</p>
+          </div>
+        </div>
+
+        <div class="gallery-item" onclick="previewImage('assets/logo.jpg', 'Official Federation Crest with Andal Gopuram')">
+          <img src="assets/logo.jpg" alt="Official Emblem">
+          <div class="gallery-overlay">
+            <i class="fa-solid fa-magnifying-glass-plus"></i>
+            <h4>Official Federation Crest</h4>
+            <p>Cricket Federation of Virudhunagar District</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AFFILIATED CLUBS TICKER STRIP -->
+  <section class="clubs-strip" id="affiliated-clubs">
+    <div class="container">
+      <div class="strip-header text-center">
+        <h4>AFFILIATED CLUBS &amp; TALUK ASSOCIATIONS</h4>
+      </div>
+      <div class="clubs-marquee">
+        <div class="clubs-track">
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Virudhunagar CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Sivakasi Super Kings</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Rajapalayam Town CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Srivilliputhur Warriors</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Aruppukottai Stars CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Sattur Young Cricketers</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Thiruthangal Sports Club</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Watrap Pioneer CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> KVS Alumni Cricket XI</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Andal Colts Cricket Club</span>
+          <!-- Duplicate for seamless infinite loop -->
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Virudhunagar CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Sivakasi Super Kings</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Rajapalayam Town CC</span>
+          <span class="club-chip"><i class="fa-solid fa-shield"></i> Srivilliputhur Warriors</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT & GRIEVANCE SECTION -->
+  <section class="section contact-section" id="contact">
+    <div class="container">
+      <div class="contact-grid">
+        <div class="contact-info-col">
+          <span class="section-tag"><i class="fa-solid fa-envelope"></i> GET IN TOUCH</span>
+          <h2 class="section-title">Federation Secretariat</h2>
+          <p class="contact-desc">
+            For tournament registrations, ground bookings, player transfers, and official inquiries, please contact our administrative office.
+          </p>
+
+          <div class="contact-card-list">
+            <div class="c-info-item">
+              <div class="c-icon"><i class="fa-solid fa-building-flag"></i></div>
+              <div>
+                <strong>Headquarters Address:</strong>
+                <p>Cricket Federation of Virudhunagar District (CFVD),<br>
+                District Sports Complex Stadium, Collectorate Campus,<br>
+                Virudhunagar, Tamil Nadu - 626 002, India.</p>
+              </div>
+            </div>
+
+            <div class="c-info-item">
+              <div class="c-icon"><i class="fa-solid fa-phone-volume"></i></div>
+              <div>
+                <strong>Official Helpline:</strong>
+                <p>+91 (04562) 282 445 / +91 94431 88290</p>
+              </div>
+            </div>
+
+            <div class="c-info-item">
+              <div class="c-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+              <div>
+                <strong>Email Enquiries:</strong>
+                <p>secretary@virudhunagarcricket.tnca.in<br>info@cfvd-cricket.org</p>
+              </div>
+            </div>
+
+            <div class="c-info-item">
+              <div class="c-icon"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <strong>Office Hours:</strong>
+                <p>Monday – Saturday: 09:30 AM – 06:30 PM (Closed on State Holidays)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-form-col">
+          <div class="glass-form-card">
+            <h3>Send an Official Message</h3>
+            <p>Submit query to the Honorary Secretary or Selection Committee</p>
+
+            <form id="contactForm" onsubmit="handleContactSubmit(event)">
+              <div class="form-group">
+                <label for="c_name">Full Name *</label>
+                <input type="text" id="c_name" required placeholder="e.g. R. Subramanian">
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="c_email">Email Address *</label>
+                  <input type="email" id="c_email" required placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                  <label for="c_phone">Mobile Number *</label>
+                  <input type="tel" id="c_phone" required placeholder="+91 98765 43210">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="c_subject">Department / Subject *</label>
+                <select id="c_subject" required>
+                  <option value="">Select Category</option>
+                  <option value="player_registration">Player Registration &amp; Verification</option>
+                  <option value="club_affiliation">Club Affiliation &amp; League Entry</option>
+                  <option value="ground_booking">District Turf Ground Booking</option>
+                  <option value="umpire_course">Umpire &amp; Scorer Clinic</option>
+                  <option value="grievance">Grievance / Ombudsman</option>
+                  <option value="other">General Query</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="c_message">Message Details *</label>
+                <textarea id="c_message" rows="4" required placeholder="Please state your inquiry with your Club or Player ID if applicable..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <i class="fa-solid fa-paper-plane"></i> Send Official Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPREHENSIVE TNCA-STYLE FOOTER -->
+  <footer class="main-footer">
+    <!-- Transparent Watermark Emblem inside Footer Background -->
+    <div class="footer-watermark-overlay" aria-hidden="true">
+      <img src="assets/watermark.png" alt="" class="footer-watermark-img">
+    </div>
+
+    <div class="container footer-container">
+      <div class="footer-grid">
+        <!-- Brand / About Col -->
+        <div class="footer-col brand-col">
+          <div class="footer-brand">
+            <img src="assets/logo_transparent.png?v=crop_v2" alt="CFVD Seal" class="footer-logo">
+            <div>
+              <h4>Cricket Federation of Virudhunagar District</h4>
+              <p class="footer-motto">"Enjoy the game and chase your dreams"</p>
+            </div>
+          </div>
+          <p class="footer-desc">
+            The accredited governing cricket administration for Virudhunagar district, affiliated with The Tamil Nadu Cricket Association (TNCA). Dedicated to preserving the spirit of cricket and nurturing state &amp; national champions.
+          </p>
+          <div class="footer-affil-tag">
+            <i class="fa-solid fa-certificate text-gold"></i> Affiliated to TNCA &amp; Recognized by SDAT
+          </div>
+          <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" aria-label="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            <a href="#" aria-label="WhatsApp Channel"><i class="fa-brands fa-whatsapp"></i></a>
+          </div>
+        </div>
+
+        <!-- Links Col 1: Match Centre -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Match Centre</h4>
+          <ul class="footer-nav">
+            <li><a href="#match-centre" onclick="filterMatches('live')"><i class="fa-solid fa-angle-right"></i> Live Scores</a></li>
+            <li><a href="#match-centre" onclick="filterMatches('upcoming')"><i class="fa-solid fa-angle-right"></i> Season Fixtures</a></li>
+            <li><a href="#match-centre" onclick="filterMatches('results')"><i class="fa-solid fa-angle-right"></i> Recent Results</a></li>
+            <li><a href="#points-table"><i class="fa-solid fa-angle-right"></i> League Points Table</a></li>
+            <li><a href="#stats"><i class="fa-solid fa-angle-right"></i> Top Batters &amp; Bowlers</a></li>
+            <li><a href="#match-centre"><i class="fa-solid fa-angle-right"></i> Historical Archives</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Col 2: Association & Tournaments -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Association &amp; Leagues</h4>
+          <ul class="footer-nav">
+            <li><a href="#about"><i class="fa-solid fa-angle-right"></i> About Federation</a></li>
+            <li><a href="#office-bearers"><i class="fa-solid fa-angle-right"></i> Office Bearers</a></li>
+            <li><a href="#tournaments"><i class="fa-solid fa-angle-right"></i> 1st Division League</a></li>
+            <li><a href="#tournaments"><i class="fa-solid fa-angle-right"></i> Kamarajar T20 Trophy</a></li>
+            <li><a href="#tournaments"><i class="fa-solid fa-angle-right"></i> Inter-School Championship</a></li>
+            <li><a href="#grounds"><i class="fa-solid fa-angle-right"></i> Turf Grounds &amp; Facilities</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Col 3: Governance & Policies -->
+        <div class="footer-col">
+          <h4 class="footer-heading">Integrity &amp; Policies</h4>
+          <ul class="footer-nav">
+            <li><a href="#rules"><i class="fa-solid fa-angle-right"></i> TNCA League By-Laws</a></li>
+            <li><a href="#anti-corruption"><i class="fa-solid fa-angle-right"></i> Anti-Corruption Code</a></li>
+            <li><a href="#anti-doping"><i class="fa-solid fa-angle-right"></i> Anti-Doping Regulations</a></li>
+            <li><a href="#ethics"><i class="fa-solid fa-angle-right"></i> Ombudsman &amp; Ethics Officer</a></li>
+            <li><a href="javascript:void(0)" onclick="openRegistrationModal()"><i class="fa-solid fa-angle-right"></i> Player ID Verification</a></li>
+            <li><a href="https://www.tnca.cricket/" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> TNCA Official Website</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="copy-text">
+          &copy; 2026 <strong>Cricket Federation of Virudhunagar District</strong>. All Rights Reserved. Affiliated to The Tamil Nadu Cricket Association (TNCA).
+        </div>
+        <div class="bottom-links">
+          <a href="#">Privacy Policy</a>
+          <span class="sep">•</span>
+          <a href="#">Terms of Use</a>
+          <span class="sep">•</span>
+          <a href="#">Constitution</a>
+          <span class="sep">•</span>
+          <a href="#">Sitemap</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- MODAL 1: LIVE INTERACTIVE SCORECARD POPUP      -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="scorecardModal" role="dialog" aria-modal="true" aria-labelledby="modalMatchTitle">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="badge red"><span class="pulse-red"></span> LIVE SCORECARD</span>
+          <h3 id="modalMatchTitle">Virudhunagar Strikers vs Sivakasi Super Kings</h3>
+          <p class="modal-subtitle">Virudhunagar Premier League 2026 • Grand Final • District Sports Complex Ground</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('scorecardModal')" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-nav-tabs">
+        <button class="modal-tab-btn active" onclick="switchModalTab('summary')">Match Summary</button>
+        <button class="modal-tab-btn" onclick="switchModalTab('scorecard')">Full Scorecard</button>
+        <button class="modal-tab-btn" onclick="switchModalTab('commentary')">Ball-by-Ball (Over 19)</button>
+        <button class="modal-tab-btn" onclick="switchModalTab('teams')">Playing XI</button>
+      </div>
+
+      <div class="modal-body" id="modalScorecardContent">
+        <!-- Tab 1: Summary -->
+        <div class="m-tab-pane active" id="pane-summary">
+          <div class="score-summary-grid">
+            <div class="summary-team-box winner-look">
+              <div class="st-head">
+                <span class="tag">Chasing Target: 163</span>
+                <h4>Virudhunagar Strikers</h4>
+              </div>
+              <div class="st-score">
+                <span class="big-score">164/5</span>
+                <span class="overs-str">(18.2 / 20.0 Overs)</span>
+              </div>
+              <div class="st-rates">
+                <span>CRR: <strong>8.95</strong></span>
+                <span>Req: <strong>2 runs from 4 balls</strong></span>
+              </div>
+            </div>
+
+            <div class="summary-team-box">
+              <div class="st-head">
+                <span class="tag">1st Innings</span>
+                <h4>Sivakasi Super Kings</h4>
+              </div>
+              <div class="st-score">
+                <span class="big-score">162/8</span>
+                <span class="overs-str">(20.0 Overs)</span>
+              </div>
+              <div class="st-rates">
+                <span>Run Rate: <strong>8.10</strong></span>
+                <span>Top Scorer: M. Anandhan 54 (39)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="crease-live-box">
+            <h4><i class="fa-solid fa-person-running text-gold"></i> Currently at the Crease</h4>
+            <div class="table-responsive">
+              <table class="mini-table">
+                <thead>
+                  <tr>
+                    <th>Batter</th>
+                    <th>R</th>
+                    <th>B</th>
+                    <th>4s</th>
+                    <th>6s</th>
+                    <th>SR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>R. Saravanan*</strong></td>
+                    <td class="text-bold">58</td>
+                    <td>34</td>
+                    <td>6</td>
+                    <td>2</td>
+                    <td>170.58</td>
+                  </tr>
+                  <tr>
+                    <td><strong>K. Ganesan</strong></td>
+                    <td class="text-bold">14</td>
+                    <td>8</td>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>175.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 class="mt-3"><i class="fa-solid fa-baseball text-red"></i> Current Bowler</h4>
+            <div class="table-responsive">
+              <table class="mini-table">
+                <thead>
+                  <tr>
+                    <th>Bowler</th>
+                    <th>O</th>
+                    <th>M</th>
+                    <th>R</th>
+                    <th>W</th>
+                    <th>Econ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>M. Vignesh</strong></td>
+                    <td>3.2</td>
+                    <td>0</td>
+                    <td>28</td>
+                    <td class="text-bold text-red">2</td>
+                    <td>8.40</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Full Scorecard -->
+        <div class="m-tab-pane" id="pane-scorecard">
+          <h4>Virudhunagar Strikers Innings (164/5)</h4>
+          <table class="leader-table">
+            <thead>
+              <tr>
+                <th>Batter</th>
+                <th>Dismissal</th>
+                <th class="text-center">R</th>
+                <th class="text-center">B</th>
+                <th class="text-center">4s</th>
+                <th class="text-center">6s</th>
+                <th class="text-right">SR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>P. Muthukumar</strong></td>
+                <td>c Karthik b M. Vignesh</td>
+                <td class="text-center">24</td>
+                <td class="text-center">18</td>
+                <td class="text-center">4</td>
+                <td class="text-center">0</td>
+                <td class="text-right">133.33</td>
+              </tr>
+              <tr>
+                <td><strong>A. Dinesh</strong></td>
+                <td>b Praveen Kumar</td>
+                <td class="text-center">18</td>
+                <td class="text-center">14</td>
+                <td class="text-center">2</td>
+                <td class="text-center">1</td>
+                <td class="text-right">128.57</td>
+              </tr>
+              <tr>
+                <td><strong>R. Saravanan*</strong></td>
+                <td>not out</td>
+                <td class="text-center text-bold text-gold">58</td>
+                <td class="text-center">34</td>
+                <td class="text-center">6</td>
+                <td class="text-center">2</td>
+                <td class="text-right">170.58</td>
+              </tr>
+              <tr>
+                <td><strong>S. Balaji (wk)</strong></td>
+                <td>lbw b Aravind</td>
+                <td class="text-center">31</td>
+                <td class="text-center">22</td>
+                <td class="text-center">3</td>
+                <td class="text-center">1</td>
+                <td class="text-right">140.91</td>
+              </tr>
+              <tr>
+                <td><strong>T. Manikandan (c)</strong></td>
+                <td>c &amp; b M. Vignesh</td>
+                <td class="text-center">12</td>
+                <td class="text-center">9</td>
+                <td class="text-center">1</td>
+                <td class="text-center">0</td>
+                <td class="text-right">133.33</td>
+              </tr>
+              <tr>
+                <td><strong>K. Ganesan</strong></td>
+                <td>not out</td>
+                <td class="text-center">14</td>
+                <td class="text-center">8</td>
+                <td class="text-center">1</td>
+                <td class="text-center">1</td>
+                <td class="text-right">175.00</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="mt-2 text-muted"><small>Extras: 7 (w 4, nb 1, b 0, lb 2) • Total: 164/5 (18.2 Ov)</small></p>
+        </div>
+
+        <!-- Tab 3: Commentary -->
+        <div class="m-tab-pane" id="pane-commentary">
+          <div class="commentary-feed">
+            <div class="comm-ball">
+              <span class="ball-num gold-bg">18.2</span>
+              <div class="ball-desc">
+                <strong>TWO RUNS!</strong> Clipped off the pads towards deep midwicket. Rapid running between wickets as Saravanan dives in! Virudhunagar Strikers need just 2 runs to win!
+              </div>
+            </div>
+            <div class="comm-ball">
+              <span class="ball-num red-bg">18.1</span>
+              <div class="ball-desc">
+                <strong>FOUR!</strong> Beautiful cover drive through extra cover! Saravanan leans forward and creams it past mid-off with absolute perfection.
+              </div>
+            </div>
+            <div class="comm-ball">
+              <span class="ball-num">17.6</span>
+              <div class="ball-desc">
+                Single taken to long on. Keeps the strike. 8 runs from the 18th over.
+              </div>
+            </div>
+            <div class="comm-ball">
+              <span class="ball-num gold-bg">17.5</span>
+              <div class="ball-desc">
+                <strong>SIX!</strong> Smoked into the grandstand! Clean strike over wide long-on by Ganesan! What a time to unleash!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Playing XI -->
+        <div class="m-tab-pane" id="pane-teams">
+          <div class="teams-xi-grid">
+            <div class="xi-card">
+              <h4>Virudhunagar Strikers XI</h4>
+              <ol class="xi-list">
+                <li>P. Muthukumar</li>
+                <li>A. Dinesh</li>
+                <li>R. Saravanan</li>
+                <li>S. Balaji (WK)</li>
+                <li>T. Manikandan (C)</li>
+                <li>K. Ganesan</li>
+                <li>M. Ramesh</li>
+                <li>V. Ashok</li>
+                <li>K. Praveen Kumar</li>
+                <li>S. Balamurugan</li>
+                <li>N. Chandran</li>
+              </ol>
+            </div>
+            <div class="xi-card">
+              <h4>Sivakasi Super Kings XI</h4>
+              <ol class="xi-list">
+                <li>M. Anandhan</li>
+                <li>C. Rajesh</li>
+                <li>S. Karthik Raja (C &amp; WK)</li>
+                <li>D. Aravind</li>
+                <li>G. Vigneshwaran</li>
+                <li>M. Vignesh</li>
+                <li>K. Santhosh</li>
+                <li>R. Jayakumar</li>
+                <li>P. Marimuthu</li>
+                <li>T. Nagarajan</li>
+                <li>L. Vetrivel</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-primary" onclick="closeModal('scorecardModal')">Close</button>
+        <button class="btn btn-gold" onclick="alert('Scorecard downloaded as official PDF summary!')">
+          <i class="fa-solid fa-file-pdf"></i> Download Official Scoresheet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 2: PLAYER / CLUB REGISTRATION FORM       -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="registrationModal" role="dialog" aria-modal="true" aria-labelledby="modalRegTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="badge gold">CFVD &amp; TNCA ENROLLMENT</span>
+          <h3 id="modalRegTitle">Season 2026-27 Registration Portal</h3>
+          <p class="modal-subtitle">Official registration for players, clubs, coaches, and match officials</p>
+        </div>
+        <button class="modal-close" onclick="closeModal('registrationModal')" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="registrationForm" onsubmit="handleRegistrationSubmit(event)">
+          <div class="form-group">
+            <label for="reg_type">Registration Category *</label>
+            <select id="reg_type" required>
+              <option value="player_senior">Senior Player (District 1st &amp; 2nd Division)</option>
+              <option value="player_junior">Junior Player (Under-19 / Under-16 / U-14)</option>
+              <option value="academy_admission">District Academy Coaching Enrollment</option>
+              <option value="club_affiliation">New Cricket Club Affiliation</option>
+              <option value="umpire_scorer">Umpire / Scorer Accreditation</option>
+            </select>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="reg_fullname">Full Name (as in Aadhaar/Birth Cert) *</label>
+              <input type="text" id="reg_fullname" required placeholder="e.g. K. Praveen Kumar">
+            </div>
+            <div class="form-group">
+              <label for="reg_dob">Date of Birth *</label>
+              <input type="date" id="reg_dob" required>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="reg_taluk">Taluk / Area *</label>
+              <select id="reg_taluk" required>
+                <option value="Virudhunagar">Virudhunagar</option>
+                <option value="Sivakasi">Sivakasi</option>
+                <option value="Rajapalayam">Rajapalayam</option>
+                <option value="Srivilliputhur">Srivilliputhur</option>
+                <option value="Aruppukottai">Aruppukottai</option>
+                <option value="Sattur">Sattur</option>
+                <option value="Watrap">Watrap</option>
+                <option value="Kariapatti">Kariapatti</option>
+                <option value="Tiruchuli">Tiruchuli</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="reg_speciality">Primary Specialization *</label>
+              <select id="reg_speciality" required>
+                <option value="Top Order Batter">Top Order Batter</option>
+                <option value="Middle Order Batter">Middle Order Batter</option>
+                <option value="Wicketkeeper Batter">Wicketkeeper Batter</option>
+                <option value="Pace / Fast Bowler">Fast / Medium Pace Bowler</option>
+                <option value="Spin Bowler">Spin Bowler (Off/Leg/Orthodox)</option>
+                <option value="All-Rounder">All-Rounder</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="reg_mobile">Contact Mobile *</label>
+              <input type="tel" id="reg_mobile" required placeholder="+91 94430 00000">
+            </div>
+            <div class="form-group">
+              <label for="reg_tnca_id">TNCA ID (if already enrolled)</label>
+              <input type="text" id="reg_tnca_id" placeholder="e.g. TNCA-VRD-2025-089">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" required>
+              <span>I hereby certify that all information submitted is true to the best of my knowledge and I agree to abide by the rules of Cricket Federation of Virudhunagar District &amp; TNCA.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-gold btn-block btn-lg">
+            <i class="fa-solid fa-check-circle"></i> Submit Application &amp; Generate Token
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 3: IMAGE LIGHTBOX PREVIEW                -->
+  <!-- ============================================== -->
+  <div class="modal-overlay" id="imageModal" role="dialog" aria-modal="true" onclick="closeModal('imageModal')">
+    <div class="image-modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close light" onclick="closeModal('imageModal')">&times;</button>
+      <img id="lightboxImg" src="" alt="Gallery Preview" class="lightbox-img">
+      <div id="lightboxCaption" class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script src="script.js?v=bright_bg_v6"></script>
+</body>
+</html>
