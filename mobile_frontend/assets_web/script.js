@@ -30,7 +30,7 @@ function initThemeToggle() {
   const toggleBtn = document.getElementById('themeToggleBtn');
   if (!toggleBtn) return;
 
-  const currentTheme = localStorage.getItem('cfvd_theme') || 'dark';
+  const currentTheme = localStorage.getItem('cfvd_theme') || 'light';
   if (currentTheme === 'light') {
     document.body.classList.remove('theme-dark');
     document.body.classList.add('theme-light');
@@ -1150,20 +1150,17 @@ function initOfficialsModule() {
 function handleOfficialRegisterSubmit(e) {
   e.preventDefault();
   const name = document.getElementById('off_name').value;
-  const role = document.getElementById('off_role').value;
-  const grade = document.getElementById('off_grade').value;
-  const taluk = document.getElementById('off_taluk').value;
+  const email = document.getElementById('off_email').value;
 
   registeredOfficials.push({
     id: `OFF-${Math.floor(400 + Math.random() * 500)}`,
     name,
-    role,
-    grade,
-    taluk,
+    email,
+    role: 'scorer',
     matches: 0
   });
 
-  alert(`✓ Official Registered Successfully!\n\nName: ${name}\nRole: ${role.toUpperCase()}\nGrade: ${grade}\nTaluk: ${taluk}\nAccredited on District Panel`);
+  alert(`✓ Scorer Registered Successfully!\n\nName: ${name}\nEmail: ${email}\n\nYour registration will be verified by the admin.`);
   initOfficialsModule();
   closeModal('officialsRegisterModal');
   e.target.reset();
@@ -1424,7 +1421,7 @@ function initFloodlights() {
   const toggleBtn = document.getElementById('floodlightToggleBtn');
   if (!toggleBtn) return;
 
-  let currentMode = localStorage.getItem('cfvd_floodlights') || 'on';
+  let currentMode = localStorage.getItem('cfvd_floodlights') || 'off';
   applyFloodlightMode(currentMode);
 
   toggleBtn.addEventListener('click', () => {
@@ -2525,7 +2522,7 @@ function updatePlayerHeaderUI() {
     const firstName = session.playerName.split(' ')[0];
     if (navText) navText.innerHTML = `${session.playerName} <span class="badge green" style="font-size:0.65rem; padding:1px 5px; margin-left:4px;">Dashboard</span>`;
     if (headerPlayerText) headerPlayerText.innerHTML = `${session.playerName} <span class="badge green" style="font-size:0.65rem; padding:1px 5px; margin-left:4px;">Dashboard</span>`;
-    if (headerRegBtnLabel) headerRegBtnLabel.innerHTML = `Registration &amp; Login <span style="font-size:0.75rem; color:#4ade80;">(${firstName})</span>`;
+    if (headerRegBtnLabel) headerRegBtnLabel.innerHTML = `Registration <span style="font-size:0.75rem; color:#4ade80;">(${firstName})</span>`;
     if (headerBtnLabel) headerBtnLabel.textContent = session.playerName;
     if (headerBtn) {
       headerBtn.classList.remove('btn-outline-gold');
@@ -2534,7 +2531,7 @@ function updatePlayerHeaderUI() {
   } else {
     if (navText) navText.textContent = 'Player Login';
     if (headerPlayerText) headerPlayerText.textContent = 'Player Login';
-    if (headerRegBtnLabel) headerRegBtnLabel.textContent = 'Registration & Login';
+    if (headerRegBtnLabel) headerRegBtnLabel.textContent = 'Registration';
     if (headerBtnLabel) headerBtnLabel.textContent = 'Player Login';
     if (headerBtn) {
       headerBtn.classList.remove('btn-gold');
@@ -3262,6 +3259,17 @@ function navigateToRoute(route, event) {
 
   closeAllDropdowns();
 
+  // If React Native Scorer Module interception is requested
+  if (route.includes('scorer-login')) {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_SCORER_MODULE' }));
+      return;
+    } else {
+      window.parent.postMessage({ type: 'OPEN_SCORER_MODULE' }, '*');
+      return;
+    }
+  }
+
   // Parse path & params
   let targetRoute = route || '/';
   if (!targetRoute.startsWith('/')) {
@@ -3432,6 +3440,18 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   }
 
   document.title = pageTitle;
+
+  // Hide header and footer if we are on scorer routes for a clean, isolated app look
+  const footer = document.querySelector('.main-footer');
+  const header = document.querySelector('.main-header');
+  const isScorerRoute = path === '/scorer-login' || path === '/scorer';
+  
+  if (footer) {
+    footer.style.display = isScorerRoute ? 'none' : 'block';
+  }
+  if (header) {
+    header.style.display = isScorerRoute ? 'none' : 'block';
+  }
 
   // Route-specific screen actions
   if (path === '/team-registration') {
@@ -3667,7 +3687,7 @@ function updateAuthHeaderUI() {
   const scorerSession = getActiveScorerSession();
 
   if (playerSession) {
-    if (loginDropdown) loginDropdown.style.display = 'none';
+    if (loginDropdown) loginDropdown.style.display = 'inline-flex';
     if (userSessionDropdown) userSessionDropdown.style.display = 'inline-flex';
     if (userSessionLabel) userSessionLabel.textContent = playerSession.playerName.split(' ')[0] + ' (Player)';
     if (userDashLink) {
@@ -3675,7 +3695,7 @@ function updateAuthHeaderUI() {
       userDashLink.onclick = (e) => navigateToRoute('/player', e);
     }
   } else if (teamSession) {
-    if (loginDropdown) loginDropdown.style.display = 'none';
+    if (loginDropdown) loginDropdown.style.display = 'inline-flex';
     if (userSessionDropdown) userSessionDropdown.style.display = 'inline-flex';
     if (userSessionLabel) userSessionLabel.textContent = (teamSession.teamName || 'Team').split(' ')[0] + ' (Team)';
     if (userDashLink) {
@@ -3683,7 +3703,7 @@ function updateAuthHeaderUI() {
       userDashLink.onclick = (e) => navigateToRoute('/team', e);
     }
   } else if (isAdmin) {
-    if (loginDropdown) loginDropdown.style.display = 'none';
+    if (loginDropdown) loginDropdown.style.display = 'inline-flex';
     if (userSessionDropdown) userSessionDropdown.style.display = 'inline-flex';
     if (userSessionLabel) userSessionLabel.textContent = 'Administrator';
     if (userDashLink) {
@@ -3691,7 +3711,7 @@ function updateAuthHeaderUI() {
       userDashLink.onclick = (e) => navigateToRoute('/admin', e);
     }
   } else if (scorerSession) {
-    if (loginDropdown) loginDropdown.style.display = 'none';
+    if (loginDropdown) loginDropdown.style.display = 'inline-flex';
     if (userSessionDropdown) userSessionDropdown.style.display = 'inline-flex';
     if (userSessionLabel) userSessionLabel.textContent = scorerSession.name + ' (Scorer)';
     if (userDashLink) {
@@ -4852,17 +4872,19 @@ function showAdminNotification(message) {
 function handleScorerLoginSubmit(e) {
   e.preventDefault();
 
-  const sel = document.getElementById('scorerLoginSelect');
-  const pass = document.getElementById('scorerLoginPasskey');
+  const nameInput = document.getElementById('scorerLoginName');
+  const emailInput = document.getElementById('scorerLoginEmail');
+  const otpInput = document.getElementById('scorerLoginOTP');
   const alertBox = document.getElementById('pageScorerLoginAlert');
 
-  const scorerIdentifier = sel ? sel.value.trim() : '';
-  const password = pass ? pass.value.trim() : '';
+  const scorerNameStr = nameInput ? nameInput.value.trim() : '';
+  const scorerEmailStr = emailInput ? emailInput.value.trim() : '';
+  const otpStr = otpInput ? otpInput.value.trim() : '';
 
-  if (password !== 'Scorer@2026') {
+  if (otpStr !== '1234') {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid passkey. Default: <code>Scorer@2026</code>.</div>';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid OTP. Default for testing is <code>1234</code>.</div>';
       alertBox.style.display = 'flex';
     }
     return;
@@ -4871,9 +4893,8 @@ function handleScorerLoginSubmit(e) {
   // Verify scorer approval status against database
   const scorers = getAllScorers();
   const matched = scorers.find(s =>
-    s.scorerName.toLowerCase() === scorerIdentifier.toLowerCase() ||
-    s.scorerId.toLowerCase() === scorerIdentifier.toLowerCase() ||
-    s.email.toLowerCase() === scorerIdentifier.toLowerCase()
+    s.scorerName.toLowerCase() === scorerNameStr.toLowerCase() &&
+    s.email.toLowerCase() === scorerEmailStr.toLowerCase()
   );
 
   if (!matched) {

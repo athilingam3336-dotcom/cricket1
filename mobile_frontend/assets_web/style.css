@@ -1319,7 +1319,7 @@ body.theme-light .name-sub {
   align-items: center;
   justify-content: center;
   height: 100%;
-  margin: 0 0.85rem;
+  margin: 0 auto;
   flex-shrink: 0;
 }
 
@@ -4556,6 +4556,16 @@ body.theme-light .modal-header h3 {
 .modal-close:hover {
   background: var(--cricket-red);
   border-color: var(--cricket-red);
+  color: #fff;
+}
+
+body.theme-light .modal-close {
+  color: #000;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.theme-light .modal-close:hover {
+  color: #fff;
 }
 
 .modal-nav-tabs {
@@ -7101,7 +7111,7 @@ body.theme-light .page-card-container {
 
 /* Dedicated Login Box */
 .page-login-box {
-  max-width: 640px;
+  max-width: 450px;
   margin: 0 auto;
   background: var(--bg-card);
   border: 1.5px solid var(--gold-border-bright);

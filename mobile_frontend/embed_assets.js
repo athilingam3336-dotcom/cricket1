@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 let htmlContent = fs.readFileSync('assets_web/inlineHtml.ts', 'utf8');
+let bundledHtmlContent = fs.readFileSync('assets_web/bundled.html', 'utf8');
 
 const assetsDir = path.join(__dirname, '../assets');
 
@@ -23,6 +24,7 @@ for (const [assetPath, mimeType] of Object.entries(filesToEmbed)) {
         // Use a global regular expression to replace all occurrences
         const regex = new RegExp(assetPath.replace(/\//g, '\\/') + '(\\?v=[a-zA-Z0-9_]+)?', 'g');
         htmlContent = htmlContent.replace(regex, dataUri);
+        bundledHtmlContent = bundledHtmlContent.replace(regex, dataUri);
         console.log(`Embedded ${assetPath}`);
     } else {
         console.log(`Warning: ${filePath} not found.`);
@@ -31,3 +33,6 @@ for (const [assetPath, mimeType] of Object.entries(filesToEmbed)) {
 
 fs.writeFileSync('assets_web/inlineHtml.ts', htmlContent);
 console.log('Successfully updated inlineHtml.ts');
+
+fs.writeFileSync('public/bundled.html', bundledHtmlContent);
+console.log('Successfully updated public/bundled.html');

@@ -21,7 +21,7 @@
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css?v=bright_top_v8">
 </head>
-<body class="theme-dark">
+<body class="theme-light floodlights-off">
 
   <!-- Fixed Stadium & Transparent Watermark Emblem Background -->
   <div class="cfvd-site-background" aria-hidden="true">
@@ -163,11 +163,6 @@
             </ul>
           </li>
 
-          <li class="nav-item">
-            <a href="/admin" onclick="navigateToRoute('/admin', event)" class="nav-link" id="navLinkAdmin">
-              <i class="fa-solid fa-shield-halved"></i> Admin Console
-            </a>
-          </li>
         </ul>
       </nav>
 
@@ -182,7 +177,7 @@
             <li><a href="/team-registration" onclick="navigateToRoute('/team-registration', event); closeAllDropdowns();"><i class="fa-solid fa-users-line text-gold"></i> <strong>Team Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">15 Players Squad Roster</small></a></li>
             <li><a href="/player-registration" onclick="navigateToRoute('/player-registration', event); closeAllDropdowns();"><i class="fa-solid fa-user-plus text-gold"></i> <strong>Player Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">District Official Enrollment</small></a></li>
             <li><a href="javascript:void(0)" onclick="openInstitutionModal(); closeAllDropdowns();"><i class="fa-solid fa-building-columns"></i> <strong>Institution Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Clubs, Colleges, Schools</small></a></li>
-            <li><a href="javascript:void(0)" onclick="openOfficialsRegisterModal(); closeAllDropdowns();"><i class="fa-solid fa-clipboard-user"></i> <strong>Officials Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Umpires, Scorers, Referees</small></a></li>
+            <li><a href="javascript:void(0)" onclick="openOfficialsRegisterModal(); closeAllDropdowns();"><i class="fa-solid fa-clipboard-user"></i> <strong>Scorer Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Official Digital &amp; Paper Scorer</small></a></li>
             <li style="border-top:1px solid rgba(212,175,55,0.25); margin:0.35rem 0;"></li>
             <li><a href="/team-registration?tab=status" onclick="navigateToRoute('/team-registration?tab=status', event); closeAllDropdowns();"><i class="fa-solid fa-magnifying-glass"></i> Check Team Registration Status</a></li>
           </ul>
@@ -639,8 +634,8 @@
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
             <div>
               <span class="badge gold">SERIAL NO 7: OFFICIALS ACCREDITATION</span>
-              <h3 style="color:var(--text-white); margin-top:0.3rem;">Register Match Officials (Umpires, Scorers &amp; Referees)</h3>
-              <p style="color:var(--text-light); font-size:0.85rem;">Step 7 in Federation operations: Register match official before assigning to match fixtures</p>
+              <h3 style="color:var(--text-white); margin-top:0.3rem;">Register Match Scorer</h3>
+              <p style="color:var(--text-light); font-size:0.85rem;">Step 7 in Federation operations: Register match scorer before assigning to match fixtures</p>
             </div>
             <button class="btn btn-gold btn-sm" onclick="openOfficialsRegisterModal()">
               <i class="fa-solid fa-user-plus"></i> Register New Official
@@ -2839,31 +2834,14 @@
   <!-- ======================================================================= -->
   <!-- PAGE 10: SCORER LOGIN (DEDICATED FULL PAGE / ROUTE)                     -->
   <!-- ======================================================================= -->
-  <div id="page-scorer-login" class="app-page" style="display:none;">
-    <div class="page-header-banner">
-      <div class="container">
-        <div class="page-header-nav-row">
-          <div class="page-breadcrumbs">
-            <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span>Login</span>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span class="current">Scorer Login</span>
-          </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
-          </button>
-        </div>
-        <h1 class="page-main-title">
-          <i class="fa-solid fa-satellite-dish text-gold"></i> Match Day Official Scorer Sign In
-        </h1>
-        <p class="page-main-subtitle">
-          Sign in to authenticate as official match scorer and record ball-by-ball match live events.
-        </p>
-      </div>
-    </div>
+  <div id="page-scorer-login" class="app-page" style="display:none; height: calc(100vh - 86px); display: flex; align-items: center; justify-content: center; padding-bottom: 2rem; position: relative;">
+    
+    <!-- Absolute back button -->
+    <button class="btn btn-outline-gold" onclick="navigateToRoute('/', event)" style="position: absolute; top: 2rem; left: 2rem;">
+      <i class="fa-solid fa-arrow-left"></i> Back to Main Site
+    </button>
 
-    <div class="container page-content-wrapper">
+    <div class="container page-content-wrapper" style="padding-top: 0; padding-bottom: 0;">
       <div class="page-login-box">
         <div class="player-login-intro-box">
           <div class="player-login-crest"><i class="fa-solid fa-satellite-dish text-gold"></i></div>
@@ -2881,21 +2859,27 @@
 
         <form id="pageScorerLoginForm" onsubmit="handleScorerLoginSubmit(event)" style="margin-top:1.2rem;">
           <div class="form-group" style="margin-bottom:1.2rem;">
-            <label for="scorerLoginSelect" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-user-check"></i> Select Certified Scorer <span class="required" style="color:#ef4444;">*</span>
+            <label for="scorerLoginName" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+              <i class="fa-solid fa-user"></i> Scorer Name <span class="required" style="color:#ef4444;">*</span>
             </label>
-            <select id="scorerLoginSelect" class="form-control" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
-              <option value="K. Sundararajan">K. Sundararajan (BCCI Level 1 Digital Scorer)</option>
-              <option value="M. Venkatesh">M. Venkatesh (District Panel Scorer)</option>
-              <option value="S. Pitchaimuthu">S. Pitchaimuthu (Collegiate Scorer)</option>
-            </select>
+            <input type="text" id="scorerLoginName" class="form-control" placeholder="e.g. S. Ramesh" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+          </div>
+
+          <div class="form-group" style="margin-bottom:1.2rem;">
+            <label for="scorerLoginEmail" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+              <i class="fa-solid fa-envelope"></i> Scorer Email <span class="required" style="color:#ef4444;">*</span>
+            </label>
+            <input type="email" id="scorerLoginEmail" class="form-control" placeholder="e.g. ramesh@example.com" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
           </div>
 
           <div class="form-group" style="margin-bottom:1.5rem;">
-            <label for="scorerLoginPasskey" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-key"></i> Scorer Passkey (Default: Scorer@2026) <span class="required" style="color:#ef4444;">*</span>
+            <label for="scorerLoginOTP" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+              <i class="fa-solid fa-lock"></i> Verification OTP (Default: 1234) <span class="required" style="color:#ef4444;">*</span>
             </label>
-            <input type="password" id="scorerLoginPasskey" class="form-control" value="Scorer@2026" required style="width:100%; height:44px;">
+            <input type="text" id="scorerLoginOTP" class="form-control" placeholder="Enter 4-digit OTP" value="1234" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+            <div style="text-align: right; margin-top: 0.5rem;">
+              <a href="#" style="color:var(--text-muted); font-size:0.8rem; text-decoration:underline;">Resend OTP?</a>
+            </div>
           </div>
 
           <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
@@ -3342,56 +3326,30 @@
   </div>
 
   <!-- ======================================================================= -->
-  <!-- MODAL 4: OFFICIALS REGISTRATION MODAL                                   -->
+  <!-- MODAL 4: SCORER REGISTRATION MODAL                                   -->
   <!-- ======================================================================= -->
   <div class="modal-overlay" id="officialsRegisterModal" role="dialog" aria-modal="true">
     <div class="modal-card">
       <div class="modal-header">
         <div>
-          <span class="badge gold">MATCH OFFICIALS PANEL</span>
-          <h3>Register Match Official (Umpire, Scorer, Referee)</h3>
-          <p class="modal-subtitle">Enroll for officiating in official district cricket matches</p>
+          <span class="badge gold">MATCH SCORERS PANEL</span>
+          <h3>Register Match Scorer</h3>
+          <p class="modal-subtitle">Enroll as a scorer. Admin will verify your registration.</p>
         </div>
         <button class="modal-close" onclick="closeModal('officialsRegisterModal')">&times;</button>
       </div>
       <div class="modal-body">
         <form onsubmit="handleOfficialRegisterSubmit(event)">
           <div class="form-group">
-            <label for="off_name">Official Full Name *</label>
-            <input type="text" id="off_name" required placeholder="e.g. Thiru. N. Selvakumar">
-          </div>
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="off_role">Officiating Role *</label>
-              <select id="off_role" required>
-                <option value="umpire">On-Field Umpire</option>
-                <option value="scorer">Official Digital &amp; Paper Scorer</option>
-                <option value="referee">Match Referee &amp; Commissioner</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="off_grade">Accreditation Grade *</label>
-              <select id="off_grade" required>
-                <option value="Panel A (Senior First-Class)">Panel A (Senior First-Class)</option>
-                <option value="Senior Panel">Senior Panel</option>
-                <option value="Level 2 Certified">Level 2 Certified</option>
-                <option value="Level 1 Certified">Level 1 Certified</option>
-              </select>
-            </div>
+            <label for="off_name">Scorer Name *</label>
+            <input type="text" id="off_name" required placeholder="e.g. S. Ramesh">
           </div>
           <div class="form-group">
-            <label for="off_taluk">Resident Taluk *</label>
-            <select id="off_taluk" required>
-              <option value="Virudhunagar">Virudhunagar</option>
-              <option value="Sivakasi">Sivakasi</option>
-              <option value="Rajapalayam">Rajapalayam</option>
-              <option value="Srivilliputhur">Srivilliputhur</option>
-              <option value="Aruppukottai">Aruppukottai</option>
-              <option value="Sattur">Sattur</option>
-            </select>
+            <label for="off_email">Scorer Email *</label>
+            <input type="email" id="off_email" required placeholder="e.g. ramesh@example.com">
           </div>
           <button type="submit" class="btn btn-gold btn-block btn-lg">
-            <i class="fa-solid fa-user-check"></i> Register Official into District Panel
+            <i class="fa-solid fa-user-check"></i> Register Scorer
           </button>
         </form>
       </div>
