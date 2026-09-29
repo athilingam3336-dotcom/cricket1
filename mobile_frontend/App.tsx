@@ -11,7 +11,7 @@ export default function App() {
         {/* @ts-ignore */}
         <iframe
           srcDoc={INLINE_HTML}
-          style={styles.iframe}
+          style={styles.iframe as any}
           title="Cricket Federation Portal"
         />
       </View>
@@ -54,8 +54,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderWidth: 0,
-    borderStyle: 'none',
-    minHeight: '100vh',
     backgroundColor: '#020612',
   },
 });
