@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
 import { assignedMatches } from '../../data/scorerMockData';
+import SharedFooter from '../../components/scorer/SharedFooter';
 
 export default function ScorecardScreen() {
   const { navigate, params } = useScorerNavigation();
@@ -19,6 +20,7 @@ export default function ScorecardScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.contentWrapper}>
         {/* Match Result Banner */}
         {match.result && (
           <View style={styles.resultBanner}>
@@ -43,7 +45,7 @@ export default function ScorecardScreen() {
           </View>
           <View style={styles.tableRow}>
              <View style={styles.colName}>
-               <Text style={styles.playerName}>Batter 1</Text>
+               <Text style={styles.playerName}>Suresh Kumar</Text>
                <Text style={styles.dismissal}>not out</Text>
              </View>
              <Text style={[styles.cell, styles.colNum]}>42</Text>
@@ -54,8 +56,8 @@ export default function ScorecardScreen() {
           </View>
           <View style={styles.tableRow}>
              <View style={styles.colName}>
-               <Text style={styles.playerName}>Batter 2</Text>
-               <Text style={styles.dismissal}>b Bowler 1</Text>
+               <Text style={styles.playerName}>Muthu Raj</Text>
+               <Text style={styles.dismissal}>b Karthik N</Text>
              </View>
              <Text style={[styles.cell, styles.colNum]}>12</Text>
              <Text style={[styles.cell, styles.colNum]}>10</Text>
@@ -65,7 +67,7 @@ export default function ScorecardScreen() {
           </View>
           <View style={styles.tableRow}>
              <View style={styles.colName}>
-               <Text style={styles.playerName}>Batter 3</Text>
+               <Text style={styles.playerName}>Vijay</Text>
                <Text style={styles.dismissal}>not out</Text>
              </View>
              <Text style={[styles.cell, styles.colNum]}>18</Text>
@@ -92,7 +94,7 @@ export default function ScorecardScreen() {
              <Text style={[styles.cell, styles.colNum]}>ECON</Text>
           </View>
           <View style={styles.tableRow}>
-             <Text style={[styles.cell, styles.colName, styles.playerName]}>Bowler 1</Text>
+             <Text style={[styles.cell, styles.colName, styles.playerName]}>Karthik N</Text>
              <Text style={[styles.cell, styles.colNum]}>3.2</Text>
              <Text style={[styles.cell, styles.colNum]}>0</Text>
              <Text style={[styles.cell, styles.colNum]}>24</Text>
@@ -100,7 +102,7 @@ export default function ScorecardScreen() {
              <Text style={[styles.cell, styles.colNum]}>7.20</Text>
           </View>
           <View style={styles.tableRow}>
-             <Text style={[styles.cell, styles.colName, styles.playerName]}>Bowler 2</Text>
+             <Text style={[styles.cell, styles.colName, styles.playerName]}>Saravanan</Text>
              <Text style={[styles.cell, styles.colNum]}>4.0</Text>
              <Text style={[styles.cell, styles.colNum]}>1</Text>
              <Text style={[styles.cell, styles.colNum]}>18</Text>
@@ -114,34 +116,37 @@ export default function ScorecardScreen() {
             <Text style={styles.actionBtnText}>Back to Live Scoring</Text>
           </TouchableOpacity>
         )}
+        </View>
+        <SharedFooter />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020612' },
-  header: { padding: 16, backgroundColor: 'rgba(5, 13, 34, 0.92)', borderBottomWidth: 1, borderBottomColor: 'rgba(212, 175, 55, 0.35)' },
-  backBtn: { marginBottom: 10 },
-  backText: { color: '#D4AF37', fontWeight: 'bold' },
-  title: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
-  subtitle: { color: '#9bb0cf', fontSize: 12, marginTop: 4 },
-  scroll: { padding: 16, paddingBottom: 40 },
-  resultBanner: { backgroundColor: 'rgba(21, 128, 61, 0.2)', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#15803d', marginBottom: 16, alignItems: 'center' },
-  resultText: { color: '#15803d', fontWeight: 'bold' },
-  inningsContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0a1838', padding: 12, borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  inningsTitle: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
-  inningsScore: { color: '#D4AF37', fontSize: 16, fontWeight: 'bold' },
-  table: { backgroundColor: 'rgba(10, 24, 56, 0.92)', borderRadius: 8, borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.35)', overflow: 'hidden' },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', paddingVertical: 10, paddingHorizontal: 12, alignItems: 'center' },
-  tableHeader: { backgroundColor: 'rgba(212, 175, 55, 0.1)' },
-  cell: { color: '#FFF', fontSize: 12 },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  header: { padding: 16, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  backBtn: { marginBottom: 12, alignSelf: 'flex-start', padding: 10, paddingHorizontal: 16, backgroundColor: '#fefce8', borderRadius: 4, borderWidth: 1, borderColor: '#eab308' },
+  backText: { color: '#b45309', fontWeight: 'bold', fontSize: 13 },
+  title: { color: '#1e293b', fontSize: 20, fontWeight: 'bold' },
+  subtitle: { color: '#b45309', fontSize: 13, marginTop: 4, fontWeight: '600' },
+  scroll: { flexGrow: 1 },
+  contentWrapper: { padding: 16, paddingBottom: 40 },
+  resultBanner: { backgroundColor: 'rgba(240, 253, 244, 0.85)', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(187, 247, 208, 0.85)', marginBottom: 16, alignItems: 'center' },
+  resultText: { color: '#16a34a', fontWeight: 'bold', fontSize: 13 },
+  inningsContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 6, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  inningsTitle: { color: '#b45309', fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase' },
+  inningsScore: { color: '#1e293b', fontSize: 16, fontWeight: 'bold' },
+  table: { backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)', paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
+  tableHeader: { backgroundColor: 'rgba(254, 243, 199, 0.65)', borderBottomColor: '#fde68a' },
+  cell: { color: '#334155', fontSize: 12, fontWeight: '600' },
   colName: { flex: 3 },
   colNum: { flex: 1, textAlign: 'center' },
-  playerName: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
-  dismissal: { color: '#9bb0cf', fontSize: 11, fontStyle: 'italic', marginTop: 2 },
-  extrasRow: { padding: 12, backgroundColor: 'rgba(255,255,255,0.02)' },
-  extrasText: { color: '#e6edf8', fontSize: 12, fontWeight: 'bold' },
-  actionBtn: { backgroundColor: '#D4AF37', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 20 },
-  actionBtnText: { color: '#000', fontWeight: 'bold', fontSize: 14 }
+  playerName: { color: '#1e293b', fontWeight: 'bold', fontSize: 14 },
+  dismissal: { color: '#b45309', fontSize: 11, fontStyle: 'italic', marginTop: 2 },
+  extrasRow: { padding: 12, backgroundColor: 'rgba(254, 243, 199, 0.45)' },
+  extrasText: { color: '#b45309', fontSize: 13, fontWeight: 'bold' },
+  actionBtn: { backgroundColor: '#eab308', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 20, shadowColor: '#eab308', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  actionBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 14, letterSpacing: 1, textTransform: 'uppercase' }
 });

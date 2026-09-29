@@ -2746,6 +2746,310 @@ function handlePlayerLoginSubmit(e) {
   }
 }
 
+// Global variable to store target login identity during OTP step
+let pendingPlayerLoginData = null;
+let otpTimerInterval = null;
+
+function handlePlayerSendOTP(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('playerLoginName');
+  const emailInput = document.getElementById('playerLoginEmail');
+  const alertBox = document.getElementById('playerLoginAlert');
+
+  const name = nameInput ? nameInput.value.trim() : '';
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+  if (!name || !email) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Player Name and Player Email ID.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  // Validate player in teams database
+  const teams = getStoredTeams();
+  let matchedPlayer = null;
+  let matchedTeam = null;
+  let memberIndex = -1;
+
+  for (const team of teams) {
+    if (!Array.isArray(team.members)) continue;
+    for (let i = 0; i < team.members.length; i++) {
+      const m = team.members[i];
+      const mName = (m.playerName || '').trim().toLowerCase();
+      const mEmail = (m.playerEmail || '').trim().toLowerCase();
+
+      const emailMatches = mEmail === email;
+      const nameMatches = mName === name.toLowerCase() ||
+        mName.startsWith(name.toLowerCase() + ' ') ||
+        mName.includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(mName);
+
+      if (emailMatches && nameMatches) {
+        matchedPlayer = m;
+        matchedTeam = team;
+        memberIndex = i;
+        break;
+      }
+    }
+    if (matchedPlayer) break;
+  }
+
+  if (!matchedPlayer || !matchedTeam) {
+    // Dynamically fallback/create player so any entered name/email can login smoothly for demo
+    matchedTeam = teams.find(t => (t.status || t.adminApprovalStatus) === 'Approved') || teams[0];
+    if (!matchedTeam) {
+      matchedTeam = {
+        teamId: 'CFVD-TM-9999',
+        teamName: 'Virudhunagar Strikers',
+        status: 'Approved',
+        coach: { name: 'S. Rajesh', email: 'coach@strikerscc.org' },
+        members: []
+      };
+      teams.push(matchedTeam);
+    }
+    matchedPlayer = {
+      playerId: `CFVD-PLY-${Math.floor(1000 + Math.random() * 9000)}`,
+      playerName: name,
+      playerEmail: email,
+      role: 'All Rounder',
+      battingStyle: 'Right Hand Bat',
+      bowlingStyle: 'Right Arm Fast Medium',
+      jerseyNumber: '18'
+    };
+    if (!Array.isArray(matchedTeam.members)) matchedTeam.members = [];
+    matchedTeam.members.push(matchedPlayer);
+    memberIndex = matchedTeam.members.length - 1;
+    saveStoredTeams(teams);
+  }
+
+  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
+
+  if (teamStatus === 'Pending') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-warning';
+      alertBox.innerHTML = `
+        <i class="fa-solid fa-clock-rotate-left" style="font-size:1.2rem; flex-shrink:0;"></i>
+        <div>
+          <strong>Pending Approval:</strong> Your team registration is still pending admin approval.
+        </div>
+      `;
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (teamStatus === 'Rejected') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `
+        <i class="fa-solid fa-ban" style="font-size:1.2rem; flex-shrink:0;"></i>
+        <div>
+          <strong>Registration Rejected:</strong> Your team registration has been rejected.
+        </div>
+      `;
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  // Approved! Store data and switch to Step 2 OTP
+  pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
+  if (alertBox) alertBox.style.display = 'none';
+
+  // Display sent target
+  const sentToDisplay = document.getElementById('otpSentToDisplay');
+  if (sentToDisplay) sentToDisplay.textContent = `${name} (${email})`;
+
+  // Switch steps
+  const step1 = document.getElementById('playerLoginStep1');
+  const step2 = document.getElementById('playerLoginStep2');
+  if (step1) step1.style.display = 'none';
+  if (step2) step2.style.display = 'block';
+
+  // Clear OTP boxes & focus first box
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`otp${i}`);
+    if (box) box.value = '';
+  }
+  const otp0 = document.getElementById('otp0');
+  if (otp0) otp0.focus();
+
+  // Start 30s countdown
+  startOTPCountdown();
+}
+
+function startOTPCountdown() {
+  let seconds = 30;
+  const timerSpan = document.getElementById('otpResendTimer');
+  const countdownEl = document.getElementById('otpCountdown');
+  const resendBtn = document.getElementById('btnResendOTP');
+
+  if (timerSpan) timerSpan.style.display = 'inline-block';
+  if (resendBtn) resendBtn.style.display = 'none';
+  if (countdownEl) countdownEl.textContent = seconds;
+
+  if (otpTimerInterval) clearInterval(otpTimerInterval);
+  otpTimerInterval = setInterval(() => {
+    seconds--;
+    if (countdownEl) countdownEl.textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(otpTimerInterval);
+      if (timerSpan) timerSpan.style.display = 'none';
+      if (resendBtn) resendBtn.style.display = 'inline-block';
+    }
+  }, 1000);
+}
+
+function handleResendOTP() {
+  startOTPCountdown();
+  const alertBox = document.getElementById('otpAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.innerHTML = '<i class="fa-solid fa-paper-plane text-gold"></i> <div>New OTP has been sent! Use <strong>1234</strong> or <strong>123456</strong> for testing.</div>';
+    alertBox.style.display = 'flex';
+  }
+}
+
+function backToPlayerLoginStep1() {
+  const step1 = document.getElementById('playerLoginStep1');
+  const step2 = document.getElementById('playerLoginStep2');
+  if (step1) step1.style.display = 'block';
+  if (step2) step2.style.display = 'none';
+  if (otpTimerInterval) clearInterval(otpTimerInterval);
+}
+
+function otpBoxInput(el, index) {
+  if (el.value.length >= 1) {
+    el.value = el.value.slice(-1);
+    const nextBox = document.getElementById(`otp${index + 1}`);
+    if (nextBox) {
+      nextBox.focus();
+    } else {
+      // Last box filled, auto trigger verify
+      handleVerifyOTP();
+    }
+  }
+}
+
+function otpBoxKeydown(e, index) {
+  if (e.key === 'Backspace' && !e.target.value) {
+    const prevBox = document.getElementById(`otp${index - 1}`);
+    if (prevBox) prevBox.focus();
+  }
+}
+
+function otpBoxPaste(e) {
+  e.preventDefault();
+  const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (pasteData) {
+    for (let i = 0; i < 6; i++) {
+      const box = document.getElementById(`otp${i}`);
+      if (box) box.value = pasteData[i] || '';
+    }
+    const lastIdx = Math.min(pasteData.length, 6) - 1;
+    const targetBox = document.getElementById(`otp${lastIdx}`);
+    if (targetBox) targetBox.focus();
+    if (pasteData.length >= 4) {
+      handleVerifyOTP();
+    }
+  }
+}
+
+function handleVerifyOTP() {
+  let otpValue = '';
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`otp${i}`);
+    if (box) otpValue += box.value;
+  }
+
+  const alertBox = document.getElementById('otpAlert');
+
+  if (!otpValue || otpValue.length < 4) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the OTP code (1234 or 123456).</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  // Allow 1234 or 123456 or any 4+ digit OTP for quick testing
+  if (otpValue.startsWith('1234') || otpValue === '123456' || otpValue.length >= 4) {
+    if (!pendingPlayerLoginData) {
+      // Fallback: check prefilled fields if page reloaded
+      const nameInput = document.getElementById('playerLoginName');
+      const emailInput = document.getElementById('playerLoginEmail');
+      const name = nameInput ? nameInput.value.trim() : 'R. Saravanan';
+      const email = emailInput ? emailInput.value.trim().toLowerCase() : 'saravanan.r@strikerscc.org';
+
+      const teams = getStoredTeams();
+      let matchedPlayer = null;
+      let matchedTeam = null;
+      let memberIndex = -1;
+      for (const team of teams) {
+        if (!Array.isArray(team.members)) continue;
+        for (let i = 0; i < team.members.length; i++) {
+          const m = team.members[i];
+          if ((m.playerEmail || '').trim().toLowerCase() === email) {
+            matchedPlayer = m;
+            matchedTeam = team;
+            memberIndex = i;
+            break;
+          }
+        }
+        if (matchedPlayer) break;
+      }
+
+      if (matchedPlayer && matchedTeam) {
+        pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
+      }
+    }
+
+    if (pendingPlayerLoginData) {
+      const { matchedPlayer, matchedTeam, memberIndex } = pendingPlayerLoginData;
+
+      if (!matchedPlayer.playerId) {
+        matchedPlayer.playerId = `CFVD-PLY-${matchedTeam.teamId.slice(-4)}-${(memberIndex + 1).toString().padStart(2, '0')}`;
+      }
+      if (!matchedPlayer.role) matchedPlayer.role = 'Batsman';
+      if (!matchedPlayer.battingStyle) matchedPlayer.battingStyle = 'Right Hand Bat';
+      if (!matchedPlayer.bowlingStyle) matchedPlayer.bowlingStyle = 'Right Arm Medium';
+      if (!matchedPlayer.jerseyNumber) matchedPlayer.jerseyNumber = (memberIndex + 1).toString();
+
+      const teams = getStoredTeams();
+      saveStoredTeams(teams);
+
+      const session = {
+        playerId: matchedPlayer.playerId,
+        playerName: matchedPlayer.playerName,
+        playerEmail: matchedPlayer.playerEmail,
+        teamId: matchedTeam.teamId,
+        teamName: matchedTeam.teamName,
+        loginTime: new Date().toISOString()
+      };
+      saveActivePlayerSession(session);
+
+      updatePlayerHeaderUI();
+      updateAuthHeaderUI();
+
+      renderPlayerDashboard(matchedPlayer, matchedTeam);
+      const dashView = document.getElementById('playerPortalDashboardView');
+      if (dashView) dashView.style.display = 'block';
+      navigateToRoute('/player');
+      switchPlayerDashTab('overview');
+    }
+  } else {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid OTP code. Enter <strong>1234</strong> or <strong>123456</strong>.</div>';
+      alertBox.style.display = 'flex';
+    }
+  }
+}
+
 function renderPlayerDashboard(player, team) {
   const heroEl = document.getElementById('playerDashboardHero');
   const paneOverview = document.getElementById('pPaneOverview');
@@ -2759,29 +3063,30 @@ function renderPlayerDashboard(player, team) {
   // 1. HERO BAR
   if (heroEl) {
     heroEl.innerHTML = `
-      <div class="player-hero-left">
-        <div class="player-avatar-large">
-          ${initials}
-          <span class="player-jersey-pill">#${jerseyNum}</span>
+      <div class="player-hero-left" style="display:flex; align-items:center; gap:1.2rem;">
+        <div class="player-avatar-large" style="position:relative; width:84px; height:84px; border-radius:50%; background:linear-gradient(135deg, #1e293b, #0f172a); border:3px solid var(--gold-bright); display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(234,179,8,0.4); overflow:hidden;">
+          <img src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&q=80&w=200" alt="Player Photo" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center; font-size:1.8rem; font-weight:900; color:var(--gold-bright);">${initials}</div>
+          <span class="player-jersey-pill" style="position:absolute; bottom:0px; right:0px; background:var(--gold-bright); color:#0f172a; font-size:0.75rem; font-weight:900; padding:2px 7px; border-radius:12px; border:2px solid #0f172a;">#${jerseyNum}</span>
         </div>
         <div>
-          <h3 class="player-hero-name">
+          <h3 class="player-hero-name" style="font-size:1.45rem; font-weight:800; color:#ffffff; margin:0 0 0.2rem 0; display:flex; align-items:center; gap:0.5rem;">
             ${player.playerName}
-            <i class="fa-solid fa-circle-check text-green" style="font-size:1.05rem;" title="Official CFVD Registered Cricketer"></i>
+            <i class="fa-solid fa-circle-check" style="color:#22c55e; font-size:1.1rem;" title="Official CFVD Registered Cricketer"></i>
           </h3>
-          <div class="player-hero-email">
+          <div class="player-hero-email" style="font-size:0.88rem; color:#93c5fd; margin-bottom:0.2rem; font-weight:600;">
             <i class="fa-solid fa-envelope" style="color:var(--gold-bright);"></i> ${player.playerEmail}
           </div>
-          <div class="player-hero-team">
-            <i class="fa-solid fa-shield-halved"></i> ${team.teamName} • <span style="color:#ffffff;">ID: ${player.playerId || 'CFVD-PLY'}</span>
+          <div class="player-hero-team" style="font-size:0.88rem; color:var(--text-light); font-weight:600;">
+            <i class="fa-solid fa-shield-halved" style="color:var(--gold-bright);"></i> ${team.teamName} • <span style="color:var(--gold-bright); font-weight:800;">ID: ${player.playerId || 'CFVD-PLY-1024'}</span>
           </div>
         </div>
       </div>
-      <div class="player-hero-actions">
-        <button type="button" class="btn btn-gold btn-sm" onclick="showPlayerProfileEdit()">
+      <div class="player-hero-actions" style="display:flex; gap:0.6rem;">
+        <button type="button" class="btn btn-gold btn-sm" style="font-weight:700;" onclick="showPlayerProfileEdit()">
           <i class="fa-solid fa-user-pen"></i> Edit Profile
         </button>
-        <button type="button" class="btn btn-outline-danger btn-sm" onclick="handlePlayerLogout()">
+        <button type="button" class="btn btn-outline-danger btn-sm" style="font-weight:700;" onclick="handlePlayerLogout()">
           <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
         </button>
       </div>
@@ -2819,58 +3124,85 @@ function renderPlayerDashboard(player, team) {
   // 2. OVERVIEW PANE
   if (paneOverview) {
     paneOverview.innerHTML = `
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.2rem; margin-bottom:1.5rem;">
-        <!-- Team Card -->
-        <div class="player-spec-card">
-          <div class="spec-card-lbl"><i class="fa-solid fa-shield-halved text-gold"></i> Affiliated Team</div>
-          <div class="spec-card-val" style="font-size:1.2rem; color:var(--gold-bright);">${team.teamName}</div>
-          <div style="font-size:0.84rem; color:var(--text-light); margin-top:0.4rem;">
-            <strong>Coach:</strong> ${team.coach.name} (${team.coach.email})<br>
-            <strong>Registration ID:</strong> ${team.teamId}<br>
-            <strong>Status:</strong> <span class="badge green" style="padding:1px 6px;">Approved &amp; Verified</span>
+      <!-- Welcome Greeting -->
+      <div style="background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(15,23,42,0.6) 100%); border: 1px solid var(--gold-border); border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="font-family: var(--font-header); font-size: 1.4rem; font-weight: 800; color: #ffffff; margin: 0 0 0.2rem 0;">
+            Welcome, ${player.playerName} 👋
+          </h3>
+          <div style="font-size: 0.85rem; color: var(--gold-bright); font-weight: 700; letter-spacing: 0.5px;">
+            PLAYER ID: ${player.playerId || 'PLY-1024'}
+          </div>
+          <div style="font-size: 0.9rem; color: var(--text-light); margin-top: 0.2rem; font-weight: 600;">
+            <i class="fa-solid fa-shield-halved text-gold"></i> ${team.teamName.toUpperCase()}
           </div>
         </div>
-
-        <!-- Quick Performance Summary -->
-        <div class="player-spec-card">
-          <div class="spec-card-lbl"><i class="fa-solid fa-award text-gold"></i> Season Highlights</div>
-          <div style="display:flex; justify-content:space-between; margin-top:0.5rem; text-align:center;">
-            <div>
-              <div style="color:var(--text-muted); font-size:0.75rem;">RUNS</div>
-              <div style="font-size:1.3rem; font-weight:900; color:#fff;">${stats.runs}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted); font-size:0.75rem;">AVERAGE</div>
-              <div style="font-size:1.3rem; font-weight:900; color:var(--gold-bright);">${stats.avg}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted); font-size:0.75rem;">WICKETS</div>
-              <div style="font-size:1.3rem; font-weight:900; color:#93c5fd;">${stats.wickets}</div>
-            </div>
-            <div>
-              <div style="color:var(--text-muted); font-size:0.75rem;">DISMISSALS</div>
-              <div style="font-size:1.3rem; font-weight:900; color:#a7f3d0;">${stats.catches + stats.stumpings}</div>
-            </div>
-          </div>
+        <div style="text-align:right;">
+          <span class="badge green" style="padding: 4px 10px; font-size: 0.78rem;"><i class="fa-solid fa-circle-check"></i> Active Player</span>
         </div>
       </div>
 
-      <!-- Notifications -->
-      <h5 style="color:var(--gold-bright); font-family:var(--font-header); font-size:0.95rem; font-weight:800; margin-bottom:0.8rem;">
-        <i class="fa-solid fa-bell"></i> Official Federation Notifications
-      </h5>
-      <div class="player-notif-item">
-        <i class="fa-solid fa-circle-check text-green" style="font-size:1.2rem; margin-top:2px;"></i>
-        <div>
-          <h5>Official Squad Authorization Confirmed</h5>
-          <p>You have been certified as an official playing member of <strong>${team.teamName}</strong> for the 2026-27 season by CFVD Apex Council.</p>
+      <!-- 4 Stats Grid -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="player-spec-card" style="text-align: center; padding: 1rem 0.5rem;">
+          <div class="spec-card-lbl" style="justify-content: center; font-size: 0.75rem; text-transform: uppercase;">Matches</div>
+          <div style="font-size: 1.6rem; font-weight: 900; color: #ffffff; margin-top: 0.3rem;">24</div>
+        </div>
+        <div class="player-spec-card" style="text-align: center; padding: 1rem 0.5rem;">
+          <div class="spec-card-lbl" style="justify-content: center; font-size: 0.75rem; text-transform: uppercase;">Runs</div>
+          <div style="font-size: 1.6rem; font-weight: 900; color: var(--gold-bright); margin-top: 0.3rem;">${stats.runs}</div>
+        </div>
+        <div class="player-spec-card" style="text-align: center; padding: 1rem 0.5rem;">
+          <div class="spec-card-lbl" style="justify-content: center; font-size: 0.75rem; text-transform: uppercase;">Wickets</div>
+          <div style="font-size: 1.6rem; font-weight: 900; color: #93c5fd; margin-top: 0.3rem;">${stats.wickets}</div>
+        </div>
+        <div class="player-spec-card" style="text-align: center; padding: 1rem 0.5rem;">
+          <div class="spec-card-lbl" style="justify-content: center; font-size: 0.75rem; text-transform: uppercase;">Catches</div>
+          <div style="font-size: 1.6rem; font-weight: 900; color: #a7f3d0; margin-top: 0.3rem;">${stats.catches}</div>
         </div>
       </div>
-      <div class="player-notif-item">
-        <i class="fa-solid fa-trophy text-gold" style="font-size:1.2rem; margin-top:2px;"></i>
-        <div>
-          <h5>District Championship Match Scheduled</h5>
-          <p>Upcoming tournament fixture against Sivakasi Super Kings at District Sports Complex Stadium, Virudhunagar.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+        <!-- UPCOMING MATCH CARD -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--gold-border); border-radius: 12px; padding: 1.25rem;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--gold-bright); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.8rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-calendar-day"></i> UPCOMING MATCH
+          </div>
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 1rem; text-align: center; margin-bottom: 1rem;">
+            <div style="font-size: 1.05rem; font-weight: 800; color: #ffffff;">${team.teamName}</div>
+            <div style="font-size: 0.85rem; font-weight: 900; color: var(--gold-bright); margin: 0.4rem 0;">VS</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #ffffff;">Sivakasi Super Kings</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem;">
+              <i class="fa-solid fa-location-dot"></i> District Sports Complex Stadium
+            </div>
+          </div>
+          <button type="button" class="btn btn-gold btn-sm w-100" onclick="switchPlayerDashTab('matches')">
+            <i class="fa-solid fa-eye"></i> View Match
+          </button>
+        </div>
+
+        <!-- RECENT PERFORMANCE -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--gold-border); border-radius: 12px; padding: 1.25rem;">
+          <div style="font-size: 0.8rem; font-weight: 800; color: var(--gold-bright); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.8rem; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fa-solid fa-chart-line"></i> RECENT PERFORMANCE
+          </div>
+          <div style="display:flex; flex-direction:column; gap:0.6rem; margin-bottom: 1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.88rem;">
+              <span style="color:var(--text-light); font-weight:600;">Match 1</span>
+              <span style="color:var(--gold-bright); font-weight:800;">42 runs</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.88rem;">
+              <span style="color:var(--text-light); font-weight:600;">Match 2</span>
+              <span style="color:#93c5fd; font-weight:800;">2 wickets</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.88rem;">
+              <span style="color:var(--text-light); font-weight:600;">Match 3</span>
+              <span style="color:var(--gold-bright); font-weight:800;">67 runs</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-gold btn-sm w-100" onclick="switchPlayerDashTab('profile')">
+            <i class="fa-solid fa-id-card"></i> VIEW FULL PROFILE
+          </button>
         </div>
       </div>
     `;
@@ -3015,41 +3347,67 @@ function renderPlayerDashboard(player, team) {
     `;
   }
 
-  // 5. MATCHES PANE
+  // 5. MATCHES PANE (TEAM FIXTURES)
   if (paneMatches) {
     paneMatches.innerHTML = `
-      <h5 style="color:var(--gold-bright); font-family:var(--font-header); font-size:0.95rem; font-weight:800; margin-bottom:0.8rem;">
-        <i class="fa-solid fa-calendar-days"></i> Official Fixtures &amp; Match Day Scorecards
+      <h5 style="color:var(--gold-bright); font-family:var(--font-header); font-size:1.05rem; font-weight:800; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fa-solid fa-calendar-days"></i> Official Fixtures &amp; Match Schedule (${team.teamName})
       </h5>
-      <div style="display:flex; flex-direction:column; gap:0.8rem;">
-        <div class="player-spec-card" style="border-left:3px solid var(--cricket-green);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="badge green" style="padding:1px 6px;">COMPLETED</span>
-            <span style="font-size:0.75rem; color:var(--gold-bright);">VPL 2026 Final • Oct 01, 2026</span>
+      <div style="display:flex; flex-direction:column; gap:1rem;">
+        
+        <!-- Fixture 1: Upcoming -->
+        <div class="player-spec-card" style="border-left:4px solid var(--gold-bright); background:rgba(15,23,42,0.85); padding:1.2rem; border-radius:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <span class="badge gold" style="padding:4px 10px; font-weight:800; font-size:0.75rem;">NEXT MATCH</span>
+            <span style="font-size:0.82rem; color:var(--gold-bright); font-weight:700;"><i class="fa-regular fa-clock"></i> Oct 05, 2026 • 09:30 AM IST</span>
           </div>
-          <div style="font-size:1.05rem; font-weight:800; color:#fff; margin:0.4rem 0;">
-            Virudhunagar Strikers (164/5) vs Sivakasi Super Kings (162/8)
+          <div style="font-size:1.2rem; font-weight:800; color:#fff; margin:0.4rem 0;">
+            ${team.teamName} <span style="color:var(--gold-bright); font-size:0.9rem;">VS</span> Sivakasi Super Kings
           </div>
-          <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.6rem;">
-            📍 District Sports Complex Stadium, Virudhunagar • Result: Strikers won by 5 wickets
+          <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.8rem;">
+            <i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> District Sports Complex Stadium, Virudhunagar • <strong>VPL 2026 League Round</strong>
           </div>
-          <button type="button" class="btn btn-outline-gold btn-sm" onclick="openScorecard('match-1')">
+          <div style="display:flex; gap:0.6rem;">
+            <button type="button" class="btn btn-gold btn-sm" style="font-weight:700;" onclick="alert('Playing XI announcement &amp; Toss update will open 30 mins before match start!')">
+              <i class="fa-solid fa-users text-dark"></i> View Team Lineup
+            </button>
+          </div>
+        </div>
+
+        <!-- Fixture 2: Completed -->
+        <div class="player-spec-card" style="border-left:4px solid #22c55e; background:rgba(15,23,42,0.85); padding:1.2rem; border-radius:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <span class="badge green" style="padding:4px 10px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-check"></i> COMPLETED</span>
+            <span style="font-size:0.82rem; color:#4ade80; font-weight:700;">Sep 28, 2026</span>
+          </div>
+          <div style="font-size:1.15rem; font-weight:800; color:#fff; margin:0.4rem 0;">
+            ${team.teamName} (178/4, 20.0 ov) <span style="color:#22c55e; font-size:0.85rem; padding:2px 8px; background:rgba(34,197,94,0.15); border-radius:4px;">WON</span> Sattur CC (142/9, 20.0 ov)
+          </div>
+          <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.8rem;">
+            📍 Municipal Sports Ground, Sattur • <strong>Personal Contribution:</strong> 42 runs &amp; 2 wickets
+          </div>
+          <button type="button" class="btn btn-outline-gold btn-sm" style="font-weight:700;" onclick="openScorecard('match-1')">
             <i class="fa-solid fa-chart-line"></i> View Certified Scorecard
           </button>
         </div>
 
-        <div class="player-spec-card" style="border-left:3px solid var(--gold-bright);">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="badge gold" style="padding:1px 6px;">UPCOMING FIXTURE</span>
-            <span style="font-size:0.75rem; color:var(--gold-bright);">District 1st Division • Oct 08, 2026</span>
+        <!-- Fixture 3: Completed -->
+        <div class="player-spec-card" style="border-left:4px solid #22c55e; background:rgba(15,23,42,0.85); padding:1.2rem; border-radius:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+            <span class="badge green" style="padding:4px 10px; font-weight:800; font-size:0.75rem;"><i class="fa-solid fa-check"></i> COMPLETED</span>
+            <span style="font-size:0.82rem; color:#4ade80; font-weight:700;">Sep 21, 2026</span>
           </div>
-          <div style="font-size:1.05rem; font-weight:800; color:#fff; margin:0.4rem 0;">
-            ${team.teamName} vs Rajapalayam CC
+          <div style="font-size:1.15rem; font-weight:800; color:#fff; margin:0.4rem 0;">
+            Aruppukottai Stars (155/8, 20.0 ov) <span style="color:#ef4444; font-size:0.85rem; padding:2px 8px; background:rgba(239,68,68,0.15); border-radius:4px;">LOST TO</span> ${team.teamName} (156/3, 18.2 ov)
           </div>
-          <div style="font-size:0.8rem; color:var(--text-muted);">
-            📍 Sivakasi Municipal Cricket Grounds • Reporting Time: 08:30 AM IST
+          <div style="font-size:0.85rem; color:#94a3b8; margin-bottom:0.8rem;">
+            📍 Federation Turf Grounds • <strong>Personal Contribution:</strong> 67 runs* (Man of the Match)
           </div>
+          <button type="button" class="btn btn-outline-gold btn-sm" style="font-weight:700;" onclick="openScorecard('match-2')">
+            <i class="fa-solid fa-chart-line"></i> View Certified Scorecard
+          </button>
         </div>
+
       </div>
     `;
   }
@@ -3459,20 +3817,42 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
     showTeamRegSubView(subTab);
     renderSquadMembersTable();
   } else if (path === '/player') {
+    const dashView = document.getElementById('playerPortalDashboardView');
+    if (dashView) dashView.style.display = 'block';
+
     const session = getActivePlayerSession();
+    const teams = getStoredTeams();
+    let team = null;
+    let player = null;
+
     if (session) {
-      const teams = getStoredTeams();
-      const team = teams.find(t => t.teamId === session.teamId);
-      let player = null;
+      team = teams.find(t => t.teamId === session.teamId);
       if (team && Array.isArray(team.members)) {
         player = team.members.find(m => (m.playerEmail || '').trim().toLowerCase() === session.playerEmail.trim().toLowerCase());
       }
-      if (player && team) {
-        renderPlayerDashboard(player, team);
-        const subTab = params.get('tab') || 'overview';
-        switchPlayerDashTab(subTab);
-      }
     }
+
+    // Fallback default mock player data so dashboard never renders blank
+    if (!player || !team) {
+      team = teams[0] || {
+        teamId: 'CFVD-TM-1001',
+        teamName: 'Virudhunagar Strikers',
+        coach: { name: 'S. Rajesh', email: 'coach@strikerscc.org' }
+      };
+      player = {
+        playerId: 'PLY-1024',
+        playerName: session ? session.playerName : 'R. Saravanan',
+        playerEmail: session ? session.playerEmail : 'saravanan.r@strikerscc.org',
+        role: 'All Rounder',
+        battingStyle: 'Right Hand Bat',
+        bowlingStyle: 'Right Arm Fast Medium',
+        jerseyNumber: '18'
+      };
+    }
+
+    renderPlayerDashboard(player, team);
+    const subTab = params.get('tab') || 'overview';
+    switchPlayerDashTab(subTab);
   } else if (path === '/team') {
     renderTeamDashboard();
   } else if (path === '/admin') {
@@ -4142,8 +4522,54 @@ function switchAdminTab(tab) {
 
   if (tab === 'teams') {
     renderAdminTeamsList();
+    updateTeamTabDiagram();
   } else if (tab === 'scorers') {
     renderAdminScorersList();
+    updateScorerTabDiagram();
+  }
+}
+
+function updateTeamTabDiagram() {
+  const teams = getStoredTeams();
+  const total = teams.length;
+  const approved = teams.filter(t => t.status === 'Approved').length;
+  const pending = teams.filter(t => (t.status || 'Pending') === 'Pending').length;
+  const rejected = teams.filter(t => t.status === 'Rejected').length;
+
+  const el = id => document.getElementById(id);
+  if (el('teamStatApproved')) el('teamStatApproved').textContent = approved;
+  if (el('teamStatPending')) el('teamStatPending').textContent = pending;
+  if (el('teamStatRejected')) el('teamStatRejected').textContent = rejected;
+  if (el('teamStatTotal')) el('teamStatTotal').textContent = total;
+  if (el('teamDonutTotal')) el('teamDonutTotal').textContent = total;
+
+  if (el('teamDonutChart') && total > 0) {
+    const approvedPct = (approved / total) * 100;
+    const pendingPct = (pending / total) * 100;
+    const rejectedPct = (rejected / total) * 100;
+    el('teamDonutChart').style.background = `conic-gradient(#10b981 0% ${approvedPct}%, #eab308 ${approvedPct}% ${approvedPct + pendingPct}%, #ef4444 ${approvedPct + pendingPct}% 100%)`;
+  }
+}
+
+function updateScorerTabDiagram() {
+  const scorers = getAllScorers ? getAllScorers() : [];
+  const total = scorers.length;
+  const approved = scorers.filter(s => s.status === 'Approved').length;
+  const pending = scorers.filter(s => (s.status || 'Pending') === 'Pending').length;
+  const rejected = scorers.filter(s => s.status === 'Rejected').length;
+
+  const el = id => document.getElementById(id);
+  if (el('scorerStatApproved')) el('scorerStatApproved').textContent = approved;
+  if (el('scorerStatPending')) el('scorerStatPending').textContent = pending;
+  if (el('scorerStatRejected')) el('scorerStatRejected').textContent = rejected;
+  if (el('scorerStatTotal')) el('scorerStatTotal').textContent = total;
+  if (el('scorerDonutTotal')) el('scorerDonutTotal').textContent = total;
+
+  if (el('scorerDonutChart') && total > 0) {
+    const approvedPct = (approved / total) * 100;
+    const pendingPct = (pending / total) * 100;
+    const rejectedPct = (rejected / total) * 100;
+    el('scorerDonutChart').style.background = `conic-gradient(#10b981 0% ${approvedPct}%, #eab308 ${approvedPct}% ${approvedPct + pendingPct}%, #ef4444 ${approvedPct + pendingPct}% 100%)`;
   }
 }
 
@@ -4247,8 +4673,8 @@ function updateTeamFilterPillsUI() {
 }
 
 function renderAdminTeamsList() {
-  const container = document.getElementById('adminTeamsListContainer');
-  if (!container) return;
+  const containers = document.querySelectorAll('#adminTeamsListContainer');
+  if (containers.length === 0) return;
 
   const teams = getStoredTeams();
   let filtered = teams;
@@ -4267,13 +4693,14 @@ function renderAdminTeamsList() {
   }
 
   if (filtered.length === 0) {
-    container.innerHTML = `
+    const emptyHtml = `
       <div style="text-align:center; padding:3rem 1.5rem; background:rgba(5, 13, 34, 0.5); border:1px dashed var(--gold-border); border-radius:10px; color:var(--text-muted);">
         <i class="fa-solid fa-folder-open" style="font-size:2rem; margin-bottom:0.8rem; color:var(--gold-primary);"></i>
         <h4 style="color:var(--text-light); margin:0 0 0.3rem 0;">No Teams Found</h4>
         <p style="font-size:0.85rem; margin:0;">No team registrations matching current filters.</p>
       </div>
     `;
+    containers.forEach(c => c.innerHTML = emptyHtml);
     return;
   }
 
@@ -4362,7 +4789,7 @@ function renderAdminTeamsList() {
     `;
   });
 
-  container.innerHTML = html;
+  containers.forEach(c => c.innerHTML = html);
 }
 
 /* --------------------------------------------------------------------------

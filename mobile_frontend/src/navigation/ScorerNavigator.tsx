@@ -5,6 +5,7 @@ import ScorerAuthScreen from '../screens/scorer/ScorerAuthScreen';
 import ScorerDashboardScreen from '../screens/scorer/ScorerDashboardScreen';
 import LiveScoringScreen from '../screens/scorer/LiveScoringScreen';
 import ScorecardScreen from '../screens/scorer/ScorecardScreen';
+import SharedBackground from '../components/scorer/SharedBackground';
 
 export type ScreenName = 'Auth' | 'Dashboard' | 'LiveScoring' | 'Scorecard';
 
@@ -49,9 +50,11 @@ export default function ScorerNavigator({ onExit }: Props) {
 
   return (
     <ScorerNavigationContext.Provider value={{ currentScreen, navigate, params, onExit }}>
-      <SafeAreaView style={styles.container}>
-        {renderScreen()}
-      </SafeAreaView>
+      <SharedBackground>
+        <SafeAreaView style={styles.container}>
+          {renderScreen()}
+        </SafeAreaView>
+      </SharedBackground>
     </ScorerNavigationContext.Provider>
   );
 }
@@ -59,6 +62,6 @@ export default function ScorerNavigator({ onExit }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020612' // Matching theme
+    backgroundColor: 'transparent'
   }
 });

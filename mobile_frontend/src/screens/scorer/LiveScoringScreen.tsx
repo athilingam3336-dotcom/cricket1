@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
 import { assignedMatches } from '../../data/scorerMockData';
-
-const { width } = Dimensions.get('window');
-const isDesktop = width > 768;
+import SharedFooter from '../../components/scorer/SharedFooter';
 
 export default function LiveScoringScreen() {
   const { navigate, params } = useScorerNavigation();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
   const matchId = params?.matchId || 'M002';
   const match = assignedMatches.find(m => m.id === matchId) || assignedMatches[1];
+  const styles = getStyles(isDesktop);
 
   // Match State
   const [runs, setRuns] = useState(145);
   const [wickets, setWickets] = useState(4);
   const [balls, setBalls] = useState(92); // 15.2 overs
   const [history, setHistory] = useState<any[]>([]);
+  const [showEndModal, setShowEndModal] = useState(false);
 
   // Batter/Bowler state (mock)
-  const [striker, setStriker] = useState({ name: 'Batter 1', runs: 42, balls: 30, fours: 4, sixes: 1 });
-  const [nonStriker, setNonStriker] = useState({ name: 'Batter 2', runs: 18, balls: 14, fours: 2, sixes: 0 });
-  const [bowler, setBowler] = useState({ name: 'Bowler 1', overs: 2.2, runs: 16, wickets: 1, maiden: 0 });
+  const [striker, setStriker] = useState({ name: 'Suresh Kumar', runs: 42, balls: 30, fours: 4, sixes: 1 });
+  const [nonStriker, setNonStriker] = useState({ name: 'Muthu Raj', runs: 18, balls: 14, fours: 2, sixes: 0 });
+  const [bowler, setBowler] = useState({ name: 'Karthik N', overs: 2.2, runs: 16, wickets: 1, maiden: 0 });
 
   const getOvers = (b: number) => {
     const overs = Math.floor(b / 6);
@@ -91,7 +93,10 @@ export default function LiveScoringScreen() {
       wickets: bowler.wickets + 1,
       overs: parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1))
     });
-    setStriker({ name: `Batter ${wickets + 3}`, runs: 0, balls: 0, fours: 0, sixes: 0 });
+    
+    const benchNames = ['Vijay', 'Dinesh', 'Ashwin', 'Murugan', 'Saravanan', 'Arun', 'Prakash', 'Ganesh', 'Kamal'];
+    const newBatterName = benchNames[wickets % benchNames.length];
+    setStriker({ name: newBatterName, runs: 0, balls: 0, fours: 0, sixes: 0 });
   };
 
   const undoLastBall = () => {
@@ -108,14 +113,33 @@ export default function LiveScoringScreen() {
   };
 
   const confirmEndInnings = () => {
-    Alert.alert('End Innings', 'Are you sure you want to end this innings?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'End Innings', style: 'destructive', onPress: () => navigate('Scorecard', { matchId }) }
-    ]);
+    setShowEndModal(true);
   };
 
   return (
     <View style={styles.container}>
+      {/* End Innings Modal */}
+      <Modal visible={showEndModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+             <Text style={styles.modalTitle}>End Innings</Text>
+             <Text style={styles.modalMessage}>Are you sure you want to end this innings?</Text>
+             <View style={styles.modalStatsBox}>
+                <Text style={styles.modalStatsText}>Score: {runs}/{wickets}</Text>
+                <Text style={styles.modalStatsText}>Overs: {getOvers(balls)}</Text>
+             </View>
+             <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowEndModal(false)}>
+                   <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirmBtn} onPress={() => { setShowEndModal(false); navigate('Scorecard', { matchId }); }}>
+                   <Text style={styles.modalConfirmText}>End Innings</Text>
+                </TouchableOpacity>
+             </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -132,6 +156,7 @@ export default function LiveScoringScreen() {
         </View>
       </View>
 
+      <ScrollView contentContainerStyle={styles.scroll}>
       <View style={styles.mainLayout}>
         {/* TOP SECTION: SCOREBOARD & PLAYERS */}
         <View style={styles.topSection}>
@@ -172,13 +197,24 @@ export default function LiveScoringScreen() {
           <View style={styles.controlPanel}>
             <Text style={styles.sectionTitle}>RUNS</Text>
             <View style={styles.controlsGrid}>
-              {[0, 1, 2, 3, 4, 6].map(run => (
-                <TouchableOpacity key={run} style={styles.scoreBtn} onPress={() => handleScore(run, 'normal')}>
-                  <Text style={styles.scoreBtnText}>{run}</Text>
-                </TouchableOpacity>
-              ))}
+              {[0, 1, 2, 3, 4, 6].map(run => {
+                const isBoundary = run === 4 || run === 6;
+                const isDot = run === 0;
+                
+                let btnStyle: any = styles.scoreBtnNormal;
+                let textStyle: any = styles.scoreBtnTextNormal;
+                if (run === 4) { btnStyle = styles.scoreBtnFour; textStyle = styles.scoreBtnTextBoundary; }
+                else if (run === 6) { btnStyle = styles.scoreBtnSix; textStyle = styles.scoreBtnTextBoundary; }
+                else if (isDot) { btnStyle = styles.scoreBtnDot; textStyle = styles.scoreBtnTextDot; }
+
+                return (
+                  <TouchableOpacity key={run} style={[styles.scoreBtn, btnStyle]} onPress={() => handleScore(run, 'normal')}>
+                    <Text style={[styles.scoreBtnText, textStyle]}>{run}</Text>
+                  </TouchableOpacity>
+                );
+              })}
               <TouchableOpacity style={[styles.scoreBtn, styles.wicketBtn]} onPress={handleWicket}>
-                <Text style={styles.scoreBtnText}>W</Text>
+                <Text style={[styles.scoreBtnText, styles.wicketBtnText]}>W</Text>
               </TouchableOpacity>
             </View>
 
@@ -212,70 +248,98 @@ export default function LiveScoringScreen() {
           </View>
         </View>
       </View>
+      
+      <SharedFooter />
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020612' },
+const getStyles = (isDesktop: boolean) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: { 
-    padding: 16, backgroundColor: '#050D22', 
-    borderBottomWidth: 1, borderBottomColor: 'rgba(212, 175, 55, 0.35)',
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
+    padding: 12, paddingHorizontal: isDesktop ? 24 : 12, backgroundColor: 'rgba(255, 255, 255, 0.65)', 
+    borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  backBtn: { marginRight: 16, padding: 8, backgroundColor: 'rgba(212, 175, 55, 0.1)', borderRadius: 4 },
-  backText: { color: '#D4AF37', fontWeight: 'bold', fontSize: 13 },
-  title: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  subtitle: { color: '#8A99B5', fontSize: 12, marginTop: 2 },
+  backBtn: { marginRight: 16, padding: 8, backgroundColor: '#f1f5f9', borderRadius: 4, borderWidth: 1, borderColor: '#e2e8f0' },
+  backText: { color: '#334155', fontWeight: 'bold', fontSize: 12 },
+  title: { color: '#1e293b', fontSize: 16, fontWeight: 'bold' },
+  subtitle: { color: '#64748b', fontSize: 12, marginTop: 2 },
   headerRight: {},
-  liveBadge: { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: '#EF4444', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
-  liveBadgeText: { color: '#EF4444', fontWeight: 'bold', fontSize: 11, letterSpacing: 1 },
+  liveBadge: { backgroundColor: '#fef2f2', borderColor: '#fca5a5', borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 },
+  liveBadgeText: { color: '#ef4444', fontWeight: 'bold', fontSize: 11, letterSpacing: 1 },
   
+  scroll: { flexGrow: 1 },
   mainLayout: { flex: 1, padding: isDesktop ? 24 : 12, justifyContent: 'space-between' },
   
   // TOP SECTION
   topSection: { flexDirection: isDesktop ? 'row' : 'column', gap: 16, marginBottom: 16 },
   scoreBoardCard: { 
     flex: isDesktop ? 1 : undefined,
-    backgroundColor: '#0A1325', padding: 24, borderRadius: 8, 
-    borderWidth: 1, borderColor: '#D4AF37', 
-    alignItems: 'center', justifyContent: 'center'
+    backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 20, borderRadius: 8, 
+    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', 
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
   },
-  battingTeam: { color: '#D4AF37', fontSize: 14, fontWeight: 'bold', marginBottom: 8, textTransform: 'uppercase' },
+  battingTeam: { color: '#b45309', fontSize: 13, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  scoreText: { color: '#FFF', fontSize: 56, fontWeight: 'bold' },
-  oversText: { color: '#8A99B5', fontSize: 24, marginLeft: 12, fontWeight: '600' },
-  rrText: { color: '#FFF', fontSize: 15, marginTop: 8, fontWeight: '500' },
+  scoreText: { color: '#1e293b', fontSize: 48, fontWeight: 'bold' },
+  oversText: { color: '#64748b', fontSize: 20, marginLeft: 10, fontWeight: '600' },
+  rrText: { color: '#475569', fontSize: 13, marginTop: 6, fontWeight: '600' },
   
-  playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 12, justifyContent: 'space-between' },
-  playerCard: { backgroundColor: '#070C18', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', flex: 1, justifyContent: 'center' },
-  playerRole: { color: '#8A99B5', fontSize: 11, fontWeight: 'bold', marginBottom: 12, letterSpacing: 1 },
-  playerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  playerName: { color: '#FFF', fontSize: 15, fontWeight: '500' },
-  striker: { fontWeight: 'bold', color: '#D4AF37' },
-  playerStats: { color: '#FFF', fontSize: 15, fontWeight: 'bold' },
+  playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 16, justifyContent: 'space-between' },
+  playerCard: { backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', flex: 1, justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  playerRole: { color: '#64748b', fontSize: 11, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 },
+  playerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  playerName: { color: '#1e293b', fontSize: 14, fontWeight: '600' },
+  striker: { fontWeight: 'bold', color: '#b45309' },
+  playerStats: { color: '#1e293b', fontSize: 14, fontWeight: 'bold' },
   
   // BOTTOM SECTION
-  controlsSection: { flex: 1, backgroundColor: '#0A1325', borderRadius: 8, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', justifyContent: 'space-between' },
+  controlsSection: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 8, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   controlPanel: { flex: 1, justifyContent: 'center' },
-  sectionTitle: { color: '#8A99B5', fontSize: 12, fontWeight: 'bold', letterSpacing: 1, marginBottom: 12 },
+  sectionTitle: { color: '#b45309', fontSize: 11, fontWeight: 'bold', letterSpacing: 1, marginBottom: 10 },
   
-  controlsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 8, marginBottom: 24 },
-  scoreBtn: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.4)', height: 60, justifyContent: 'center', alignItems: 'center', borderRadius: 6 },
-  wicketBtn: { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: '#EF4444' },
-  scoreBtnText: { color: '#FFF', fontSize: 22, fontWeight: 'bold' },
+  controlsGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 6, marginBottom: 16 },
+  scoreBtn: { flex: 1, borderWidth: 1, height: 52, justifyContent: 'center', alignItems: 'center', borderRadius: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  scoreBtnNormal: { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' },
+  scoreBtnDot: { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' },
+  scoreBtnFour: { backgroundColor: '#3b82f6', borderColor: '#2563eb' },
+  scoreBtnSix: { backgroundColor: '#eab308', borderColor: '#ca8a04' },
+  wicketBtn: { backgroundColor: '#ef4444', borderColor: '#dc2626' },
   
-  extrasGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 8, marginBottom: 20 },
-  extraBtn: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', height: 50, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-  extraBtnText: { color: '#FFF', fontWeight: '600', fontSize: 14 },
+  scoreBtnText: { fontSize: 20, fontWeight: '900' },
+  scoreBtnTextNormal: { color: '#1d4ed8' },
+  scoreBtnTextDot: { color: '#475569' },
+  scoreBtnTextBoundary: { color: '#ffffff' },
+  wicketBtnText: { color: '#ffffff' },
   
-  actionPanel: { flexDirection: 'row', gap: 12, marginTop: 10 },
-  actionBtn: { flex: 1, height: 48, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  undoBtn: { borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'rgba(255,255,255,0.05)' },
-  scorecardBtn: { borderColor: '#D4AF37', backgroundColor: 'rgba(212, 175, 55, 0.1)' },
-  endBtn: { borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-  actionBtnText: { fontWeight: 'bold', fontSize: 13 },
-  scorecardBtnText: { color: '#D4AF37', fontWeight: 'bold', fontSize: 13 },
-  endBtnText: { color: '#EF4444', fontWeight: 'bold', fontSize: 13 }
+  extrasGrid: { flexDirection: 'row', flexWrap: 'nowrap', gap: 6, marginBottom: 16 },
+  extraBtn: { flex: 1, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', height: 44, borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
+  extraBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
+  
+  actionPanel: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  actionBtn: { flex: 1, height: 44, borderRadius: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  undoBtn: { borderColor: '#cbd5e1', backgroundColor: '#f1f5f9' },
+  scorecardBtn: { borderColor: '#eab308', backgroundColor: '#fefce8' },
+  endBtn: { borderColor: '#ef4444', backgroundColor: '#fef2f2' },
+  actionBtnText: { fontWeight: 'bold', fontSize: 12 },
+  scorecardBtnText: { color: '#b45309', fontWeight: 'bold', fontSize: 12 },
+  endBtnText: { color: '#ef4444', fontWeight: 'bold', fontSize: 12 },
+  
+  // MODAL STYLES
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#ffffff', width: '100%', maxWidth: 400, borderRadius: 12, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#1e293b', marginBottom: 8, textAlign: 'center' },
+  modalMessage: { fontSize: 14, color: '#475569', textAlign: 'center', marginBottom: 20 },
+  modalStatsBox: { backgroundColor: '#f8fafc', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 24, alignItems: 'center' },
+  modalStatsText: { fontSize: 18, fontWeight: 'bold', color: '#0f172a', marginBottom: 4 },
+  modalActions: { flexDirection: 'row', gap: 12 },
+  modalCancelBtn: { flex: 1, padding: 12, borderRadius: 6, backgroundColor: '#f1f5f9', alignItems: 'center' },
+  modalCancelText: { color: '#475569', fontWeight: 'bold', fontSize: 14 },
+  modalConfirmBtn: { flex: 1, padding: 12, borderRadius: 6, backgroundColor: '#ef4444', alignItems: 'center' },
+  modalConfirmText: { color: '#ffffff', fontWeight: 'bold', fontSize: 14 }
 });

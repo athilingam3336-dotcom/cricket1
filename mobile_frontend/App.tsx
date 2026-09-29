@@ -66,7 +66,7 @@ export default function App() {
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        <StatusBar barStyle="light-content" backgroundColor="#020612" />
+        <StatusBar barStyle="dark-content" backgroundColor="#fdfbf7" />
         {renderWebView()}
       </SafeAreaView>
     </SafeAreaProvider>
@@ -76,7 +76,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020612',
+    backgroundColor: '#fdfbf7',
   },
   webviewContainer: {
     flex: 1,

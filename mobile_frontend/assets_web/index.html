@@ -2071,36 +2071,13 @@
   <!-- ======================================================================= -->
   <!-- PAGE 4: PLAYER LOGIN (DEDICATED FULL PAGE / ROUTE)                      -->
   <!-- ======================================================================= -->
-  <div id="page-player-login" class="app-page" style="display:none;">
-    <div class="page-header-banner">
-      <div class="container">
-        <div class="page-header-nav-row">
-          <div class="page-breadcrumbs">
-            <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span>Login</span>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span class="current">Player Login</span>
-          </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
-          </button>
-        </div>
-        <h1 class="page-main-title">
-          <i class="fa-solid fa-circle-user text-gold"></i> Official Player Sign In
-        </h1>
-        <p class="page-main-subtitle">
-          Sign in using your registered Player Name and Email ID collected during Team Registration to access your dashboard.
-        </p>
-      </div>
-    </div>
+  <div id="page-player-login" class="app-page" style="display:none; padding-top: 1.5rem;">
 
     <div class="container page-content-wrapper">
       <div class="page-login-box">
 
-        
-        <!-- 1. LOGIN VIEW -->
-        <div id="playerPortalLoginView" style="display:block;">
+        <!-- STEP 1: IDENTITY INPUT -->
+        <div id="playerLoginStep1" style="display:block;">
           <div class="player-login-intro-box">
             <div class="player-login-crest">
               <i class="fa-solid fa-user-shield text-gold"></i>
@@ -2110,15 +2087,14 @@
                 Player Sign In
               </h4>
               <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.45; margin:0;">
-                Access your official player profile, certified match statistics, and team fixtures. Sign in using your registered <strong>Player Name</strong> and <strong>Email ID</strong> collected during Team Registration.
+                Enter your registered <strong>Player Name</strong> and <strong>Email ID</strong> to receive your secure OTP verification code.
               </p>
             </div>
           </div>
 
-          <!-- Alert Container (Exact requested messages) -->
           <div id="playerLoginAlert" class="alert-box" style="display:none; margin:1rem 0;"></div>
 
-          <form id="playerLoginForm" onsubmit="handlePlayerLoginSubmit(event)" style="margin-top:1.2rem;">
+          <form id="playerLoginForm" onsubmit="handlePlayerSendOTP(event)" style="margin-top:1.2rem;">
             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:1.2rem;">
               <div class="form-group">
                 <label for="playerLoginName" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
@@ -2136,9 +2112,9 @@
             </div>
 
             <div style="margin-top:1.5rem; display:flex; gap:0.8rem; justify-content:flex-end;">
-              <button type="button" class="btn btn-outline-danger" onclick="closeModal('playerPortalModal')">Cancel</button>
-              <button type="submit" id="btnPlayerLoginSubmit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
-                <i class="fa-solid fa-arrow-right-to-bracket"></i> Login
+              <button type="button" class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">Cancel</button>
+              <button type="submit" id="btnSendOTP" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                <i class="fa-solid fa-paper-plane"></i> Send OTP
               </button>
             </div>
           </form>
@@ -2172,47 +2148,86 @@
               </div>
             </div>
             <p style="margin:0.6rem 0 0; font-size:0.78rem; color:var(--text-muted);">
-              <i class="fa-solid fa-hand-pointer text-gold"></i> Click any card above to auto-populate the login fields and test the exact validation rules.
+              <i class="fa-solid fa-hand-pointer text-gold"></i> Click any card to auto-fill login fields. OTP for demo: <strong style="color:var(--gold-bright);">123456</strong>
             </p>
           </div>
         </div>
 
-        
+        <!-- STEP 2: OTP VERIFICATION -->
+        <div id="playerLoginStep2" style="display:none;">
+          <div style="text-align:center; margin-bottom:1.8rem;">
+            <!-- Icon with animated ring -->
+            <div style="position:relative; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1.2rem;">
+              <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,rgba(234,179,8,0.2),rgba(234,179,8,0.05)); border:2px solid rgba(234,179,8,0.4); display:flex; align-items:center; justify-content:center; box-shadow:0 0 30px rgba(234,179,8,0.15);">
+                <i class="fa-solid fa-mobile-screen-button" style="font-size:2rem; color:#fbbf24;"></i>
+              </div>
+            </div>
+            <h4 style="font-family:var(--font-header); font-size:1.35rem; font-weight:800; color:#fff; margin:0 0 0.4rem;">OTP Verification</h4>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin:0 0 0.3rem;">A 6-digit OTP has been sent to</p>
+            <div id="otpSentToDisplay" style="color:var(--gold-bright); font-weight:700; font-size:1rem; margin-bottom:0.3rem;"></div>
+            <p style="color:rgba(180,196,230,0.6); font-size:0.78rem; margin:0;">
+              <i class="fa-solid fa-circle-info" style="font-size:0.7rem;"></i> Demo OTP: <strong style="color:#fbbf24;">123456</strong> (simulated — no real SMS/email sent)
+            </p>
+          </div>
+
+          <!-- OTP Alert -->
+          <div id="otpAlert" class="alert-box" style="display:none; margin-bottom:1rem;"></div>
+
+          <!-- 6-box OTP Input -->
+          <div style="display:flex; justify-content:center; gap:0.6rem; margin-bottom:1.5rem;" id="otpBoxesContainer">
+            <input type="text" class="otp-box" id="otp0" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 0)" onkeydown="otpBoxKeydown(event, 0)" onpaste="otpBoxPaste(event)">
+            <input type="text" class="otp-box" id="otp1" maxlength="1" inputmode="numeric" pattern="[0-9]"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 1)" onkeydown="otpBoxKeydown(event, 1)">
+            <input type="text" class="otp-box" id="otp2" maxlength="1" inputmode="numeric" pattern="[0-9]"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 2)" onkeydown="otpBoxKeydown(event, 2)">
+            <input type="text" class="otp-box" id="otp3" maxlength="1" inputmode="numeric" pattern="[0-9]"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 3)" onkeydown="otpBoxKeydown(event, 3)">
+            <input type="text" class="otp-box" id="otp4" maxlength="1" inputmode="numeric" pattern="[0-9]"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 4)" onkeydown="otpBoxKeydown(event, 4)">
+            <input type="text" class="otp-box" id="otp5" maxlength="1" inputmode="numeric" pattern="[0-9]"
+              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
+              oninput="otpBoxInput(this, 5)" onkeydown="otpBoxKeydown(event, 5)">
+          </div>
+
+          <!-- Verify Button -->
+          <div style="display:flex; justify-content:center; margin-bottom:1.2rem;">
+            <button type="button" id="btnVerifyOTP" class="btn btn-gold btn-lg" style="padding:0.8rem 3rem; font-size:1rem;" onclick="handleVerifyOTP()">
+              <i class="fa-solid fa-shield-check"></i> Verify OTP
+            </button>
+          </div>
+
+          <!-- Resend & Change -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; padding-top:1rem; border-top:1px solid rgba(254,215,102,0.15);">
+            <div id="otpResendArea">
+              <span id="otpResendTimer" style="color:var(--text-muted); font-size:0.85rem;">
+                <i class="fa-solid fa-clock"></i> Resend OTP in <strong id="otpCountdown" style="color:var(--gold-bright);">30</strong>s
+              </span>
+              <button type="button" id="btnResendOTP" class="btn btn-outline-gold btn-sm" style="display:none;" onclick="handleResendOTP()">
+                <i class="fa-solid fa-rotate-right"></i> Resend OTP
+              </button>
+            </div>
+            <button type="button" class="btn btn-outline-gold btn-sm" onclick="backToPlayerLoginStep1()">
+              <i class="fa-solid fa-arrow-left"></i> Change Name / Email
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
 
+
+
   <!-- ======================================================================= -->
   <!-- PAGE 5: PLAYER DASHBOARD (DEDICATED FULL PAGE / ROUTE)                  -->
   <!-- ======================================================================= -->
-  <div id="page-player-dashboard" class="app-page" style="display:none;">
-    <div class="page-header-banner">
-      <div class="container">
-        <div class="page-header-nav-row">
-          <div class="page-breadcrumbs">
-            <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <a href="/player-login" onclick="navigateToRoute('/player-login', event)">Player</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span class="current">Dashboard</span>
-          </div>
-          <div style="display:flex; gap:0.6rem; align-items:center;">
-            <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-              <i class="fa-solid fa-arrow-left"></i> Back to Home
-            </button>
-            <button class="btn btn-outline-danger btn-sm" onclick="handlePlayerLogout()">
-              <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-            </button>
-          </div>
-        </div>
-        <h1 class="page-main-title">
-          <i class="fa-solid fa-id-card text-gold"></i> District Player Dashboard &amp; Career Profile
-        </h1>
-        <p class="page-main-subtitle">
-          Official certified credentials, match records, personal performance metrics, team fixtures, and career scorecard statistics.
-        </p>
-      </div>
-    </div>
+  <div id="page-player-dashboard" class="app-page" style="display:none; padding-top: 1.5rem;">
 
     <div class="container page-content-wrapper">
       <div class="page-card-container">
@@ -2641,9 +2656,9 @@
   <!-- PAGE 9: ADMIN DASHBOARD (DEDICATED FULL PAGE / ROUTE)                   -->
   <!-- ======================================================================= -->
   <div id="page-admin-dashboard" class="app-page" style="display:none;">
-    <div class="page-header-banner">
-      <div class="container">
-        <div class="page-header-nav-row">
+    <div class="container page-content-wrapper" style="margin-top: 2rem;">
+      <div class="page-card-container">
+        <div class="page-header-nav-row" style="margin-bottom: 1.5rem;">
           <div class="page-breadcrumbs">
             <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
@@ -2660,17 +2675,6 @@
             </button>
           </div>
         </div>
-        <h1 class="page-main-title">
-          <i class="fa-solid fa-shield-halved text-gold"></i> CFVD Administration &amp; Approvals Console
-        </h1>
-        <p class="page-main-subtitle">
-          Integrated association module to review, verify, and approve/reject Team Registrations and Official Match Scorers.
-        </p>
-      </div>
-    </div>
-
-    <div class="container page-content-wrapper">
-      <div class="page-card-container">
         <!-- Notification Message Banner for Admin Actions -->
         <div id="adminActionNotification" class="page-success-banner" style="display:none; margin-bottom:1.5rem;"></div>
 
@@ -2763,6 +2767,8 @@
             </div>
           </div>
 
+
+
           <!-- Quick Action Banner -->
           <div style="background:rgba(10,24,56,0.7); border:1px solid var(--gold-border); border-radius:10px; padding:1.2rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
@@ -2786,6 +2792,73 @@
 
         <!-- SECTION 2: TEAM REGISTRATION MANAGEMENT TAB -->
         <div id="adminViewTeams" style="display:none;">
+
+          <!-- SUMMARY PANEL: Left explanation + Right diagram -->
+          <div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+            <!-- LEFT: Stats Explanation -->
+            <div style="flex:1; min-width:240px; background:linear-gradient(135deg, rgba(10,20,50,0.95) 0%, rgba(20,40,80,0.9) 100%); border:1px solid rgba(254,215,102,0.45); border-radius:16px; padding:1.6rem; box-shadow:0 0 20px rgba(234,179,8,0.1), inset 0 1px 0 rgba(255,255,255,0.05);">
+              <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.8rem;">
+                <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#eab308,#f59e0b); display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px rgba(234,179,8,0.5);">
+                  <i class="fa-solid fa-users" style="color:#fff; font-size:0.95rem;"></i>
+                </div>
+                <h4 style="color:#fff; margin:0; font-family:var(--font-header); font-size:1.1rem; letter-spacing:0.01em;">Team Registrations</h4>
+              </div>
+              <p style="color:rgba(180,196,230,0.7); font-size:0.82rem; margin-bottom:1.3rem; line-height:1.6; border-bottom:1px solid rgba(254,215,102,0.15); padding-bottom:1rem;">
+                All team registration requests submitted to CFVD for the current season.
+              </p>
+              <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 100%); border:1px solid rgba(16,185,129,0.5); border-left:3px solid #10b981; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981;"></span>
+                    <span style="color:#a7f3d0; font-size:0.85rem; font-weight:600;">Approved</span>
+                  </div>
+                  <span id="teamStatApproved" style="color:#4ade80; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(74,222,128,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(234,179,8,0.18) 0%, rgba(234,179,8,0.06) 100%); border:1px solid rgba(234,179,8,0.5); border-left:3px solid #eab308; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#eab308; display:inline-block; box-shadow:0 0 6px #eab308;"></span>
+                    <span style="color:#fde68a; font-size:0.85rem; font-weight:600;">Pending Review</span>
+                  </div>
+                  <span id="teamStatPending" style="color:#fbbf24; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(251,191,36,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.06) 100%); border:1px solid rgba(239,68,68,0.5); border-left:3px solid #ef4444; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block; box-shadow:0 0 6px #ef4444;"></span>
+                    <span style="color:#fca5a5; font-size:0.85rem; font-weight:600;">Rejected</span>
+                  </div>
+                  <span id="teamStatRejected" style="color:#f87171; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(248,113,113,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.06) 100%); border:1px solid rgba(99,102,241,0.5); border-left:3px solid #818cf8; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#818cf8; display:inline-block; box-shadow:0 0 6px #818cf8;"></span>
+                    <span style="color:#c7d2fe; font-size:0.85rem; font-weight:600;">Total Registered</span>
+                  </div>
+                  <span id="teamStatTotal" style="color:#a5b4fc; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(165,180,252,0.5);">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: Donut Chart Diagram -->
+            <div style="flex:1; min-width:240px; background:linear-gradient(135deg, rgba(10,20,50,0.95) 0%, rgba(20,40,80,0.9) 100%); border:1px solid rgba(254,215,102,0.45); border-radius:16px; padding:1.6rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; box-shadow:0 0 20px rgba(234,179,8,0.1), inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h4 style="color:#fff; margin:0; font-family:var(--font-header); font-size:1.1rem; text-align:center; letter-spacing:0.01em;">
+                <i class="fa-solid fa-chart-pie" style="color:#eab308; margin-right:0.4rem;"></i>Status Distribution
+              </h4>
+              <div style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
+                <div id="teamDonutChart" style="width:190px; height:190px; border-radius:50%; background:conic-gradient(#10b981 0% 50%, #f59e0b 50% 75%, #ef4444 75% 100%); box-shadow:0 0 30px rgba(16,185,129,0.3), 0 0 60px rgba(234,179,8,0.15); transition:background 0.6s ease;"></div>
+                <div style="position:absolute; width:118px; height:118px; border-radius:50%; background:radial-gradient(circle, rgba(10,20,50,0.98) 0%, rgba(5,15,40,0.98) 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; border:2px solid rgba(254,215,102,0.2);">
+                  <span id="teamDonutTotal" style="font-size:2.2rem; font-weight:900; color:#fff; line-height:1;">0</span>
+                  <span style="font-size:0.68rem; color:rgba(254,215,102,0.8); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Teams</span>
+                </div>
+              </div>
+              <div style="display:flex; gap:1.2rem; flex-wrap:wrap; justify-content:center;">
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#6ee7b7; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 5px #10b981;"></span>Approved</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#fde68a; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;box-shadow:0 0 5px #f59e0b;"></span>Pending</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#fca5a5; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;box-shadow:0 0 5px #ef4444;"></span>Rejected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOOLBAR + LIST -->
           <div class="admin-toolbar">
             <div class="admin-search-box">
               <i class="fa-solid fa-search"></i>
@@ -2808,6 +2881,73 @@
 
         <!-- SECTION 3: SCORER MANAGEMENT TAB -->
         <div id="adminViewScorers" style="display:none;">
+
+          <!-- SUMMARY PANEL: Left explanation + Right diagram -->
+          <div style="display:flex; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+            <!-- LEFT: Stats Explanation -->
+            <div style="flex:1; min-width:240px; background:linear-gradient(135deg, rgba(10,20,50,0.95) 0%, rgba(20,40,80,0.9) 100%); border:1px solid rgba(254,215,102,0.45); border-radius:16px; padding:1.6rem; box-shadow:0 0 20px rgba(234,179,8,0.1), inset 0 1px 0 rgba(255,255,255,0.05);">
+              <div style="display:flex; align-items:center; gap:0.7rem; margin-bottom:0.8rem;">
+                <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#3b82f6,#2563eb); display:flex; align-items:center; justify-content:center; box-shadow:0 0 12px rgba(59,130,246,0.5);">
+                  <i class="fa-solid fa-satellite-dish" style="color:#fff; font-size:0.95rem;"></i>
+                </div>
+                <h4 style="color:#fff; margin:0; font-family:var(--font-header); font-size:1.1rem; letter-spacing:0.01em;">Scorer Management</h4>
+              </div>
+              <p style="color:rgba(180,196,230,0.7); font-size:0.82rem; margin-bottom:1.3rem; line-height:1.6; border-bottom:1px solid rgba(254,215,102,0.15); padding-bottom:1rem;">
+                Official scorer registrations and live match scoring access requests across Virudhunagar District.
+              </p>
+              <div style="display:flex; flex-direction:column; gap:0.65rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 100%); border:1px solid rgba(16,185,129,0.5); border-left:3px solid #10b981; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981;"></span>
+                    <span style="color:#a7f3d0; font-size:0.85rem; font-weight:600;">Authorized Scorers</span>
+                  </div>
+                  <span id="scorerStatApproved" style="color:#4ade80; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(74,222,128,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(234,179,8,0.18) 0%, rgba(234,179,8,0.06) 100%); border:1px solid rgba(234,179,8,0.5); border-left:3px solid #eab308; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#eab308; display:inline-block; box-shadow:0 0 6px #eab308;"></span>
+                    <span style="color:#fde68a; font-size:0.85rem; font-weight:600;">Pending Approval</span>
+                  </div>
+                  <span id="scorerStatPending" style="color:#fbbf24; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(251,191,36,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.06) 100%); border:1px solid rgba(239,68,68,0.5); border-left:3px solid #ef4444; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#ef4444; display:inline-block; box-shadow:0 0 6px #ef4444;"></span>
+                    <span style="color:#fca5a5; font-size:0.85rem; font-weight:600;">Rejected</span>
+                  </div>
+                  <span id="scorerStatRejected" style="color:#f87171; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(248,113,113,0.5);">0</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.7rem 1rem; background:linear-gradient(90deg, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0.06) 100%); border:1px solid rgba(99,102,241,0.5); border-left:3px solid #818cf8; border-radius:8px;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="width:8px; height:8px; border-radius:50%; background:#818cf8; display:inline-block; box-shadow:0 0 6px #818cf8;"></span>
+                    <span style="color:#c7d2fe; font-size:0.85rem; font-weight:600;">Total Scorers</span>
+                  </div>
+                  <span id="scorerStatTotal" style="color:#a5b4fc; font-size:1.4rem; font-weight:900; text-shadow:0 0 10px rgba(165,180,252,0.5);">0</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: Donut Chart Diagram -->
+            <div style="flex:1; min-width:240px; background:linear-gradient(135deg, rgba(10,20,50,0.95) 0%, rgba(20,40,80,0.9) 100%); border:1px solid rgba(254,215,102,0.45); border-radius:16px; padding:1.6rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; box-shadow:0 0 20px rgba(59,130,246,0.12), inset 0 1px 0 rgba(255,255,255,0.05);">
+              <h4 style="color:#fff; margin:0; font-family:var(--font-header); font-size:1.1rem; text-align:center; letter-spacing:0.01em;">
+                <i class="fa-solid fa-chart-pie" style="color:#3b82f6; margin-right:0.4rem;"></i>Status Distribution
+              </h4>
+              <div style="position:relative; display:inline-flex; align-items:center; justify-content:center;">
+                <div id="scorerDonutChart" style="width:190px; height:190px; border-radius:50%; background:conic-gradient(#10b981 0% 40%, #f59e0b 40% 80%, #ef4444 80% 100%); box-shadow:0 0 30px rgba(59,130,246,0.3), 0 0 60px rgba(16,185,129,0.15); transition:background 0.6s ease;"></div>
+                <div style="position:absolute; width:118px; height:118px; border-radius:50%; background:radial-gradient(circle, rgba(10,20,50,0.98) 0%, rgba(5,15,40,0.98) 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; border:2px solid rgba(59,130,246,0.3);">
+                  <span id="scorerDonutTotal" style="font-size:2.2rem; font-weight:900; color:#fff; line-height:1;">0</span>
+                  <span style="font-size:0.68rem; color:rgba(147,197,253,0.9); font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;">Scorers</span>
+                </div>
+              </div>
+              <div style="display:flex; gap:1.2rem; flex-wrap:wrap; justify-content:center;">
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#6ee7b7; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;box-shadow:0 0 5px #10b981;"></span>Authorized</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#fde68a; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;box-shadow:0 0 5px #f59e0b;"></span>Pending</span>
+                <span style="display:flex; align-items:center; gap:4px; font-size:0.78rem; color:#fca5a5; font-weight:600;"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;box-shadow:0 0 5px #ef4444;"></span>Rejected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOOLBAR + LIST -->
           <div class="admin-toolbar">
             <div class="admin-search-box">
               <i class="fa-solid fa-search"></i>

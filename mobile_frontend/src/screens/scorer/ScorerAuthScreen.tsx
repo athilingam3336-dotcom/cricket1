@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import SharedFooter from '../../components/scorer/SharedFooter';
 
 export default function ScorerAuthScreen() {
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -58,7 +59,8 @@ export default function ScorerAuthScreen() {
       </View>
       
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.logoContainer}>
+        <View style={styles.cardContainer}>
+          <View style={styles.logoContainer}>
           <Image source={require('../../../assets/logo_transparent.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.mainTitle}>CRICKET FEDERATION OF</Text>
           <Text style={styles.mainSubtitle}>VIRUDHUNAGAR DISTRICT</Text>
@@ -81,7 +83,12 @@ export default function ScorerAuthScreen() {
           {isLoginMode ? (
             <>
               <Text style={styles.label}>Enter OTP (Use 1234 for testing) *</Text>
-              <TextInput style={styles.input} value={otp} onChangeText={setOtp} secureTextEntry placeholder="Enter 1234" placeholderTextColor="#9bb0cf" keyboardType="number-pad" />
+              <View style={styles.passwordContainer}>
+                <TextInput style={styles.passwordInput} value={otp} onChangeText={setOtp} secureTextEntry={!showPassword} placeholder="Enter 1234" placeholderTextColor="#9bb0cf" keyboardType="number-pad" />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Text style={styles.toggleText}>{showPassword ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity style={styles.forgotBtn} onPress={handleResendOTP}>
                 <Text style={styles.forgotText}>Resend OTP?</Text>
               </TouchableOpacity>
@@ -102,7 +109,7 @@ export default function ScorerAuthScreen() {
               <View style={styles.passwordContainer}>
                 <TextInput style={styles.passwordInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} placeholder="Enter password" placeholderTextColor="#9bb0cf" />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={styles.toggleText}>{showPassword ? 'Hide' : 'Show'}</Text>
+                  <Text style={styles.toggleText}>{showPassword ? '🙈' : '👁️'}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -121,33 +128,36 @@ export default function ScorerAuthScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+        </View>
+        <SharedFooter />
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020612', width: '100%' },
-  header: { padding: 16, backgroundColor: 'rgba(2, 6, 18, 0.8)', borderBottomWidth: 1, borderBottomColor: 'rgba(212, 175, 55, 0.3)' },
-  backBtn: { alignSelf: 'flex-start' },
-  backText: { color: '#D4AF37', fontSize: 14, fontWeight: 'bold' },
+  container: { flex: 1, backgroundColor: 'transparent', width: '100%' },
+  header: { padding: 16, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 4 },
+  backBtn: { alignSelf: 'flex-start', padding: 8, paddingLeft: 0 },
+  backText: { color: '#eab308', fontSize: 18, fontWeight: 'bold' },
   logoContainer: { alignItems: 'center', marginBottom: 24, marginTop: 10 },
   logo: { width: 80, height: 80, marginBottom: 10 },
-  mainTitle: { color: '#FFF', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
-  mainSubtitle: { color: '#D4AF37', fontSize: 24, fontWeight: '900', letterSpacing: 1 },
-  scroll: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 16, paddingBottom: 40, width: '100%' },
-  card: { backgroundColor: 'rgba(10, 24, 56, 0.95)', borderRadius: 12, padding: 24, borderWidth: 1, borderColor: '#D4AF37', width: '100%', maxWidth: 450, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
-  title: { color: '#FFF', fontSize: 22, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
-  subtitle: { color: '#9bb0cf', fontSize: 13, marginBottom: 24, textAlign: 'center' },
-  label: { color: '#FFF', fontSize: 13, marginBottom: 6, fontWeight: '600' },
-  input: { backgroundColor: 'rgba(2, 6, 18, 0.8)', color: '#FFF', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.5)', padding: 14, borderRadius: 6, marginBottom: 16, fontSize: 15 },
-  passwordContainer: { flexDirection: 'row', backgroundColor: 'rgba(2, 6, 18, 0.8)', borderWidth: 1, borderColor: 'rgba(212, 175, 55, 0.5)', borderRadius: 6, marginBottom: 16, alignItems: 'center', paddingRight: 10 },
-  passwordInput: { flex: 1, color: '#FFF', padding: 14, fontSize: 15 },
-  toggleText: { color: '#D4AF37', fontWeight: 'bold', fontSize: 12 },
+  mainTitle: { color: '#1e293b', fontSize: 18, fontWeight: 'bold', letterSpacing: 1 },
+  mainSubtitle: { color: '#b45309', fontSize: 24, fontWeight: '900', letterSpacing: 1 },
+  scroll: { flexGrow: 1, width: '100%' },
+  cardContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16, paddingBottom: 40, width: '100%' },
+  card: { backgroundColor: '#ffffff', borderRadius: 12, padding: 24, borderWidth: 1, borderColor: '#e2e8f0', width: '100%', maxWidth: 450, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
+  title: { color: '#1e293b', fontSize: 22, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
+  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 24, textAlign: 'center' },
+  label: { color: '#334155', fontSize: 13, marginBottom: 6, fontWeight: '700' },
+  input: { backgroundColor: '#f8fafc', color: '#1e293b', borderWidth: 1, borderColor: '#cbd5e1', padding: 14, borderRadius: 6, marginBottom: 16, fontSize: 15 },
+  passwordContainer: { flexDirection: 'row', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, marginBottom: 16, alignItems: 'center', paddingRight: 10 },
+  passwordInput: { flex: 1, color: '#1e293b', padding: 14, fontSize: 15 },
+  toggleText: { color: '#0f172a', fontSize: 16 },
   forgotBtn: { alignSelf: 'flex-end', marginBottom: 20 },
-  forgotText: { color: '#D4AF37', fontSize: 13 },
-  actionBtn: { backgroundColor: '#D4AF37', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 4, shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5 },
-  actionText: { color: '#000', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase' },
+  forgotText: { color: '#0f172a', fontSize: 13, fontWeight: '600' },
+  actionBtn: { backgroundColor: '#eab308', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 4, shadowColor: '#eab308', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5 },
+  actionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 },
   linkBtn: { marginTop: 24, alignItems: 'center' },
-  linkText: { color: '#D4AF37', textDecorationLine: 'underline', fontSize: 14, fontWeight: '500' }
+  linkText: { color: '#b45309', textDecorationLine: 'underline', fontSize: 14, fontWeight: '500' }
 });
