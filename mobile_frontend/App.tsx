@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, StatusBar, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { INLINE_HTML } from './assets_web/inlineHtml';
 
 export default function App() {
   if (Platform.OS === 'web') {
@@ -10,7 +9,7 @@ export default function App() {
         <StatusBar barStyle="light-content" backgroundColor="#020612" />
         {/* @ts-ignore */}
         <iframe
-          srcDoc={INLINE_HTML}
+          src="/bundled.html"
           style={styles.iframe as any}
           title="Cricket Federation Portal"
         />
@@ -26,12 +25,12 @@ export default function App() {
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <StatusBar barStyle="light-content" backgroundColor="#020612" />
         <WebView
-          source={{ html: INLINE_HTML, baseUrl: 'https://rawcdn.githack.com/athilingam3336-dotcom/cricket1/main/' }}
+          source={require('./public/bundled.html')}
           style={styles.webview}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           startInLoadingState={true}
-          scalesPageToFit={true}
+          scalesPageToFit={false}
           mixedContentMode="always"
           originWhitelist={['*']}
           showsVerticalScrollIndicator={false}
