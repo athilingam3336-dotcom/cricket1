@@ -8,13 +8,50 @@ export default function App() {
 
   useEffect(() => {
     if (Platform.OS === 'web') {
+      const getIframe = (): HTMLIFrameElement | null =>
+        document.getElementById('cfvd-main-frame') as HTMLIFrameElement | null;
+
       const handleMessage = (event: MessageEvent) => {
         if (event.data && event.data.type === 'OPEN_SCORER_MODULE') {
           setIsScorerMode(true);
         }
+        // Handle navigation messages from the iframe to update the top-level browser URL
+        if (event.data && event.data.type === 'NAVIGATE' && event.data.route) {
+          try {
+            const route: string = event.data.route;
+            const [path, queryString] = route.split('?');
+            const fullUrl = window.location.origin + path + (queryString ? '?' + queryString : '');
+            window.history.pushState({ iframeRoute: route }, '', fullUrl);
+          } catch (e) {}
+        }
+        // Handle section-based hash navigation from iframe
+        if (event.data && event.data.type === 'SECTION_NAV' && event.data.hash) {
+          try {
+            const hash: string = event.data.hash;
+            window.history.pushState({ iframeHash: hash }, '', hash);
+          } catch (e) {}
+        }
       };
+
+      // When user presses Back/Forward, tell the iframe to navigate to the matching route
+      const handlePopState = (e: PopStateEvent) => {
+        try {
+          const route = (e.state && e.state.iframeRoute)
+            ? e.state.iframeRoute
+            : window.location.pathname + window.location.search;
+          const iframe = getIframe();
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'NAVIGATE_TO', route }, '*');
+          }
+        } catch (e) {}
+      };
+
       window.addEventListener('message', handleMessage);
-      return () => window.removeEventListener('message', handleMessage);
+      window.addEventListener('popstate', handlePopState);
+      return () => {
+        window.removeEventListener('message', handleMessage);
+        window.removeEventListener('popstate', handlePopState);
+      };
     }
   }, []);
 
@@ -28,11 +65,16 @@ export default function App() {
 
   const renderWebView = () => {
     if (Platform.OS === 'web') {
+      // Compute initial route from current URL path to support deep links
+      const initialPath = (typeof window !== 'undefined' && window.location.pathname !== '/')
+        ? '#' + window.location.pathname + window.location.search
+        : '';
       return (
         <View style={styles.webviewContainer}>
           {/* @ts-ignore */}
           <iframe
-            src="/bundled.html"
+            id="cfvd-main-frame"
+            src={`/bundled.html${initialPath}`}
             style={styles.iframe as any}
             title="Cricket Federation Portal"
           />

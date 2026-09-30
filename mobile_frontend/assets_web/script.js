@@ -3690,11 +3690,22 @@ function navigateToRoute(route, event) {
     window.location.hash = '#' + targetRoute;
   }
 
+  // Notify parent window (when running inside an iframe) to update the top-level URL
+  try {
+    const routeMsg = { type: 'NAVIGATE', route: targetRoute };
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(routeMsg, '*');
+    }
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(routeMsg));
+    }
+  } catch (e) {}
+
   renderCurrentRoute(targetRoute, true);
 }
 
 /**
- * Navigates to a specific section on the Home page
+ * Navigates to a specific section on the Home page and updates the URL hash
  */
 function navigateToSection(sectionId, tab, event) {
   if (event) {
@@ -3703,11 +3714,27 @@ function navigateToSection(sectionId, tab, event) {
 
   closeAllDropdowns();
 
+  // Build a hash URL for the section, appending tab if provided
+  const hashSegment = tab ? `#${sectionId}?tab=${tab}` : `#${sectionId}`;
+  try {
+    window.history.pushState({ section: sectionId, tab: tab || null }, '', hashSegment);
+  } catch (e) {
+    window.location.hash = hashSegment.slice(1);
+  }
+
+  // Notify parent window (iframe → top-level browser URL sync)
+  try {
+    const sectionMsg = { type: 'SECTION_NAV', hash: hashSegment };
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(sectionMsg, '*');
+    }
+  } catch (e) {}
+
   const currentRoute = getCurrentRouteFromUrl();
   const [basePath] = currentRoute.split('?');
 
   if (basePath !== '/' && basePath !== '/home') {
-    // Switch to home first
+    // Switch to home first, then scroll
     navigateToRoute('/');
     setTimeout(() => {
       const el = document.getElementById(sectionId);
@@ -3721,7 +3748,7 @@ function navigateToSection(sectionId, tab, event) {
       }
     }, 150);
   } else {
-    // Already on home
+    // Already on home — just scroll
     const el = document.getElementById(sectionId);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3903,6 +3930,13 @@ function initMultiPageRouting() {
   window.addEventListener('hashchange', () => {
     const route = getCurrentRouteFromUrl();
     renderCurrentRoute(route, true);
+  });
+
+  // Listen for navigation commands from parent window (browser Back/Forward sync)
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'NAVIGATE_TO' && e.data.route) {
+      renderCurrentRoute(e.data.route, true);
+    }
   });
 
   // Intercept route links
