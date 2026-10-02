@@ -250,6 +250,9 @@ class ScorerService {
     const match = matchRows && matchRows[0];
     if (!match) throw { status: 404, message: 'Match not found' };
 
+    const [tournRows] = await db.query('SELECT * FROM tournaments WHERE id = ?', [match.tournament_id]);
+    const tournament = (tournRows && tournRows[0]) || { name: 'VPL 2026' };
+
     const [teams] = await db.query('SELECT * FROM teams');
     const teamMap = {};
     (teams || []).forEach(t => { teamMap[t.id] = t; });
@@ -264,24 +267,45 @@ class ScorerService {
       const batTeam = teamMap[inn.batting_team_id] || { name: 'Batting Team' };
       const bowlTeam = teamMap[inn.bowling_team_id] || { name: 'Bowling Team' };
 
-      // Batters
+      // Batters from MySQL table innings_batters
       const [batters] = await db.query('SELECT * FROM innings_batters WHERE innings_id = ? ORDER BY batting_position ASC', [inn.id]);
-      const battingCard = (batters || []).map(b => ({
-        id: b.id,
-        name: (playerMap[b.player_id] && playerMap[b.player_id].name) || 'Batter',
-        runs: b.runs,
-        balls: b.balls,
-        fours: b.fours,
-        sixes: b.sixes,
-        strikeRate: b.strike_rate,
-        isOut: b.is_out,
-        dismissal: b.is_out ? (b.dismissal_type ? `${b.dismissal_type.toLowerCase()} b ${(playerMap[b.dismissed_by] && playerMap[b.dismissed_by].name) || 'Bowler'}` : 'out') : 'not out'
-      }));
+      const battingCard = (batters || []).map(b => {
+        let dismissalText = 'not out';
+        if (b.is_out) {
+          const bowlerName = (playerMap[b.dismissed_by] && playerMap[b.dismissed_by].name) || '';
+          if (b.dismissal_type === 'BOWLED') {
+            dismissalText = bowlerName ? `b ${bowlerName}` : 'bowled';
+          } else if (b.dismissal_type === 'CAUGHT') {
+            dismissalText = bowlerName ? `c ${bowlerName}` : 'caught';
+          } else if (b.dismissal_type === 'LBW') {
+            dismissalText = bowlerName ? `lbw b ${bowlerName}` : 'lbw';
+          } else if (b.dismissal_type === 'RUN_OUT') {
+            dismissalText = 'run out';
+          } else if (b.dismissal_type === 'STUMPED') {
+            dismissalText = bowlerName ? `st b ${bowlerName}` : 'stumped';
+          } else {
+            dismissalText = b.dismissal_type ? b.dismissal_type.toLowerCase() : 'out';
+          }
+        }
+        return {
+          id: b.id,
+          playerId: b.player_id,
+          name: (playerMap[b.player_id] && playerMap[b.player_id].name) || 'Batter',
+          runs: b.runs,
+          balls: b.balls,
+          fours: b.fours,
+          sixes: b.sixes,
+          strikeRate: b.strike_rate,
+          isOut: b.is_out,
+          dismissal: dismissalText
+        };
+      });
 
-      // Bowlers
+      // Bowlers from MySQL table innings_bowlers
       const [bowlers] = await db.query('SELECT * FROM innings_bowlers WHERE innings_id = ?', [inn.id]);
       const bowlingCard = (bowlers || []).map(bw => ({
         id: bw.id,
+        playerId: bw.player_id,
         name: (playerMap[bw.player_id] && playerMap[bw.player_id].name) || 'Bowler',
         overs: `${bw.overs}.${bw.balls}`,
         maidens: bw.maidens,
@@ -290,16 +314,57 @@ class ScorerService {
         economy: bw.economy
       }));
 
-      // Calculate extras
-      const [delRows] = await db.query('SELECT * FROM deliveries WHERE innings_id = ?', [inn.id]);
+      // Calculate extras directly from deliveries table
+      const [delRows] = await db.query('SELECT * FROM deliveries WHERE innings_id = ? ORDER BY id ASC', [inn.id]);
       let wides = 0, noBalls = 0, byes = 0, legByes = 0;
+      const fallOfWickets = [];
+      let runningScore = 0;
+      let wicketCount = 0;
+
       (delRows || []).forEach(d => {
+        runningScore += (d.total_runs || 0);
         if (d.extra_type === 'WIDE') wides += d.runs_extras;
         if (d.extra_type === 'NO_BALL') noBalls += d.runs_extras;
         if (d.extra_type === 'BYE') byes += d.runs_extras;
         if (d.extra_type === 'LEG_BYE') legByes += d.runs_extras;
+        if (d.wicket) {
+          wicketCount += 1;
+          const dismissedName = (playerMap[d.dismissed_player_id] && playerMap[d.dismissed_player_id].name) || 'Batter';
+          fallOfWickets.push(`${wicketCount}-${runningScore} (${dismissedName}, ${d.over_number}.${d.ball_number} ov)`);
+        }
       });
       const totalExtras = wides + noBalls + byes + legByes;
+
+      // Fall of wickets calculation from dismissed batters if delivery rows were aggregated
+      if (fallOfWickets.length === 0 && (batters || []).some(b => b.is_out)) {
+        let fWkt = 0;
+        let cumScore = 0;
+        (batters || []).filter(b => b.is_out).forEach((b) => {
+          fWkt++;
+          cumScore += b.runs;
+          const pName = (playerMap[b.player_id] && playerMap[b.player_id].name) || 'Batter';
+          fallOfWickets.push(`${fWkt}-${cumScore} (${pName}, ${b.dismissal_ball || 'Ov'})`);
+        });
+      }
+
+      // Partnerships calculation
+      const partnerships = [];
+      if (battingCard.length >= 2) {
+        partnerships.push({
+          wicket: '1st Wicket',
+          runs: (battingCard[0]?.runs || 0) + (battingCard[1]?.runs || 0),
+          balls: (battingCard[0]?.balls || 0) + (battingCard[1]?.balls || 0),
+          batters: `${battingCard[0]?.name} & ${battingCard[1]?.name}`
+        });
+      }
+      if (battingCard.length >= 3) {
+        partnerships.push({
+          wicket: '2nd Wicket',
+          runs: (battingCard[1]?.runs || 0) + (battingCard[2]?.runs || 0),
+          balls: (battingCard[1]?.balls || 0) + (battingCard[2]?.balls || 0),
+          batters: `${battingCard[1]?.name} & ${battingCard[2]?.name}`
+        });
+      }
 
       return {
         id: inn.id,
@@ -312,21 +377,42 @@ class ScorerService {
         overs: `${inn.overs}.${inn.balls}`,
         extras: {
           total: totalExtras,
+          wide: wides,
+          noBall: noBalls,
+          bye: byes,
+          legBye: legByes,
           breakdown: `wd ${wides}, nb ${noBalls}, b ${byes}, lb ${legByes}`
         },
         batters: battingCard,
-        bowlers: bowlingCard
+        bowlers: bowlingCard,
+        fallOfWickets,
+        partnerships
       };
     }));
 
-    return {
-      matchId: match.id,
-      tournament: 'VPL 2026',
+    const matchData = {
+      id: match.id,
+      tournament: tournament.name || 'VPL 2026',
       teamA: (teamMap[match.team_a_id] && teamMap[match.team_a_id].name) || 'Team A',
       teamB: (teamMap[match.team_b_id] && teamMap[match.team_b_id].name) || 'Team B',
-      venue: match.venue_name,
+      venue: match.venue_name || 'Kamarajar Stadium, Virudhunagar',
+      date: match.scheduled_date || '2026-10-10',
+      time: match.scheduled_time || '10:00 AM',
+      overs: match.overs || 20,
       status: match.status === 'LIVE' ? 'Live' : (match.status === 'COMPLETED' ? 'Completed' : 'Upcoming'),
-      result: match.result_text,
+      result: match.result_text || 'Match Concluded'
+    };
+
+    return {
+      matchId: match.id,
+      match: matchData,
+      tournament: matchData.tournament,
+      teamA: matchData.teamA,
+      teamB: matchData.teamB,
+      venue: matchData.venue,
+      date: matchData.date,
+      status: matchData.status,
+      result: matchData.result,
       innings: formattedInnings
     };
   }

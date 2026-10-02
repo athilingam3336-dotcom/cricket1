@@ -14,6 +14,7 @@ ON DUPLICATE KEY UPDATE name=VALUES(name);
 
 -- 3. Teams
 INSERT INTO teams (id, name, short_name, logo_url, city, status) VALUES
+('T005', 'Sattur Spartans', 'SSP', '/assets/teams/ssp.png', 'Sattur', 'ACTIVE'),
 ('T001', 'Virudhunagar Strikers', 'VST', '/assets/teams/vst.png', 'Virudhunagar', 'ACTIVE'),
 ('T002', 'Sivakasi Super Kings', 'SSK', '/assets/teams/ssk.png', 'Sivakasi', 'ACTIVE'),
 ('T003', 'Aruppukottai Avengers', 'AKA', '/assets/teams/aka.png', 'Aruppukottai', 'ACTIVE'),
@@ -84,7 +85,7 @@ ON DUPLICATE KEY UPDATE name=VALUES(name);
 INSERT INTO matches (id, tournament_id, venue_id, venue_name, team_a_id, team_b_id, scheduled_date, scheduled_time, overs, status, toss_winner, toss_decision, current_innings, current_over, current_ball, winner_team_id, result_text) VALUES
 ('M001', 'TOUR-2026', 'VEN-01', 'Kamarajar Stadium, Virudhunagar', 'T001', 'T002', '2026-10-15', '10:00 AM', 20, 'SCHEDULED', NULL, NULL, 1, 0, 0, NULL, NULL),
 ('M002', 'TOUR-2026', 'VEN-02', 'Srivilliputhur Ground', 'T003', 'T004', '2026-10-16', '02:00 PM', 20, 'LIVE', 'T003', 'BAT', 1, 15, 2, NULL, 'Match in Progress - Innings 1'),
-('M003', 'TOUR-2026', 'VEN-01', 'Kamarajar Stadium, Virudhunagar', 'T004', 'T001', '2026-10-10', '10:00 AM', 20, 'COMPLETED', 'T004', 'BAT', 2, 18, 4, 'T001', 'Virudhunagar Strikers won by 7 wickets')
+('M003', 'TOUR-2026', 'VEN-01', 'Kamarajar Stadium, Virudhunagar', 'T005', 'T001', '2026-10-10', '10:00 AM', 20, 'COMPLETED', 'T004', 'BAT', 2, 18, 4, 'T001', 'Virudhunagar Strikers won by 7 wickets')
 ON DUPLICATE KEY UPDATE status=VALUES(status);
 
 -- 6. Scorer Assignments (All assigned to S. Ramesh SCR-101)
@@ -125,6 +126,6 @@ ON DUPLICATE KEY UPDATE total_runs=VALUES(total_runs);
 
 -- 8. Innings for Completed Match M003
 INSERT INTO innings (id, match_id, innings_number, batting_team_id, bowling_team_id, total_runs, wickets, overs, balls, target, status, started_at, ended_at) VALUES
-('INN-M003-1', 'M003', 1, 'T004', 'T001', 160, 8, 20, 0, NULL, 'COMPLETED', '2026-10-10 10:00:00', '2026-10-10 11:35:00'),
-('INN-M003-2', 'M003', 2, 'T001', 'T004', 162, 3, 18, 4, 161, 'COMPLETED', '2026-10-10 11:50:00', '2026-10-10 13:15:00')
+('INN-M003-1', 'M003', 1, 'T005', 'T001', 160, 8, 20, 0, NULL, 'COMPLETED', '2026-10-10 10:00:00', '2026-10-10 11:35:00'),
+('INN-M003-2', 'M003', 2, 'T001', 'T005', 162, 3, 18, 4, 161, 'COMPLETED', '2026-10-10 11:50:00', '2026-10-10 13:15:00')
 ON DUPLICATE KEY UPDATE total_runs=VALUES(total_runs);

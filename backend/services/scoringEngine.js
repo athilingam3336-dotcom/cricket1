@@ -1,3 +1,4 @@
+let deliverySequence = 10000;
 ﻿/**
  * services/scoringEngine.js
  * Comprehensive Cricket Scoring Engine & Rules Service
@@ -128,7 +129,7 @@ class ScoringEngine {
       );
 
       // Insert delivery record
-      const deliveryId = 'DEL-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      const deliveryId = 'DEL-' + Date.now() + '-' + String(++deliverySequence).padStart(6, '0');
       await conn.query(
         `INSERT INTO deliveries (
           id, innings_id, over_number, ball_number, striker_id, non_striker_id, bowler_id,
@@ -553,6 +554,207 @@ class ScoringEngine {
         socketService.broadcastScoreUpdate(matchId, payload);
         return { success: true, data: payload };
       }
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  /**
+   * Edit Delivery Transaction-Safe with Innings Recalculation
+   * PATCH /api/scorer/matches/:matchId/deliveries/:deliveryId
+   */
+  async editDelivery(matchId, deliveryId, updates, editorId) {
+    const conn = await db.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const [delRows] = await conn.query('SELECT * FROM deliveries WHERE id = ?', [deliveryId]);
+      const delivery = delRows && delRows[0];
+      if (!delivery) throw { status: 404, message: 'Delivery not found' };
+
+      const [inningsRows] = await conn.query('SELECT * FROM innings WHERE id = ?', [delivery.innings_id]);
+      const innings = inningsRows && inningsRows[0];
+      if (!innings) throw { status: 404, message: 'Innings not found' };
+
+      // Apply modifications
+      const runsBatter = updates.runsBatter !== undefined ? Number(updates.runsBatter) : delivery.runs_batter;
+      const runsExtras = updates.runsExtras !== undefined ? Number(updates.runsExtras) : delivery.runs_extras;
+      const totalRuns = runsBatter + runsExtras;
+      const extraType = updates.extraType !== undefined ? updates.extraType : delivery.extra_type;
+      const isLegal = extraType === 'NONE' || extraType === 'BYE' || extraType === 'LEG_BYE';
+      const wicket = updates.wicket !== undefined ? Boolean(updates.wicket) : Boolean(delivery.wicket);
+      const wicketType = updates.wicketType !== undefined ? updates.wicketType : delivery.wicket_type;
+
+      // Update delivery record and audit note
+      const auditNote = ` [Edited by ${editorId || 'SCORER'} on ${new Date().toISOString()}]`;
+      const updatedCommentary = (updates.commentary || delivery.commentary || '') + auditNote;
+
+      await conn.query(
+        `UPDATE deliveries SET 
+          runs_batter = ?, runs_extras = ?, total_runs = ?, extra_type = ?, 
+          wicket = ?, wicket_type = ?, is_legal_delivery = ?, commentary = ?
+         WHERE id = ?`,
+        [runsBatter, runsExtras, totalRuns, extraType, wicket, wicketType, isLegal, updatedCommentary, deliveryId]
+      );
+
+      // Recalculate whole innings totals from deliveries for 100% mathematical integrity
+      const [allDeliveries] = await conn.query('SELECT * FROM deliveries WHERE innings_id = ? ORDER BY id ASC', [innings.id]);
+
+      let totalInningsRuns = 0;
+      let totalInningsWickets = 0;
+      let legalBalls = 0;
+
+      const batterStats = {};
+      const bowlerStats = {};
+
+      for (const d of (allDeliveries || [])) {
+        totalInningsRuns += d.total_runs;
+        if (d.wicket) totalInningsWickets += 1;
+        if (d.is_legal_delivery) legalBalls += 1;
+
+        // Accumulate batter
+        if (d.striker_id) {
+          if (!batterStats[d.striker_id]) {
+            batterStats[d.striker_id] = { runs: 0, balls: 0, fours: 0, sixes: 0, is_out: false };
+          }
+          batterStats[d.striker_id].runs += d.runs_batter;
+          if (d.extra_type !== 'WIDE') {
+            batterStats[d.striker_id].balls += 1;
+          }
+          if (d.runs_batter === 4) batterStats[d.striker_id].fours += 1;
+          if (d.runs_batter === 6) batterStats[d.striker_id].sixes += 1;
+          if (d.wicket && d.dismissed_player_id === d.striker_id) {
+            batterStats[d.striker_id].is_out = true;
+          }
+        }
+
+        // Accumulate bowler
+        if (d.bowler_id) {
+          if (!bowlerStats[d.bowler_id]) {
+            bowlerStats[d.bowler_id] = { overs: 0, balls: 0, runs_conceded: 0, wickets: 0, wides: 0, no_balls: 0 };
+          }
+          if (d.extra_type !== 'BYE' && d.extra_type !== 'LEG_BYE') {
+            bowlerStats[d.bowler_id].runs_conceded += d.total_runs;
+          }
+          if (d.extra_type === 'WIDE') bowlerStats[d.bowler_id].wides += 1;
+          if (d.extra_type === 'NO_BALL') bowlerStats[d.bowler_id].no_balls += 1;
+          if (d.wicket && d.wicket_type !== 'RUN_OUT') bowlerStats[d.bowler_id].wickets += 1;
+          if (d.is_legal_delivery) {
+            bowlerStats[d.bowler_id].balls += 1;
+            if (bowlerStats[d.bowler_id].balls >= 6) {
+              bowlerStats[d.bowler_id].overs += 1;
+              bowlerStats[d.bowler_id].balls = 0;
+            }
+          }
+        }
+      }
+
+      // Update batter rows
+      for (const [pId, stats] of Object.entries(batterStats)) {
+        const sr = stats.balls > 0 ? parseFloat(((stats.runs / stats.balls) * 100).toFixed(2)) : 0;
+        await conn.query(
+          `UPDATE innings_batters SET runs = ?, balls = ?, fours = ?, sixes = ?, strike_rate = ?, is_out = ? WHERE innings_id = ? AND player_id = ?`,
+          [stats.runs, stats.balls, stats.fours, stats.sixes, sr, stats.is_out, innings.id, pId]
+        );
+      }
+
+      // Update bowler rows
+      for (const [pId, stats] of Object.entries(bowlerStats)) {
+        const totalBowlerLegalBalls = (stats.overs * 6) + stats.balls;
+        const econ = totalBowlerLegalBalls > 0 ? parseFloat(((stats.runs_conceded / totalBowlerLegalBalls) * 6).toFixed(2)) : 0;
+        await conn.query(
+          `UPDATE innings_bowlers SET overs = ?, balls = ?, runs_conceded = ?, wickets = ?, wides = ?, no_balls = ?, economy = ? WHERE innings_id = ? AND player_id = ?`,
+          [stats.overs, stats.balls, stats.runs_conceded, stats.wickets, stats.wides, stats.no_balls, econ, innings.id, pId]
+        );
+      }
+
+      const finalOvers = Math.floor(legalBalls / 6);
+      const finalBalls = legalBalls % 6;
+
+      await conn.query(
+        'UPDATE innings SET total_runs = ?, wickets = ?, overs = ?, balls = ? WHERE id = ?',
+        [totalInningsRuns, totalInningsWickets, finalOvers, finalBalls, innings.id]
+      );
+
+      await conn.query('UPDATE matches SET current_over = ?, current_ball = ? WHERE id = ?', [finalOvers, finalBalls, matchId]);
+
+      await conn.commit();
+
+      const livePayload = {
+        matchId,
+        score: `${totalInningsRuns}/${totalInningsWickets}`,
+        overs: `${finalOvers}.${finalBalls}`,
+        totalRuns: totalInningsRuns,
+        wickets: totalInningsWickets,
+        action: 'EDIT_DELIVERY',
+        deliveryId
+      };
+      socketService.broadcastScoreUpdate(matchId, livePayload);
+
+      return {
+        success: true,
+        message: 'Delivery edited and innings recalculated successfully.',
+        data: livePayload
+      };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  /**
+   * Conclude Match Manually (POST /api/scorer/matches/:matchId/end)
+   */
+  async endMatch(matchId, { resultText, winnerTeamId, status = 'COMPLETED' }) {
+    const conn = await db.getConnection();
+    await conn.beginTransaction();
+
+    try {
+      const [matches] = await conn.query('SELECT * FROM matches WHERE id = ?', [matchId]);
+      const match = matches && matches[0];
+      if (!match) throw { status: 404, message: 'Match not found' };
+
+      const finalResult = resultText || match.result_text || 'Match Concluded';
+      const finalWinner = winnerTeamId || match.winner_team_id;
+
+      await conn.query(
+        'UPDATE matches SET status = ?, winner_team_id = ?, result_text = ? WHERE id = ?',
+        [status, finalWinner, finalResult, matchId]
+      );
+
+      // Close all live innings
+      await conn.query(
+        'UPDATE innings SET status = ? WHERE match_id = ? AND status = ?',
+        ['COMPLETED', matchId, 'LIVE']
+      );
+
+      // Update Scorer assignment to COMPLETED
+      await conn.query(
+        'UPDATE scorer_assignments SET status = ? WHERE match_id = ?',
+        ['COMPLETED', matchId]
+      );
+
+      await conn.commit();
+
+      const payload = {
+        matchId,
+        status,
+        resultText: finalResult,
+        winnerTeamId: finalWinner,
+        action: 'MATCH_COMPLETED'
+      };
+      socketService.broadcastScoreUpdate(matchId, payload);
+
+      return {
+        success: true,
+        message: 'Match successfully completed.',
+        data: payload
+      };
     } catch (err) {
       await conn.rollback();
       throw err;

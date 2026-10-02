@@ -1,53 +1,171 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Image,
+  ScrollView,
+  Platform,
+  ActivityIndicator
+} from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
 import SharedFooter from '../../components/scorer/SharedFooter';
+import { ScorerApi } from '../../services/api';
 
 export default function ScorerAuthScreen() {
   const [isLoginMode, setIsLoginMode] = useState(true);
-  
-  // Login State
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  
-  // Register State
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [association, setAssociation] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  
+  // Real status feedback states: 'Sending OTP...', 'OTP sent successfully', 'Invalid OTP', etc.
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
 
   const { navigate, onExit } = useScorerNavigation();
 
-  const handleLogin = () => {
-    if (!email || !otp) {
-      Alert.alert('Error', 'Please enter email and OTP.');
+  const handleLogin = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+
+    if (!email.trim() || !otp.trim()) {
+      setStatusMessage('Please enter your email address and OTP.');
+      setStatusType('error');
       return;
     }
-    // Simple mock auth for demonstration
-    if (otp === '1234') {
-      navigate('Dashboard');
-    } else {
-      Alert.alert('Error', 'Invalid OTP. Use 1234 for testing.');
+
+    setIsLoading(true);
+    setStatusMessage('Verifying credentials...');
+    setStatusType('info');
+
+    try {
+      const res = await ScorerApi.verifyOtp(email.trim(), otp.trim());
+      setStatusMessage('Login successful! Redirecting...');
+      setStatusType('success');
+
+      // Role-based redirection
+      const userRole = (res.user?.role || 'SCORER').toUpperCase();
+      setTimeout(() => {
+        if (userRole === 'ADMIN') {
+          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            window.location.reload();
+          } else {
+            navigate('Dashboard', { role: 'ADMIN', user: res.user });
+          }
+        } else if (userRole === 'SCORER') {
+          navigate('Dashboard', { user: res.user });
+        } else if (userRole === 'PLAYER') {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            window.location.href = '/player';
+          } else {
+            navigate('Dashboard', { user: res.user });
+          }
+        } else {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            window.location.href = '/home';
+          } else {
+            navigate('Dashboard', { user: res.user });
+          }
+        }
+      }, 500);
+    } catch (err: any) {
+      const rawMsg = err.message || '';
+      let displayError = 'Login failed. Network/server error.';
+
+      if (rawMsg.toLowerCase().includes('expired')) {
+        displayError = 'OTP expired. Please request a new OTP.';
+      } else if (rawMsg.toLowerCase().includes('invalid otp') || rawMsg.toLowerCase().includes('incorrect')) {
+        displayError = 'Invalid OTP. Please check and try again.';
+      } else if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
+        displayError = 'Email not registered. Please register an account.';
+      } else if (err.message) {
+        displayError = err.message;
+      }
+
+      setStatusMessage(displayError);
+      setStatusType('error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRegister = () => {
-    if (!name || !email || !password) {
-      Alert.alert('Error', 'Please fill all required fields.');
+  const handleRegister = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+
+    if (!name || !email) {
+      setStatusMessage('Please fill all required fields.');
+      setStatusType('error');
       return;
     }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
+
+    setIsLoading(true);
+    try {
+      const res = await ScorerApi.register({
+        name,
+        email: email.trim(),
+        mobile: phone,
+        password,
+        role: 'SCORER'
+      });
+      setStatusMessage('Registration successful! Logging you in...');
+      setStatusType('success');
+      setTimeout(() => {
+        navigate('Dashboard', { user: res.user });
+      }, 600);
+    } catch (err: any) {
+      setStatusMessage(err.message || 'Registration failed.');
+      setStatusType('error');
+    } finally {
+      setIsLoading(false);
     }
-    Alert.alert('Success', 'Registration submitted for admin approval!');
-    setIsLoginMode(true);
   };
 
-  const handleResendOTP = () => {
-    Alert.alert('OTP Sent', 'A new OTP has been sent to your email.');
+  const handleResendOTP = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+
+    if (!email.trim()) {
+      setStatusMessage('Please enter your email address to receive an OTP.');
+      setStatusType('error');
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setStatusMessage('Sending OTP...');
+    setStatusType('info');
+
+    try {
+      await ScorerApi.requestOtp(email.trim());
+      setStatusMessage('OTP sent successfully. Please check your email.');
+      setStatusType('success');
+    } catch (err: any) {
+      const rawMsg = err.message || '';
+      let displayError = 'Unable to send OTP. Server error.';
+
+      if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
+        displayError = 'Email not registered. Please create an account.';
+      } else if (rawMsg.toLowerCase().includes('rate limit') || rawMsg.toLowerCase().includes('too many') || rawMsg.toLowerCase().includes('wait')) {
+        displayError = rawMsg;
+      } else if (err.message) {
+        displayError = err.message;
+      }
+
+      setStatusMessage(displayError);
+      setStatusType('error');
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
   return (
@@ -61,73 +179,154 @@ export default function ScorerAuthScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.cardContainer}>
           <View style={styles.logoContainer}>
-          <Image source={require('../../../assets/logo_transparent.png')} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.mainTitle}>CRICKET FEDERATION OF</Text>
-          <Text style={styles.mainSubtitle}>VIRUDHUNAGAR DISTRICT</Text>
-        </View>
+            <Image source={require('../../../assets/logo_transparent.png')} style={styles.logo} resizeMode="contain" />
+            <Text style={styles.mainTitle}>CRICKET FEDERATION OF</Text>
+            <Text style={styles.mainSubtitle}>VIRUDHUNAGAR DISTRICT</Text>
+          </View>
 
-        <View style={styles.card}>
-          <Text style={styles.title}>{isLoginMode ? 'Scorer Portal Login' : 'Scorer Registration'}</Text>
-          <Text style={styles.subtitle}>{isLoginMode ? 'Enter your details and OTP to access' : 'Create an account to become a scorer'}</Text>
-
-          {!isLoginMode && (
-            <>
-              <Text style={styles.label}>Full Name *</Text>
-              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Your Name" placeholderTextColor="#9bb0cf" autoCapitalize="words" />
-            </>
-          )}
-
-          <Text style={styles.label}>Email Address *</Text>
-          <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder={isLoginMode ? "admin@example.com" : "scorer@test.com"} keyboardType="email-address" placeholderTextColor="#9bb0cf" autoCapitalize="none" />
-
-          {isLoginMode ? (
-            <>
-              <Text style={styles.label}>Enter OTP (Use 1234 for testing) *</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput style={styles.passwordInput} value={otp} onChangeText={setOtp} secureTextEntry={!showPassword} placeholder="Enter 1234" placeholderTextColor="#9bb0cf" keyboardType="number-pad" />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={styles.toggleText}>{showPassword ? '🙈' : '👁️'}</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity style={styles.forgotBtn} onPress={handleResendOTP}>
-                <Text style={styles.forgotText}>Resend OTP?</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionBtn} onPress={handleLogin}>
-                <Text style={styles.actionText}>Verify & Login</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <Text style={styles.label}>Mobile Number *</Text>
-              <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="Enter mobile" keyboardType="phone-pad" placeholderTextColor="#9bb0cf" />
-
-              <Text style={styles.label}>Cricket Association / District *</Text>
-              <TextInput style={styles.input} value={association} onChangeText={setAssociation} placeholder="e.g. Virudhunagar District" placeholderTextColor="#9bb0cf" />
-
-              <Text style={styles.label}>Password *</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput style={styles.passwordInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} placeholder="Enter password" placeholderTextColor="#9bb0cf" />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <Text style={styles.toggleText}>{showPassword ? '🙈' : '👁️'}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.label}>Confirm Password *</Text>
-              <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry={!showPassword} placeholder="Confirm password" placeholderTextColor="#9bb0cf" />
-
-              <TouchableOpacity style={styles.actionBtn} onPress={handleRegister}>
-                <Text style={styles.actionText}>Register as Scorer</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          <TouchableOpacity onPress={() => setIsLoginMode(!isLoginMode)} style={styles.linkBtn}>
-            <Text style={styles.linkText}>
-              {isLoginMode ? "Don't have an account? Register" : "Already have an account? Login"}
+          <View style={styles.card}>
+            <Text style={styles.title}>{isLoginMode ? 'Scorer Portal Login' : 'Scorer Registration'}</Text>
+            <Text style={styles.subtitle}>
+              {isLoginMode
+                ? 'Enter your registered email and OTP to access real-time scoring'
+                : 'Create an account to become an authorized scorer'}
             </Text>
-          </TouchableOpacity>
-        </View>
+
+            {statusMessage && (
+              <View
+                style={[
+                  styles.statusBanner,
+                  statusType === 'error' && styles.statusError,
+                  statusType === 'success' && styles.statusSuccess,
+                  statusType === 'info' && styles.statusInfo
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusText,
+                    statusType === 'error' && styles.statusTextError,
+                    statusType === 'success' && styles.statusTextSuccess,
+                    statusType === 'info' && styles.statusTextInfo
+                  ]}
+                >
+                  {statusMessage}
+                </Text>
+              </View>
+            )}
+
+            {!isLoginMode && (
+              <>
+                <Text style={styles.label}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Your Name"
+                  placeholderTextColor="#9bb0cf"
+                  autoCapitalize="words"
+                />
+              </>
+            )}
+
+            <Text style={styles.label}>Email Address *</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="e.g. scorer@cfvd.org or admin@example.com"
+              keyboardType="email-address"
+              placeholderTextColor="#9bb0cf"
+              autoCapitalize="none"
+            />
+
+            {isLoginMode ? (
+              <>
+                <Text style={styles.label}>Enter OTP *</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={otp}
+                    onChangeText={setOtp}
+                    secureTextEntry={!showPassword}
+                    placeholder="Enter OTP (e.g. 1234 for dev admin)"
+                    placeholderTextColor="#9bb0cf"
+                    keyboardType="number-pad"
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.forgotBtn}
+                  onPress={handleResendOTP}
+                  disabled={isSendingOtp || isLoading}
+                >
+                  <Text style={styles.forgotText}>
+                    {isSendingOtp ? 'Sending OTP...' : 'Resend OTP?'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={handleLogin}
+                  disabled={isLoading || isSendingOtp}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.actionText}>Verify & Login</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.label}>Mobile Number *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="Enter mobile"
+                  keyboardType="phone-pad"
+                  placeholderTextColor="#9bb0cf"
+                />
+
+                <Text style={styles.label}>Cricket Association / District *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={association}
+                  onChangeText={setAssociation}
+                  placeholder="e.g. Virudhunagar District"
+                  placeholderTextColor="#9bb0cf"
+                />
+
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={handleRegister}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.actionText}>Register as Scorer</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
+
+            <TouchableOpacity
+              onPress={() => {
+                setIsLoginMode(!isLoginMode);
+                setStatusMessage(null);
+                setStatusType(null);
+              }}
+              style={styles.linkBtn}
+            >
+              <Text style={styles.linkText}>
+                {isLoginMode ? "Don't have an account? Register" : "Already have an account? Login"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <SharedFooter />
       </ScrollView>
@@ -148,7 +347,15 @@ const styles = StyleSheet.create({
   cardContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16, paddingBottom: 40, width: '100%' },
   card: { backgroundColor: '#ffffff', borderRadius: 12, padding: 24, borderWidth: 1, borderColor: '#e2e8f0', width: '100%', maxWidth: 450, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
   title: { color: '#1e293b', fontSize: 22, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
-  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 24, textAlign: 'center' },
+  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 20, textAlign: 'center' },
+  statusBanner: { padding: 12, borderRadius: 6, marginBottom: 16, borderWidth: 1 },
+  statusError: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
+  statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
+  statusInfo: { backgroundColor: '#eff6ff', borderColor: '#93c5fd' },
+  statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  statusTextError: { color: '#b91c1c' },
+  statusTextSuccess: { color: '#15803d' },
+  statusTextInfo: { color: '#1d4ed8' },
   label: { color: '#334155', fontSize: 13, marginBottom: 6, fontWeight: '700' },
   input: { backgroundColor: '#f8fafc', color: '#1e293b', borderWidth: 1, borderColor: '#cbd5e1', padding: 14, borderRadius: 6, marginBottom: 16, fontSize: 15 },
   passwordContainer: { flexDirection: 'row', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, marginBottom: 16, alignItems: 'center', paddingRight: 10 },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,20 +7,53 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import { SCORECARD_DETAILS } from '../data/cricketData';
 
 export default function ScorecardModal({ matchId, visible, onClose, theme }) {
   const [activeTab, setActiveTab] = useState('summary');
+  const [scorecard, setScorecard] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (visible && matchId) {
+      loadScorecard();
+    }
+  }, [visible, matchId]);
+
+  const loadScorecard = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      // Map legacy ID if needed
+      const apiMatchId = matchId === 'match-1' ? 'M003' : (matchId === 'match-2' ? 'M002' : matchId);
+      const res = await fetch(`http://localhost:5000/api/matches/${apiMatchId}/scorecard`);
+      const data = await res.json();
+      if (data && data.success && data.data) {
+        setScorecard(data.data);
+      } else {
+        setError('No scorecard data available in database.');
+      }
+    } catch (err) {
+      console.warn('ScorecardModal fetch error:', err.message);
+      setError('Unable to load scorecard from server.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!matchId) return null;
-  const match = SCORECARD_DETAILS[matchId] || SCORECARD_DETAILS['match-1'];
+
+  const matchInfo = scorecard?.match || scorecard;
+  const innings1 = scorecard?.innings && scorecard.innings[0];
+  const innings2 = scorecard?.innings && scorecard.innings[1];
 
   const handleDownloadScoresheet = () => {
     Alert.alert(
       'Scoresheet Generated',
-      `Official match record for "${match.title}" has been saved to device. Verified by CFVD Umpires & Scorers Committee.`,
+      `Official match record for "${matchInfo ? `${matchInfo.teamA} vs ${matchInfo.teamB}` : 'Match'}" has been saved. Verified by CFVD Umpires & Scorers Committee.`,
       [{ text: 'OK' }]
     );
   };
@@ -38,303 +71,183 @@ export default function ScorecardModal({ matchId, visible, onClose, theme }) {
                   <Text style={styles.liveBadgeText}>OFFICIAL MATCH CENTRE</Text>
                 </View>
               </View>
-              <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
-                {match.title}
-              </Text>
-              <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
-                {match.subtitle}
-              </Text>
+              {isLoading ? (
+                <Text style={[styles.title, { color: theme.text }]}>Loading Scorecard...</Text>
+              ) : error ? (
+                <Text style={[styles.title, { color: '#ef4444' }]}>{error}</Text>
+              ) : matchInfo ? (
+                <>
+                  <Text style={[styles.title, { color: theme.text }]} numberOfLines={1}>
+                    {matchInfo.teamA} vs {matchInfo.teamB}
+                  </Text>
+                  <Text style={[styles.subtitle, { color: theme.textSecondary }]} numberOfLines={2}>
+                    {matchInfo.tournament} &bull; {matchInfo.venue} &bull; {matchInfo.result}
+                  </Text>
+                </>
+              ) : null}
             </View>
-
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: theme.card }]}>
               <MaterialCommunityIcons name="close" size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
 
-          {/* Tab Navigation */}
-          <View style={[styles.tabBar, { borderBottomColor: theme.borderLight }]}>
-            {[
-              { key: 'summary', label: 'Summary' },
-              { key: 'scorecard', label: 'Scorecard' },
-              { key: 'commentary', label: 'Commentary' },
-              { key: 'teams', label: 'Playing XI' },
-            ].map((tab) => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[
-                  styles.tabItem,
-                  activeTab === tab.key && [styles.activeTabItem, { borderBottomColor: theme.primary }],
-                ]}
-                onPress={() => setActiveTab(tab.key)}
-              >
-                <Text
-                  style={[
-                    styles.tabItemText,
-                    { color: activeTab === tab.key ? theme.primary : theme.textSecondary },
-                  ]}
-                >
-                  {tab.label}
-                </Text>
+          {isLoading ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+              <ActivityIndicator size="large" color="#b45309" />
+              <Text style={{ marginTop: 12, color: theme.textSecondary, fontSize: 13 }}>
+                Loading verified match data from database...
+              </Text>
+            </View>
+          ) : error ? (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+              <Text style={{ color: '#ef4444', fontSize: 15, fontWeight: 'bold', marginBottom: 8 }}>{error}</Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 16 }}>
+                Could not retrieve match records from MySQL.
+              </Text>
+              <TouchableOpacity onPress={loadScorecard} style={{ backgroundColor: '#b45309', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 4 }}>
+                <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>Retry</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
+          ) : !scorecard ? null : (
+            <>
+              {/* Tab Selector */}
+              <View style={[styles.tabRow, { borderBottomColor: theme.borderLight }]}>
+                {['summary', 'innings-1', 'innings-2'].map((tab) => (
+                  <TouchableOpacity
+                    key={tab}
+                    onPress={() => setActiveTab(tab)}
+                    style={[styles.tab, activeTab === tab && { borderBottomColor: theme.primary, borderBottomWidth: 2 }]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        { color: activeTab === tab ? theme.primary : theme.textSecondary },
+                        activeTab === tab && { fontWeight: '700' }
+                      ]}
+                    >
+                      {tab === 'summary' ? 'Summary' : (tab === 'innings-1' ? (innings1 ? innings1.battingTeam : '1st Innings') : (innings2 ? innings2.battingTeam : '2nd Innings'))}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
-          {/* Tab Content */}
-          <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
-            {/* TAB 1: SUMMARY */}
-            {activeTab === 'summary' && (
-              <View>
-                {/* Score Summary Boxes */}
-                <View style={styles.summaryGrid}>
-                  <View style={[styles.summaryBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.primary }]}>
-                    <Text style={[styles.boxTag, { color: theme.primary }]}>
-                      {match.chasingTarget ? `Chasing Target: ${match.chasingTarget}` : '1st Innings'}
-                    </Text>
-                    <Text style={[styles.boxTeamName, { color: theme.text }]}>
-                      {match.summary.team1.name}
-                    </Text>
-                    <Text style={[styles.bigScore, { color: theme.primary }]}>
-                      {match.summary.team1.score}
-                    </Text>
-                    <Text style={[styles.oversStr, { color: theme.textSecondary }]}>
-                      ({match.summary.team1.overs})
-                    </Text>
-                    <View style={styles.rateRow}>
-                      <Text style={[styles.rateText, { color: theme.textSecondary }]}>
-                        CRR: <Text style={{ color: theme.text, fontWeight: '700' }}>{match.summary.team1.crr}</Text>
-                      </Text>
-                      <Text style={[styles.rateText, { color: theme.accentGold, fontWeight: '700' }]}>
-                        {match.summary.team1.req}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={[styles.summaryBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight }]}>
-                    <Text style={[styles.boxTag, { color: theme.textSecondary }]}>1st Innings</Text>
-                    <Text style={[styles.boxTeamName, { color: theme.text }]}>
-                      {match.summary.team2.name}
-                    </Text>
-                    <Text style={[styles.bigScore, { color: theme.text }]}>
-                      {match.summary.team2.score}
-                    </Text>
-                    <Text style={[styles.oversStr, { color: theme.textSecondary }]}>
-                      ({match.summary.team2.overs})
-                    </Text>
-                    <View style={styles.rateRow}>
-                      <Text style={[styles.rateText, { color: theme.textSecondary }]}>
-                        RR: <Text style={{ color: theme.text, fontWeight: '700' }}>{match.summary.team2.runRate}</Text>
-                      </Text>
-                      <Text style={[styles.rateText, { color: theme.textMuted }]}>
-                        {match.summary.team2.topScorer}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Currently at the Crease */}
-                {match.summary.crease.length > 0 && (
-                  <View style={[styles.sectionBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight }]}>
-                    <View style={styles.sectionHeader}>
-                      <MaterialCommunityIcons name="run-fast" size={16} color={theme.accentGold} />
-                      <Text style={[styles.sectionHeading, { color: theme.text }]}>Currently at Crease</Text>
-                    </View>
-
-                    <View style={styles.tableHeaderRow}>
-                      <Text style={[styles.colHead, { flex: 2, color: theme.textSecondary }]}>Batter</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>R</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>B</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>4s</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>6s</Text>
-                      <Text style={[styles.colHead, styles.colRight, { color: theme.textSecondary }]}>SR</Text>
-                    </View>
-
-                    {match.summary.crease.map((b, i) => (
-                      <View key={i} style={[styles.tableRow, { borderTopColor: theme.borderLight }]}>
-                        <Text style={[styles.colCell, { flex: 2, color: theme.text, fontWeight: '700' }]}>{b.name}</Text>
-                        <Text style={[styles.colCell, styles.colCenter, { color: theme.primary, fontWeight: '800' }]}>{b.r}</Text>
-                        <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.b}</Text>
-                        <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.fours}</Text>
-                        <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.sixes}</Text>
-                        <Text style={[styles.colCell, styles.colRight, { color: theme.textSecondary }]}>{b.sr}</Text>
+              <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {activeTab === 'summary' && (
+                  <View style={{ paddingBottom: 24 }}>
+                    {/* Result Banner */}
+                    {matchInfo?.result && (
+                      <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: 6, marginBottom: 16, borderWidth: 1, borderColor: '#bbf7d0', alignItems: 'center' }}>
+                        <Text style={{ color: '#166534', fontWeight: 'bold', fontSize: 14 }}>{matchInfo.result}</Text>
                       </View>
-                    ))}
+                    )}
+
+                    {/* Innings 1 & 2 summaries */}
+                    {innings1 && (
+                      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, marginBottom: 12, padding: 14, borderRadius: 6, borderWidth: 1 }]}>
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#b45309', marginBottom: 4 }}>{innings1.battingTeam} (Innings 1)</Text>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>{innings1.score}</Text>
+                        {innings1.extras && <Text style={{ fontSize: 11, color: theme.textSecondary, marginTop: 4 }}>Extras: {innings1.extras.total} ({innings1.extras.breakdown})</Text>}
+                      </View>
+                    )}
+
+                    {innings2 && (
+                      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border, marginBottom: 12, padding: 14, borderRadius: 6, borderWidth: 1 }]}>
+                        <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#b45309', marginBottom: 4 }}>{innings2.battingTeam} (Innings 2)</Text>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>{innings2.score}</Text>
+                        {innings2.extras && <Text style={{ fontSize: 11, color: theme.textSecondary, marginTop: 4 }}>Extras: {innings2.extras.total} ({innings2.extras.breakdown})</Text>}
+                      </View>
+                    )}
                   </View>
                 )}
 
-                {/* Current Bowler */}
-                {match.summary.currentBowler && (
-                  <View style={[styles.sectionBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight, marginTop: 10 }]}>
-                    <View style={styles.sectionHeader}>
-                      <MaterialCommunityIcons name="cricket" size={16} color={theme.accentRed} />
-                      <Text style={[styles.sectionHeading, { color: theme.text }]}>Current Bowler</Text>
-                    </View>
+                {(activeTab === 'innings-1' || activeTab === 'innings-2') && (
+                  <View style={{ paddingBottom: 24 }}>
+                    {(() => {
+                      const inn = activeTab === 'innings-1' ? innings1 : innings2;
+                      if (!inn) return <Text style={{ color: theme.textSecondary, padding: 16 }}>Innings not available.</Text>;
+                      return (
+                        <View>
+                          <Text style={{ fontSize: 15, fontWeight: 'bold', color: theme.text, marginBottom: 12 }}>
+                            {inn.battingTeam} Batting Card
+                          </Text>
+                          <View style={{ backgroundColor: theme.card, borderRadius: 6, borderWidth: 1, borderColor: theme.border, overflow: 'hidden', marginBottom: 16 }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: '#f8fafc', padding: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+                              <Text style={{ flex: 3, fontSize: 11, fontWeight: '700', color: '#64748b' }}>Batter</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>R</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>B</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>4s</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>6s</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>SR</Text>
+                            </View>
+                            {inn.batters && inn.batters.map((b, bIdx) => (
+                              <View key={bIdx} style={{ flexDirection: 'row', padding: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                                <View style={{ flex: 3 }}>
+                                  <Text style={{ fontSize: 13, fontWeight: '600', color: theme.text }}>{b.name}</Text>
+                                  <Text style={{ fontSize: 10, color: theme.textSecondary, fontStyle: 'italic' }}>{b.dismissal}</Text>
+                                </View>
+                                <Text style={{ flex: 1, fontSize: 13, fontWeight: 'bold', color: theme.text, textAlign: 'center' }}>{b.runs}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{b.balls}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{b.fours}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{b.sixes}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{b.strikeRate}</Text>
+                              </View>
+                            ))}
+                            {inn.extras && (
+                              <View style={{ padding: 10, backgroundColor: '#fefce8' }}>
+                                <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#b45309' }}>Extras: {inn.extras.total} ({inn.extras.breakdown})</Text>
+                              </View>
+                            )}
+                          </View>
 
-                    <View style={styles.tableHeaderRow}>
-                      <Text style={[styles.colHead, { flex: 2, color: theme.textSecondary }]}>Bowler</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>O</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>M</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>R</Text>
-                      <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>W</Text>
-                      <Text style={[styles.colHead, styles.colRight, { color: theme.textSecondary }]}>Econ</Text>
-                    </View>
+                          <Text style={{ fontSize: 15, fontWeight: 'bold', color: theme.text, marginBottom: 12 }}>
+                            {inn.bowlingTeam} Bowling Card
+                          </Text>
+                          <View style={{ backgroundColor: theme.card, borderRadius: 6, borderWidth: 1, borderColor: theme.border, overflow: 'hidden' }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: '#f8fafc', padding: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+                              <Text style={{ flex: 3, fontSize: 11, fontWeight: '700', color: '#64748b' }}>Bowler</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>O</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>M</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>R</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>W</Text>
+                              <Text style={{ flex: 1, fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' }}>ECON</Text>
+                            </View>
+                            {inn.bowlers && inn.bowlers.map((bw, bwIdx) => (
+                              <View key={bwIdx} style={{ flexDirection: 'row', padding: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                                <Text style={{ flex: 3, fontSize: 13, fontWeight: '600', color: theme.text }}>{bw.name}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{bw.overs}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{bw.maidens}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{bw.runs}</Text>
+                                <Text style={{ flex: 1, fontSize: 13, fontWeight: 'bold', color: '#b45309', textAlign: 'center' }}>{bw.wickets}</Text>
+                                <Text style={{ flex: 1, fontSize: 12, color: theme.textSecondary, textAlign: 'center' }}>{bw.economy}</Text>
+                              </View>
+                            ))}
+                          </View>
 
-                    <View style={[styles.tableRow, { borderTopColor: theme.borderLight }]}>
-                      <Text style={[styles.colCell, { flex: 2, color: theme.text, fontWeight: '700' }]}>{match.summary.currentBowler.name}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{match.summary.currentBowler.o}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{match.summary.currentBowler.m}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{match.summary.currentBowler.r}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.accentRed, fontWeight: '800' }]}>{match.summary.currentBowler.w}</Text>
-                      <Text style={[styles.colCell, styles.colRight, { color: theme.textSecondary }]}>{match.summary.currentBowler.econ}</Text>
-                    </View>
+                          {inn.fallOfWickets && inn.fallOfWickets.length > 0 && (
+                            <View style={{ marginTop: 14, padding: 10, backgroundColor: '#f8fafc', borderRadius: 4, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>Fall of Wickets</Text>
+                              <Text style={{ fontSize: 12, color: '#334155' }}>{inn.fallOfWickets.join(' &bull; ')}</Text>
+                            </View>
+                          )}
+                        </View>
+                      );
+                    })()}
                   </View>
                 )}
+              </ScrollView>
+
+              {/* Footer */}
+              <View style={[styles.footer, { borderTopColor: theme.borderLight }]}>
+                <TouchableOpacity
+                  style={[styles.downloadBtn, { backgroundColor: theme.primary }]}
+                  onPress={handleDownloadScoresheet}
+                >
+                  <FontAwesome5 name="file-pdf" size={14} color="#ffffff" style={{ marginRight: 8 }} />
+                  <Text style={styles.downloadBtnText}>Official Match Scoresheet</Text>
+                </TouchableOpacity>
               </View>
-            )}
-
-            {/* TAB 2: SCORECARD */}
-            {activeTab === 'scorecard' && (
-              <View>
-                <Text style={[styles.subHeading, { color: theme.text }]}>Batting Card</Text>
-                <View style={[styles.sectionBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight }]}>
-                  <View style={styles.tableHeaderRow}>
-                    <Text style={[styles.colHead, { flex: 2.2, color: theme.textSecondary }]}>Batter</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>R</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>B</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>4s</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>6s</Text>
-                    <Text style={[styles.colHead, styles.colRight, { color: theme.textSecondary }]}>SR</Text>
-                  </View>
-
-                  {match.batting.map((item, idx) => (
-                    <View key={idx} style={[styles.scorecardRow, { borderTopColor: theme.borderLight }]}>
-                      <View style={{ flex: 2.2 }}>
-                        <Text style={[styles.batterName, { color: item.highlight ? theme.accentGold : theme.text }]}>
-                          {item.batter}
-                        </Text>
-                        <Text style={[styles.dismissalText, { color: theme.textMuted }]}>
-                          {item.dismissal}
-                        </Text>
-                      </View>
-                      <Text style={[styles.colCell, styles.colCenter, { color: item.highlight ? theme.accentGold : theme.text, fontWeight: '700' }]}>{item.r}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{item.b}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{item.fours}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{item.sixes}</Text>
-                      <Text style={[styles.colCell, styles.colRight, { color: theme.textSecondary }]}>{item.sr}</Text>
-                    </View>
-                  ))}
-
-                  <View style={[styles.extrasRow, { borderTopColor: theme.borderLight }]}>
-                    <Text style={[styles.extrasText, { color: theme.textSecondary }]}>
-                      Extras: {match.extras}
-                    </Text>
-                    <Text style={[styles.totalScoreText, { color: theme.primary }]}>
-                      Total: {match.total}
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Bowling */}
-                <Text style={[styles.subHeading, { color: theme.text, marginTop: 14 }]}>Bowling Card</Text>
-                <View style={[styles.sectionBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight }]}>
-                  <View style={styles.tableHeaderRow}>
-                    <Text style={[styles.colHead, { flex: 2, color: theme.textSecondary }]}>Bowler</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>O</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>M</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>R</Text>
-                    <Text style={[styles.colHead, styles.colCenter, { color: theme.textSecondary }]}>W</Text>
-                    <Text style={[styles.colHead, styles.colRight, { color: theme.textSecondary }]}>Econ</Text>
-                  </View>
-
-                  {match.bowling.map((b, i) => (
-                    <View key={i} style={[styles.tableRow, { borderTopColor: theme.borderLight }]}>
-                      <Text style={[styles.colCell, { flex: 2, color: theme.text, fontWeight: '600' }]}>{b.bowler}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.o}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.m}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.textSecondary }]}>{b.r}</Text>
-                      <Text style={[styles.colCell, styles.colCenter, { color: theme.accentRed, fontWeight: '800' }]}>{b.w}</Text>
-                      <Text style={[styles.colCell, styles.colRight, { color: theme.textSecondary }]}>{b.econ}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* TAB 3: COMMENTARY */}
-            {activeTab === 'commentary' && (
-              <View>
-                {match.commentary.map((comm, index) => {
-                  let badgeBg = theme.surfaceElevated;
-                  let badgeText = '#CBD5E1';
-                  if (comm.type === 'four') {
-                    badgeBg = '#EF4444';
-                    badgeText = '#FFF';
-                  } else if (comm.type === 'six') {
-                    badgeBg = '#F59E0B';
-                    badgeText = '#000';
-                  } else if (comm.type === 'wicket') {
-                    badgeBg = '#DC2626';
-                    badgeText = '#FFF';
-                  } else if (comm.type === 'runs') {
-                    badgeBg = theme.primary;
-                    badgeText = '#000';
-                  }
-
-                  return (
-                    <View key={index} style={[styles.commItem, { borderBottomColor: theme.borderLight }]}>
-                      <View style={[styles.commBallBadge, { backgroundColor: badgeBg }]}>
-                        <Text style={[styles.commBallText, { color: badgeText }]}>{comm.ball}</Text>
-                      </View>
-                      <Text style={[styles.commText, { color: theme.text }]}>{comm.text}</Text>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
-
-            {/* TAB 4: PLAYING XI */}
-            {activeTab === 'teams' && (
-              <View style={styles.teamsGrid}>
-                <View style={[styles.xiBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight }]}>
-                  <Text style={[styles.xiHeading, { color: theme.primary }]}>
-                    {match.summary.team1.name} XI
-                  </Text>
-                  {match.playingXI.team1.map((player, idx) => (
-                    <Text key={idx} style={[styles.playerItem, { color: theme.text }]}>
-                      <Text style={{ color: theme.textSecondary }}>{idx + 1}. </Text>
-                      {player}
-                    </Text>
-                  ))}
-                </View>
-
-                <View style={[styles.xiBox, { backgroundColor: theme.surfaceElevated, borderColor: theme.borderLight, marginTop: 10 }]}>
-                  <Text style={[styles.xiHeading, { color: theme.accentBlue }]}>
-                    {match.summary.team2.name} XI
-                  </Text>
-                  {match.playingXI.team2.map((player, idx) => (
-                    <Text key={idx} style={[styles.playerItem, { color: theme.text }]}>
-                      <Text style={{ color: theme.textSecondary }}>{idx + 1}. </Text>
-                      {player}
-                    </Text>
-                  ))}
-                </View>
-              </View>
-            )}
-          </ScrollView>
-
-          {/* Footer */}
-          <View style={[styles.footer, { borderTopColor: theme.borderLight }]}>
-            <TouchableOpacity style={[styles.closeFooterBtn, { borderColor: theme.border }]} onPress={onClose}>
-              <Text style={[styles.closeFooterBtnText, { color: theme.textSecondary }]}>Close</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.downloadBtn, { backgroundColor: theme.primary }]}
-              onPress={handleDownloadScoresheet}
-            >
-              <FontAwesome5 name="file-pdf" size={13} color="#000" />
-              <Text style={styles.downloadBtnText}>Official Scoresheet</Text>
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -344,266 +257,89 @@ export default function ScorecardModal({ matchId, visible, onClose, theme }) {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16
   },
   modalCard: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderWidth: 1,
+    width: '100%',
+    maxWidth: 680,
     maxHeight: '90%',
-    minHeight: '75%',
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: 'hidden'
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1
   },
   badgeRow: {
-    marginBottom: 4,
+    marginBottom: 4
   },
   livePulseBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    paddingHorizontal: 6,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    borderRadius: 4,
+    alignSelf: 'flex-start'
   },
   pulseDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#b45309',
+    marginRight: 6
   },
   liveBadgeText: {
-    color: '#EF4444',
-    fontSize: 9,
-    fontWeight: '900',
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#b45309'
   },
   title: {
-    fontSize: 15,
-    fontWeight: '900',
-    marginBottom: 2,
+    fontSize: 16,
+    fontWeight: 'bold'
   },
   subtitle: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    marginTop: 2
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 20,
+    padding: 8,
+    borderRadius: 20
   },
-  tabBar: {
+  tabRow: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
+    borderBottomWidth: 1
   },
-  tabItem: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+  tab: {
+    paddingVertical: 12,
+    paddingHorizontal: 16
   },
-  activeTabItem: {
-    borderBottomWidth: 2,
+  tabText: {
+    fontSize: 13
   },
-  tabItemText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    padding: 14,
-  },
-  summaryGrid: {
-    gap: 10,
-    marginBottom: 12,
-  },
-  summaryBox: {
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  boxTag: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  boxTeamName: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  bigScore: {
-    fontSize: 22,
-    fontWeight: '900',
-    marginTop: 2,
-  },
-  oversStr: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  rateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  rateText: {
-    fontSize: 11,
-  },
-  sectionBox: {
-    borderRadius: 10,
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  sectionHeading: {
-    fontSize: 12.5,
-    fontWeight: '800',
-  },
-  subHeading: {
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 6,
-  },
-  tableHeaderRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-  },
-  colHead: {
-    flex: 1,
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  colCell: {
-    flex: 1,
-    fontSize: 11,
-  },
-  colCenter: {
-    textAlign: 'center',
-  },
-  colRight: {
-    textAlign: 'right',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderTopWidth: 1,
-  },
-  scorecardRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderTopWidth: 1,
-    alignItems: 'center',
-  },
-  batterName: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  dismissalText: {
-    fontSize: 9.5,
-    marginTop: 1,
-  },
-  extrasRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-  },
-  extrasText: {
-    fontSize: 11,
-  },
-  totalScoreText: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  commItem: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  commBallBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 6,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  commBallText: {
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  commText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  teamsGrid: {
-    gap: 10,
-  },
-  xiBox: {
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  xiHeading: {
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  playerItem: {
-    fontSize: 12,
-    paddingVertical: 3,
+  content: {
+    padding: 16
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    padding: 12,
-    borderTopWidth: 1,
-  },
-  closeFooterBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  closeFooterBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
+    padding: 16,
+    borderTopWidth: 1
   },
   downloadBtn: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 8,
+    paddingVertical: 12,
+    borderRadius: 6
   },
   downloadBtnText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: '800',
-  },
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 13
+  }
 });

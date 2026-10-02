@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "cricket-backend",
   "version": "1.0.0",
   "description": "Cricket Federation Full-Stack Scorer and Management REST API Backend",
@@ -16,6 +16,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.12.0",
+    "nodemailer": "^10.0.13",
     "socket.io": "^4.8.1"
   }
 }

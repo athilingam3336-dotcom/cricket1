@@ -1,90 +1,83 @@
-﻿/**
+/**
  * middleware/authMiddleware.js
- * Authorization middleware for SCORER and ADMIN roles
+ * JWT Authentication middleware verifying Bearer tokens
  */
 
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'cricket_super_secret_jwt_2026';
 
-function extractUser(req) {
-  // Check Authorization Bearer header
+function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
+  
   if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7).trim();
     try {
-      return jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+      return next();
     } catch (err) {
-      // Token invalid
-      return null;
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized: Invalid or expired token.'
+      });
     }
   }
 
-  // Fallback to custom headers for testing / dev
-  const role = req.headers['x-user-role'] || req.headers['role'];
-  const email = req.headers['x-user-email'] || req.headers['user-email'];
-  const id = req.headers['x-user-id'] || req.headers['scorer-id'] || (role === 'ADMIN' ? 'ADM-1001' : 'SCR-101');
+  // Development/testing custom headers (only if token is absent)
+  if (process.env.NODE_ENV !== 'production') {
+    const roleHeader = req.headers['x-user-role'] || req.headers['role'];
+    const emailHeader = req.headers['x-user-email'] || req.headers['user-email'];
+    const idHeader = req.headers['x-user-id'] || req.headers['scorer-id'];
 
-  if (role) {
-    return {
-      id,
-      email: email || (role === 'ADMIN' ? 'admin@cfvd.org' : 'scorer@cfvd.org'),
-      role: role.toUpperCase(),
-      name: role === 'ADMIN' ? 'Chief Admin' : 'S. Ramesh'
-    };
+    if (roleHeader) {
+      req.user = {
+        id: idHeader || (roleHeader.toUpperCase() === 'ADMIN' ? 'ADM-1001' : 'SCR-101'),
+        email: emailHeader || (roleHeader.toUpperCase() === 'ADMIN' ? 'admin@example.com' : 'scorer@cfvd.org'),
+        role: roleHeader.toUpperCase(),
+        name: roleHeader.toUpperCase() === 'ADMIN' ? 'Chief Admin' : 'S. Ramesh'
+      };
+      return next();
+    }
   }
 
-  // Default demo fallback for scorer if no header
-  return {
-    id: 'SCR-101',
-    email: 'scorer@cfvd.org',
-    role: 'SCORER',
-    name: 'S. Ramesh'
-  };
+  // No token or credentials provided
+  return res.status(401).json({
+    success: false,
+    message: 'Unauthorized: Authentication token required.'
+  });
 }
 
+// Scorer authorization helper (backward compatibility)
 function requireScorerAuth(req, res, next) {
-  const user = extractUser(req);
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      error: 'Unauthorized: Authentication token required.'
-    });
-  }
-
-  if (user.role !== 'SCORER' && user.role !== 'ADMIN') {
-    return res.status(403).json({
-      success: false,
-      error: 'Forbidden: SCORER or ADMIN authorization required.',
-      details: `Role '${user.role}' cannot access scorer endpoints.`
-    });
-  }
-
-  req.user = user;
-  next();
+  verifyToken(req, res, () => {
+    if (req.user.role !== 'SCORER' && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: SCORER or ADMIN authorization required.',
+        details: `Role '${req.user.role}' cannot access scorer endpoints.`
+      });
+    }
+    next();
+  });
 }
 
+// Admin authorization helper (backward compatibility)
 function requireAdminAuth(req, res, next) {
-  const user = extractUser(req);
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      error: 'Unauthorized: Authentication token required.'
-    });
-  }
-
-  if (user.role !== 'ADMIN') {
-    return res.status(403).json({
-      success: false,
-      error: 'Forbidden: ADMIN authorization required.',
-      details: `Role '${user.role}' cannot access administrative management endpoints.`
-    });
-  }
-
-  req.adminUser = user;
-  next();
+  verifyToken(req, res, () => {
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: ADMIN authorization required.',
+        details: `Role '${req.user.role}' cannot access administrative management endpoints.`
+      });
+    }
+    req.adminUser = req.user;
+    next();
+  });
 }
 
 module.exports = {
+  verifyToken,
   requireScorerAuth,
   requireAdminAuth
 };

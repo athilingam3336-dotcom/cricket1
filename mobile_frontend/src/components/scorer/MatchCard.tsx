@@ -12,7 +12,9 @@ export default function MatchCard({ match, variant = 'upcoming' }: Props) {
   const { navigate } = useScorerNavigation();
 
   const handleAction = () => {
-    if (match.status === 'Upcoming' || match.status === 'Live') {
+    if (match.status === 'Upcoming') {
+      navigate('MatchSetup', { matchId: match.id });
+    } else if (match.status === 'Live') {
       navigate('LiveScoring', { matchId: match.id });
     } else {
       navigate('Scorecard', { matchId: match.id });
@@ -43,14 +45,14 @@ export default function MatchCard({ match, variant = 'upcoming' }: Props) {
           </View>
           <View style={styles.teamColRight}>
             <Text style={styles.liveTeamNameRight}>{match.teamB}</Text>
-            <Text style={[styles.liveScoreRight, { fontSize: match.scoreB ? 24 : 14, color: match.scoreB ? '#FFF' : '#8A99B5' }]}>
+            <Text style={[styles.liveScoreRight, { fontSize: match.scoreB ? 24 : 14, color: match.scoreB ? '#1e293b' : '#64748b' }]}>
               {match.scoreB || 'Yet to Bat'}
             </Text>
           </View>
         </View>
 
         <View style={styles.metaRow}>
-          <Text style={styles.metaText}>{match.venue} • {match.format}</Text>
+          <Text style={styles.metaText}>{match.venue} &bull; {match.format}</Text>
         </View>
 
         <TouchableOpacity style={styles.primaryBtn} onPress={handleAction}>
@@ -98,11 +100,11 @@ export default function MatchCard({ match, variant = 'upcoming' }: Props) {
         <Text style={styles.upcomingTeam}>{match.teamB}</Text>
       </View>
       
-      <Text style={styles.metaTextCentered}>{match.date} • {match.venue} • {match.format}</Text>
+      <Text style={styles.metaTextCentered}>{match.date} &bull; {match.venue} &bull; {match.format}</Text>
       
       <View style={styles.centerBtnRow}>
-        <TouchableOpacity style={styles.secondaryBtn} onPress={handleAction}>
-          <Text style={styles.secondaryBtnText}>VIEW MATCH</Text>
+        <TouchableOpacity style={styles.setupBtn} onPress={handleAction}>
+          <Text style={styles.setupBtnText}>SETUP &amp; START MATCH</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -162,6 +164,8 @@ const styles = StyleSheet.create({
   upcomingTeam: { color: '#1e293b', fontSize: 14, fontWeight: 'bold' },
   upcomingVs: { color: '#94a3b8', fontSize: 11, marginVertical: 2, fontWeight: 'bold' },
   centerBtnRow: { alignItems: 'center' },
+  setupBtn: { backgroundColor: '#b45309', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4 },
+  setupBtnText: { color: '#ffffff', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 },
   
   // COMPLETED STYLES
   compactRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },

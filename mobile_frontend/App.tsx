@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, StatusBar, Platform, TouchableOpacity, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import ScorerNavigator from './src/navigation/ScorerNavigator';
@@ -8,6 +8,16 @@ export default function App() {
 
   useEffect(() => {
     if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (
+        window.location.pathname.includes('scorer') ||
+        window.location.search.includes('scorer') ||
+        window.location.hash.includes('scorer')
+      ) {
+        setIsScorerMode(true);
+      }
+    }
+
       const getIframe = (): HTMLIFrameElement | null =>
         document.getElementById('cfvd-main-frame') as HTMLIFrameElement | null;
 
@@ -157,3 +167,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
   }
 });
+
