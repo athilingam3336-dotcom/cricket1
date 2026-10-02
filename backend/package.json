@@ -1,0 +1,21 @@
+﻿{
+  "name": "cricket-backend",
+  "version": "1.0.0",
+  "description": "Cricket Federation Full-Stack Scorer and Management REST API Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "migrate": "node migrations/migrate.js",
+    "seed": "node seeds/seed.js",
+    "test": "node tests/runTests.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.12.0",
+    "socket.io": "^4.8.1"
+  }
+}

@@ -1,31 +1,90 @@
-/**
- * authMiddleware.js
- * 
- * Authorization middleware enforcing strictly ADMIN role for secured endpoints.
- * Denies access with 403 Forbidden to PLAYER, TEAM_OFFICIAL, SCORER, CONTENT_STAFF.
+﻿/**
+ * middleware/authMiddleware.js
+ * Authorization middleware for SCORER and ADMIN roles
  */
 
-function requireAdminAuth(req, res, next) {
-  // Extract session user role & identifier from headers or session
-  const role = (req.headers['x-user-role'] || req.headers['role'] || 'ADMIN').toUpperCase();
-  const userEmail = req.headers['x-user-email'] || req.headers['user-email'] || 'admin@cfvd.org';
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'cricket_super_secret_jwt_2026';
 
-  if (role !== 'ADMIN') {
-    return res.status(403).json({
-      error: 'Access Denied: ADMIN authorization required.',
-      details: `User role '${role}' is not authorized to access administrative management endpoints.`
+function extractUser(req) {
+  // Check Authorization Bearer header
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    try {
+      return jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      // Token invalid
+      return null;
+    }
+  }
+
+  // Fallback to custom headers for testing / dev
+  const role = req.headers['x-user-role'] || req.headers['role'];
+  const email = req.headers['x-user-email'] || req.headers['user-email'];
+  const id = req.headers['x-user-id'] || req.headers['scorer-id'] || (role === 'ADMIN' ? 'ADM-1001' : 'SCR-101');
+
+  if (role) {
+    return {
+      id,
+      email: email || (role === 'ADMIN' ? 'admin@cfvd.org' : 'scorer@cfvd.org'),
+      role: role.toUpperCase(),
+      name: role === 'ADMIN' ? 'Chief Admin' : 'S. Ramesh'
+    };
+  }
+
+  // Default demo fallback for scorer if no header
+  return {
+    id: 'SCR-101',
+    email: 'scorer@cfvd.org',
+    role: 'SCORER',
+    name: 'S. Ramesh'
+  };
+}
+
+function requireScorerAuth(req, res, next) {
+  const user = extractUser(req);
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized: Authentication token required.'
     });
   }
 
-  // Attach verified identity to request
-  req.adminUser = {
-    email: userEmail,
-    role: 'ADMIN'
-  };
+  if (user.role !== 'SCORER' && user.role !== 'ADMIN') {
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden: SCORER or ADMIN authorization required.',
+      details: `Role '${user.role}' cannot access scorer endpoints.`
+    });
+  }
 
+  req.user = user;
+  next();
+}
+
+function requireAdminAuth(req, res, next) {
+  const user = extractUser(req);
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized: Authentication token required.'
+    });
+  }
+
+  if (user.role !== 'ADMIN') {
+    return res.status(403).json({
+      success: false,
+      error: 'Forbidden: ADMIN authorization required.',
+      details: `Role '${user.role}' cannot access administrative management endpoints.`
+    });
+  }
+
+  req.adminUser = user;
   next();
 }
 
 module.exports = {
+  requireScorerAuth,
   requireAdminAuth
 };
