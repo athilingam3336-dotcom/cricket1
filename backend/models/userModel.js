@@ -30,6 +30,37 @@ class UserModel {
     return this.findById(userId);
   }
 
+  async updateStatus(userId, status) {
+    await db.query(
+      `UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?`,
+      [status, userId]
+    );
+    return this.findById(userId);
+  }
+
+  async updateStatusByEmail(email, status) {
+    const cleanEmail = email.trim().toLowerCase();
+    await db.query(
+      `UPDATE users SET status = ?, updated_at = NOW() WHERE email = ?`,
+      [status, cleanEmail]
+    );
+    return this.findByEmail(cleanEmail);
+  }
+
+  async getScorers(status = null) {
+    if (status) {
+      const [rows] = await db.query(
+        `SELECT id, name, email, mobile, role, status, created_at, updated_at FROM users WHERE role = 'SCORER' AND status = ?`,
+        [status]
+      );
+      return rows;
+    }
+    const [rows] = await db.query(
+      `SELECT id, name, email, mobile, role, status, created_at, updated_at FROM users WHERE role = 'SCORER'`
+    );
+    return rows;
+  }
+
   async updateOtp(userId, { otp_hash, otp_expires_at }) {
     await db.query(
       `UPDATE users SET otp_hash = ?, otp_expires_at = ?, otp_verified_at = NULL, updated_at = NOW() WHERE id = ?`,

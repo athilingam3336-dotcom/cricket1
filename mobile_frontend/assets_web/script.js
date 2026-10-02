@@ -5222,6 +5222,12 @@ function promptApproveScorer(scorerId) {
       scorer.approvedBy = 'admin@cfvd.org';
       scorer.rejectionReason = null;
 
+      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
+      }).catch(console.error);
+
       persistScorers(scorers);
       updateAdminSummaryCounts();
       renderAdminScorersList();
@@ -5249,6 +5255,12 @@ function promptRejectScorer(scorerId) {
       scorer.rejectionReason = reason || 'Certification criteria not met';
       scorer.approvedAt = null;
       scorer.approvedBy = null;
+
+      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
+      }).catch(console.error);
 
       persistScorers(scorers);
       updateAdminSummaryCounts();

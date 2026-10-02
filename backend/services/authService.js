@@ -30,16 +30,38 @@ class AuthService {
     // 1. Verify user exists in MySQL
     const user = await userModel.findByEmail(cleanEmail);
     if (!user) {
-      throw { status: 404, message: 'Email not registered. Please register or contact an administrator.' };
+      throw { status: 404, message: 'Email not registered. Please register as a scorer first.' };
     }
 
-    // 2. Rate limiting check
+    // 2. ENFORCE ADMIN APPROVAL STATUS
+    if (user.role === 'SCORER') {
+      if (user.status === 'PENDING') {
+        throw {
+          status: 403,
+          message: 'Your scorer registration is PENDING admin approval. You can only log in once an administrator approves your account.'
+        };
+      }
+      if (user.status === 'REJECTED' || user.status === 'CANCELLED') {
+        throw {
+          status: 403,
+          message: 'Your scorer registration has been REJECTED / CANCELLED by the administrator.'
+        };
+      }
+      if (user.status !== 'ACTIVE') {
+        throw {
+          status: 403,
+          message: 'Your scorer account is inactive. Please contact the administrator.'
+        };
+      }
+    }
+
+    // 3. Rate limiting check
     const rateCheck = otpService.checkRateLimit(cleanEmail);
     if (!rateCheck.allowed) {
       throw { status: 429, message: rateCheck.message };
     }
 
-    // 3. Generate secure OTP and store hash in MySQL
+    // 4. Generate secure OTP and store hash in MySQL
     const rawOtp = otpService.generateOtpCode();
     const otpHash = otpService.hashOtp(rawOtp);
     const expiresAt = new Date(Date.now() + otpService.OTP_EXPIRATION_MS);
@@ -49,17 +71,19 @@ class AuthService {
       otp_expires_at: expiresAt
     });
 
-    // 4. Send OTP email via Nodemailer
+    // 5. Send OTP email via Nodemailer
     await sendOtpEmail({
       toEmail: user.email,
       userName: user.name,
       otp: rawOtp
     });
 
-    // Return success without revealing OTP
     return {
       success: true,
-      message: 'OTP sent successfully to your registered email address.'
+      message: process.env.SMTP_USER 
+        ? 'OTP sent successfully to your registered email address.' 
+        : `OTP sent! (Dev Code: ${rawOtp})`,
+      devOtp: !process.env.SMTP_USER ? rawOtp : undefined
     };
   }
 
@@ -77,9 +101,7 @@ class AuthService {
     const cleanEmail = email.trim().toLowerCase();
     const cleanOtp = String(otp).trim();
 
-    // ==================================================
     // SPECIAL DEVELOPMENT ADMIN LOGIN (Isolated & Configurable)
-    // ==================================================
     const isDevBypass = process.env.DEV_ADMIN_BYPASS !== 'false';
     const devAdminEmail = (process.env.DEV_ADMIN_EMAIL || 'admin@example.com').trim().toLowerCase();
     const devAdminOtp = (process.env.DEV_ADMIN_OTP || '1234').trim();
@@ -89,43 +111,53 @@ class AuthService {
       if (!adminUser) {
         adminUser = await userModel.create({
           id: 'ADM-1001',
-          name: 'System Administrator',
-          email: cleanEmail,
+          name: 'Chief Administrator',
+          email: devAdminEmail,
           role: 'ADMIN',
           status: 'ACTIVE'
         });
       }
 
       const token = jwt.sign(
-        {
-          id: adminUser.id,
-          name: adminUser.name,
-          email: adminUser.email,
-          role: 'ADMIN'
-        },
+        { id: adminUser.id, name: adminUser.name, email: adminUser.email, role: 'ADMIN' },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
       return {
         success: true,
-        message: 'OTP verified successfully (Development Admin Bypass)',
-        user: {
-          id: adminUser.id,
-          name: adminUser.name,
-          email: adminUser.email,
-          role: 'ADMIN'
-        },
+        message: 'Dev Admin Authenticated Successfully',
+        user: { id: adminUser.id, name: adminUser.name, email: adminUser.email, role: 'ADMIN' },
         token
       };
     }
 
-    // ==================================================
     // REAL MYSQL DATABASE VALIDATION
-    // ==================================================
     const user = await userModel.findByEmail(cleanEmail);
     if (!user) {
       throw { status: 404, message: 'User not found with this email.' };
+    }
+
+    // ENFORCE ADMIN APPROVAL STATUS
+    if (user.role === 'SCORER') {
+      if (user.status === 'PENDING') {
+        throw {
+          status: 403,
+          message: 'Your scorer registration is PENDING admin approval. You can only log in once an administrator approves your account.'
+        };
+      }
+      if (user.status === 'REJECTED' || user.status === 'CANCELLED') {
+        throw {
+          status: 403,
+          message: 'Your scorer registration has been REJECTED / CANCELLED by the administrator.'
+        };
+      }
+      if (user.status !== 'ACTIVE') {
+        throw {
+          status: 403,
+          message: 'Your scorer account is inactive. Please contact the administrator.'
+        };
+      }
     }
 
     // Check if OTP was requested
@@ -168,23 +200,125 @@ class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        status: user.status
       },
       token
     };
   }
 
   /**
-   * Compatibility wrapper for existing scorer login calls
+   * Register a new Match Scorer with PENDING status requiring Admin approval
    */
-  async login(email, otpOrPassword) {
-    return this.verifyOtp(email, otpOrPassword);
+  async registerScorer({ name, email, mobile }) {
+    if (!name || !email) {
+      throw { status: 400, message: 'Name and email are required.' };
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await userModel.findByEmail(cleanEmail);
+    if (existing) {
+      if (existing.status === 'PENDING') {
+        return {
+          success: true,
+          status: 'PENDING',
+          message: 'Your scorer registration has already been submitted and is PENDING admin approval.',
+          scorer: { id: existing.id, name: existing.name, email: existing.email, status: 'PENDING' }
+        };
+      }
+      if (existing.status === 'ACTIVE') {
+        return {
+          success: true,
+          status: 'ACTIVE',
+          message: 'Your account is already active. You can log in with OTP.',
+          scorer: { id: existing.id, name: existing.name, email: existing.email, status: 'ACTIVE' }
+        };
+      }
+      if (existing.status === 'REJECTED') {
+        throw { status: 403, message: 'This registration was previously rejected by the administrator.' };
+      }
+      throw { status: 409, message: 'User with this email already exists.' };
+    }
+
+    const id = `SCR-${Math.floor(400 + Math.random() * 500)}`;
+    const user = await userModel.create({
+      id,
+      name: name.trim(),
+      email: cleanEmail,
+      mobile: mobile || null,
+      role: 'SCORER',
+      status: 'PENDING'
+    });
+
+    console.log(`\n📋 [NEW SCORER REGISTRATION] ID: ${user.id}, Name: ${user.name}, Email: ${user.email}, Status: PENDING (Awaiting Admin Approval)\n`);
+
+    return {
+      success: true,
+      status: 'PENDING',
+      message: 'Scorer registration submitted! Your account is PENDING admin verification and approval.',
+      scorer: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        status: 'PENDING'
+      }
+    };
   }
 
   /**
-   * Register a new user
+   * Admin: Approve or Reject a Scorer Registration
    */
-  async register({ name, email, mobile, password, role = 'SCORER' }) {
+  async updateScorerStatus(idOrEmail, newStatus, reason = null) {
+    const validStatuses = ['ACTIVE', 'REJECTED', 'PENDING'];
+    const normalizedStatus = String(newStatus).toUpperCase();
+    if (!validStatuses.includes(normalizedStatus)) {
+      throw { status: 400, message: `Invalid status '${newStatus}'. Allowed: ${validStatuses.join(', ')}` };
+    }
+
+    let user = await userModel.findById(idOrEmail);
+    if (!user) {
+      user = await userModel.findByEmail(idOrEmail);
+    }
+
+    if (!user) {
+      throw { status: 404, message: `Scorer '${idOrEmail}' not found.` };
+    }
+
+    await userModel.updateStatus(user.id, normalizedStatus);
+    const updated = await userModel.findById(user.id);
+
+    console.log(`\n⚖️ [ADMIN SCORER UPDATE] ${user.name} (${user.email}) -> Status set to: ${normalizedStatus}${reason ? ' (Reason: ' + reason + ')' : ''}\n`);
+
+    return {
+      success: true,
+      message: `Scorer ${user.name} status updated to ${normalizedStatus}`,
+      scorer: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        role: updated.role,
+        status: updated.status
+      }
+    };
+  }
+
+  /**
+   * Admin: Get all Scorer accounts from database
+   */
+  async getScorers(status = null) {
+    return userModel.getScorers(status);
+  }
+
+  /**
+   * Compatibility wrapper for register
+   */
+  async register(payload) {
+    if (payload.role === 'SCORER') {
+      return this.registerScorer(payload);
+    }
+
+    const { name, email, mobile, password, role = 'USER' } = payload;
     if (!name || !email) {
       throw { status: 400, message: 'Name and email are required.' };
     }
@@ -195,7 +329,7 @@ class AuthService {
       throw { status: 409, message: 'User with this email already exists.' };
     }
 
-    const id = (role === 'ADMIN' ? 'ADM-' : role === 'PLAYER' ? 'PLY-' : role === 'SCORER' ? 'SCR-' : 'USR-') + Math.floor(100 + Math.random() * 900);
+    const id = (role === 'ADMIN' ? 'ADM-' : role === 'PLAYER' ? 'PLY-' : 'USR-') + Math.floor(100 + Math.random() * 900);
     const user = await userModel.create({
       id,
       name,
@@ -207,12 +341,7 @@ class AuthService {
     });
 
     const token = jwt.sign(
-      {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
+      { id: user.id, name: user.name, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -220,12 +349,7 @@ class AuthService {
     return {
       success: true,
       message: 'User registered successfully',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, status: user.status },
       token
     };
   }

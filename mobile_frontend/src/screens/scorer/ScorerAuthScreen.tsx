@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Image,
   ScrollView,
   Platform,
@@ -17,29 +16,88 @@ import { ScorerApi } from '../../services/api';
 
 export default function ScorerAuthScreen() {
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [association, setAssociation] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   
-  // Real status feedback states: 'Sending OTP...', 'OTP sent successfully', 'Invalid OTP', etc.
+  // Status feedback states
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
 
   const { navigate, onExit } = useScorerNavigation();
 
+  const handleSendOTP = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setStatusMessage('Please enter your email address to receive an OTP.');
+      setStatusType('error');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setStatusMessage('Please enter a valid email address.');
+      setStatusType('error');
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setStatusMessage(`Sending OTP to ${cleanEmail}...`);
+    setStatusType('info');
+
+    try {
+      const res = await ScorerApi.requestOtp(cleanEmail);
+      setOtpSent(true);
+      if (res && res.devOtp) {
+        setOtp(String(res.devOtp));
+      }
+      setStatusMessage(res?.message || 'OTP sent successfully! Please check your email.');
+      setStatusType('success');
+    } catch (err: any) {
+      const rawMsg = err.message || '';
+      let displayError = 'Unable to send OTP. Server error.';
+
+      if (rawMsg.toLowerCase().includes('pending')) {
+        displayError = '⏳ Your registration is PENDING admin approval. You can only log in once an administrator approves your account.';
+      } else if (rawMsg.toLowerCase().includes('rejected') || rawMsg.toLowerCase().includes('cancelled')) {
+        displayError = '❌ Your registration was REJECTED / CANCELLED by the administrator.';
+      } else if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
+        displayError = 'Email not registered. Please create an account below.';
+      } else if (rawMsg.toLowerCase().includes('rate limit') || rawMsg.toLowerCase().includes('too many') || rawMsg.toLowerCase().includes('wait')) {
+        displayError = rawMsg;
+      } else if (err.message) {
+        displayError = err.message;
+      }
+
+      setStatusMessage(displayError);
+      setStatusType('error');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
   const handleLogin = async () => {
     setStatusMessage(null);
     setStatusType(null);
 
-    if (!email.trim() || !otp.trim()) {
-      setStatusMessage('Please enter your email address and OTP.');
+    if (!email.trim()) {
+      setStatusMessage('Please enter your email address.');
+      setStatusType('error');
+      return;
+    }
+
+    if (!otp.trim()) {
+      setStatusMessage('Please enter the OTP sent to your email.');
       setStatusType('error');
       return;
     }
@@ -82,7 +140,11 @@ export default function ScorerAuthScreen() {
       const rawMsg = err.message || '';
       let displayError = 'Login failed. Network/server error.';
 
-      if (rawMsg.toLowerCase().includes('expired')) {
+      if (rawMsg.toLowerCase().includes('pending')) {
+        displayError = '⏳ Your registration is PENDING admin approval. You can only log in once an administrator approves your account.';
+      } else if (rawMsg.toLowerCase().includes('rejected') || rawMsg.toLowerCase().includes('cancelled')) {
+        displayError = '❌ Your registration was REJECTED / CANCELLED by the administrator.';
+      } else if (rawMsg.toLowerCase().includes('expired')) {
         displayError = 'OTP expired. Please request a new OTP.';
       } else if (rawMsg.toLowerCase().includes('invalid otp') || rawMsg.toLowerCase().includes('incorrect')) {
         displayError = 'Invalid OTP. Please check and try again.';
@@ -103,7 +165,7 @@ export default function ScorerAuthScreen() {
     setStatusMessage(null);
     setStatusType(null);
 
-    if (!name || !email) {
+    if (!name.trim() || !email.trim()) {
       setStatusMessage('Please fill all required fields.');
       setStatusType('error');
       return;
@@ -112,59 +174,20 @@ export default function ScorerAuthScreen() {
     setIsLoading(true);
     try {
       const res = await ScorerApi.register({
-        name,
+        name: name.trim(),
         email: email.trim(),
-        mobile: phone,
+        mobile: phone.trim(),
         password,
         role: 'SCORER'
       });
-      setStatusMessage('Registration successful! Logging you in...');
-      setStatusType('success');
-      setTimeout(() => {
-        navigate('Dashboard', { user: res.user });
-      }, 600);
+
+      setStatusMessage('✓ Registration submitted! Status: PENDING admin approval. You can log in once an administrator approves your account.');
+      setStatusType('info');
     } catch (err: any) {
       setStatusMessage(err.message || 'Registration failed.');
       setStatusType('error');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleResendOTP = async () => {
-    setStatusMessage(null);
-    setStatusType(null);
-
-    if (!email.trim()) {
-      setStatusMessage('Please enter your email address to receive an OTP.');
-      setStatusType('error');
-      return;
-    }
-
-    setIsSendingOtp(true);
-    setStatusMessage('Sending OTP...');
-    setStatusType('info');
-
-    try {
-      await ScorerApi.requestOtp(email.trim());
-      setStatusMessage('OTP sent successfully. Please check your email.');
-      setStatusType('success');
-    } catch (err: any) {
-      const rawMsg = err.message || '';
-      let displayError = 'Unable to send OTP. Server error.';
-
-      if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
-        displayError = 'Email not registered. Please create an account.';
-      } else if (rawMsg.toLowerCase().includes('rate limit') || rawMsg.toLowerCase().includes('too many') || rawMsg.toLowerCase().includes('wait')) {
-        displayError = rawMsg;
-      } else if (err.message) {
-        displayError = err.message;
-      }
-
-      setStatusMessage(displayError);
-      setStatusType('error');
-    } finally {
-      setIsSendingOtp(false);
     }
   };
 
@@ -179,16 +202,22 @@ export default function ScorerAuthScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.cardContainer}>
           <View style={styles.logoContainer}>
-            <Image source={require('../../../assets/logo_transparent.png')} style={styles.logo} resizeMode="contain" />
+            <Image
+              source={require('../../../assets/logo_transparent.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
             <Text style={styles.mainTitle}>CRICKET FEDERATION OF</Text>
             <Text style={styles.mainSubtitle}>VIRUDHUNAGAR DISTRICT</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.title}>{isLoginMode ? 'Scorer Portal Login' : 'Scorer Registration'}</Text>
+            <Text style={styles.title}>
+              {isLoginMode ? 'Scorer Portal Login' : 'Register New Scorer'}
+            </Text>
             <Text style={styles.subtitle}>
               {isLoginMode
-                ? 'Enter your registered email and OTP to access real-time scoring'
+                ? (otpSent ? 'Enter the verification code sent to your email' : 'Enter your registered email to receive an OTP')
                 : 'Create an account to become an authorized scorer'}
             </Text>
 
@@ -228,65 +257,131 @@ export default function ScorerAuthScreen() {
               </>
             )}
 
-            <Text style={styles.label}>Email Address *</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="e.g. scorer@cfvd.org or admin@example.com"
-              keyboardType="email-address"
-              placeholderTextColor="#9bb0cf"
-              autoCapitalize="none"
-            />
-
             {isLoginMode ? (
               <>
-                <Text style={styles.label}>Enter OTP *</Text>
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    value={otp}
-                    onChangeText={setOtp}
-                    secureTextEntry={!showPassword}
-                    placeholder="Enter OTP (e.g. 1234 for dev admin)"
-                    placeholderTextColor="#9bb0cf"
-                    keyboardType="number-pad"
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                  </TouchableOpacity>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Email Address *</Text>
+                  {otpSent && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setOtpSent(false);
+                        setStatusMessage(null);
+                        setStatusType(null);
+                      }}
+                    >
+                      <Text style={styles.editEmailText}>Change Email</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
 
-                <TouchableOpacity
-                  style={styles.forgotBtn}
-                  onPress={handleResendOTP}
-                  disabled={isSendingOtp || isLoading}
-                >
-                  <Text style={styles.forgotText}>
-                    {isSendingOtp ? 'Sending OTP...' : 'Resend OTP?'}
-                  </Text>
-                </TouchableOpacity>
+                <TextInput
+                  style={[styles.input, otpSent && styles.inputDisabled]}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="e.g. scorer@cfvd.org or athilingam3336@gmail.com"
+                  keyboardType="email-address"
+                  placeholderTextColor="#9bb0cf"
+                  autoCapitalize="none"
+                  editable={!otpSent}
+                />
 
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={handleLogin}
-                  disabled={isLoading || isSendingOtp}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="#ffffff" />
-                  ) : (
-                    <Text style={styles.actionText}>Verify & Login</Text>
-                  )}
-                </TouchableOpacity>
+                {!otpSent ? (
+                  <>
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={handleSendOTP}
+                      disabled={isSendingOtp}
+                    >
+                      {isSendingOtp ? (
+                        <ActivityIndicator color="#ffffff" />
+                      ) : (
+                        <Text style={styles.actionText}>Send OTP</Text>
+                      )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.secondaryLinkBtn}
+                      onPress={() => setOtpSent(true)}
+                    >
+                      <Text style={styles.secondaryLinkText}>
+                        Already have an OTP? Enter code directly →
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.label}>Enter OTP *</Text>
+                    <View style={styles.passwordContainer}>
+                      <TextInput
+                        style={styles.passwordInput}
+                        value={otp}
+                        onChangeText={setOtp}
+                        secureTextEntry={!showPassword}
+                        placeholder="Enter OTP code"
+                        placeholderTextColor="#9bb0cf"
+                        keyboardType="number-pad"
+                        autoFocus
+                      />
+                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.otpHelperRow}>
+                      <TouchableOpacity
+                        style={styles.resendBtn}
+                        onPress={handleSendOTP}
+                        disabled={isSendingOtp || isLoading}
+                      >
+                        <Text style={styles.resendText}>
+                          {isSendingOtp ? 'Sending...' : 'Resend OTP?'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => {
+                          setOtpSent(false);
+                          setStatusMessage(null);
+                          setStatusType(null);
+                        }}
+                      >
+                        <Text style={styles.changeEmailLink}>Back to Email</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={handleLogin}
+                      disabled={isLoading || isSendingOtp}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color="#ffffff" />
+                      ) : (
+                        <Text style={styles.actionText}>Verify & Login</Text>
+                      )}
+                    </TouchableOpacity>
+                  </>
+                )}
               </>
             ) : (
               <>
+                <Text style={styles.label}>Email Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="e.g. scorer@cfvd.org"
+                  keyboardType="email-address"
+                  placeholderTextColor="#9bb0cf"
+                  autoCapitalize="none"
+                />
+
                 <Text style={styles.label}>Mobile Number *</Text>
                 <TextInput
                   style={styles.input}
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="Enter mobile"
+                  placeholder="Enter mobile number"
                   keyboardType="phone-pad"
                   placeholderTextColor="#9bb0cf"
                 />
@@ -317,6 +412,7 @@ export default function ScorerAuthScreen() {
             <TouchableOpacity
               onPress={() => {
                 setIsLoginMode(!isLoginMode);
+                setOtpSent(false);
                 setStatusMessage(null);
                 setStatusType(null);
               }}
@@ -356,13 +452,20 @@ const styles = StyleSheet.create({
   statusTextError: { color: '#b91c1c' },
   statusTextSuccess: { color: '#15803d' },
   statusTextInfo: { color: '#1d4ed8' },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { color: '#334155', fontSize: 13, marginBottom: 6, fontWeight: '700' },
+  editEmailText: { color: '#b45309', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline', marginBottom: 6 },
   input: { backgroundColor: '#f8fafc', color: '#1e293b', borderWidth: 1, borderColor: '#cbd5e1', padding: 14, borderRadius: 6, marginBottom: 16, fontSize: 15 },
+  inputDisabled: { backgroundColor: '#f1f5f9', color: '#64748b' },
   passwordContainer: { flexDirection: 'row', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, marginBottom: 16, alignItems: 'center', paddingRight: 10 },
   passwordInput: { flex: 1, color: '#1e293b', padding: 14, fontSize: 15 },
   toggleText: { color: '#0f172a', fontSize: 16 },
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: 20 },
-  forgotText: { color: '#0f172a', fontSize: 13, fontWeight: '600' },
+  otpHelperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  resendBtn: { paddingVertical: 4 },
+  resendText: { color: '#b45309', fontSize: 13, fontWeight: '600' },
+  changeEmailLink: { color: '#64748b', fontSize: 13, textDecorationLine: 'underline' },
+  secondaryLinkBtn: { marginTop: 14, alignItems: 'center', padding: 6 },
+  secondaryLinkText: { color: '#64748b', fontSize: 13, fontWeight: '500' },
   actionBtn: { backgroundColor: '#eab308', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 4, shadowColor: '#eab308', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5 },
   actionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 },
   linkBtn: { marginTop: 24, alignItems: 'center' },

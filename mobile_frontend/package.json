@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "mobile_frontend",
   "version": "1.0.0",
   "main": "index.ts",
@@ -20,7 +20,8 @@
     "@types/react": "~19.2.2",
     "typescript": "~6.0.3"
   },
-  "scripts": {`n    "dev": "expo start --web",
+  "scripts": {
+    "dev": "expo start --web",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -28,4 +29,3 @@
   },
   "private": true
 }
-
