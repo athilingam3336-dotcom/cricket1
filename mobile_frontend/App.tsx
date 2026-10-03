@@ -7,7 +7,7 @@ import RegistrationScreen from './src/screens/auth/RegistrationScreen';
 import ScorerNavigator from './src/navigation/ScorerNavigator';
 
 function MainAppShell() {
-  const { currentScreen, navigate } = useAppNavigation();
+  const { currentScreen, navigate, params } = useAppNavigation();
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -46,7 +46,7 @@ function MainAppShell() {
               navigate('Home');
             } else if (route === '/login') {
               navigate('Login');
-            } else if (route === '/scorer-login') {
+            } else if (route === '/scorer-login' || route === '/scorer') {
               navigate('Scorer');
             } else if (route === '/player-registration' || route === '/team-registration' || route === '/register') {
               navigate('Registration');
@@ -81,7 +81,12 @@ function MainAppShell() {
   }
 
   if (currentScreen === 'Scorer') {
-    return <ScorerNavigator onExit={() => navigate('Home')} />;
+    return (
+      <ScorerNavigator
+        onExit={(target, navParams) => navigate('Home', navParams)}
+        initialParams={params}
+      />
+    );
   }
 
   // Home Screen with Top Native Bar containing only "Login" and "Scorer Login" (No separate Register)

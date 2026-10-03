@@ -1,4 +1,4 @@
-/**
+﻿/**
  * services/otpService.js
  * Cryptographically secure OTP generation, hashing, rate limiting, and verification.
  */
@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes window
 const MAX_REQUESTS_PER_WINDOW = 5;            // Max 5 OTP requests per 15 minutes
-const MIN_COOLDOWN_MS = 15 * 1000;            // 15 seconds minimum between requests
+const MIN_COOLDOWN_MS = 30 * 1000;            // 30 seconds cooldown between OTP requests
 const OTP_EXPIRATION_MS = 5 * 60 * 1000;      // 5 minutes expiry
 
 /**
@@ -43,7 +43,7 @@ function checkRateLimit(email) {
     const waitSec = Math.ceil((MIN_COOLDOWN_MS - (now - entry.lastRequestTime)) / 1000);
     return {
       allowed: false,
-      message: `Please wait ${waitSec} second(s) before requesting another OTP.`
+      message: `Too many attempts. Please wait ${waitSec} second(s) before requesting another OTP.`
     };
   }
 
@@ -73,10 +73,17 @@ function resetRateLimit(email) {
   }
 }
 
+function verifyOtp(plainOtp, hash) {
+  if (!plainOtp || !hash) return false;
+  return hashOtp(plainOtp) === hash;
+}
+
 module.exports = {
+  verifyOtp,
   generateOtpCode,
   hashOtp,
   checkRateLimit,
   resetRateLimit,
-  OTP_EXPIRATION_MS
+  OTP_EXPIRATION_MS,
+  MIN_COOLDOWN_MS
 };

@@ -29,6 +29,7 @@ class RelationalMemoryStore {
       users: [],
       tournaments: [],
       teams: [],
+      team_players: [],
       players: [],
       matches: [],
       match_players: [],
@@ -37,7 +38,9 @@ class RelationalMemoryStore {
       innings: [],
       innings_batters: [],
       innings_bowlers: [],
-      deliveries: []
+      deliveries: [],
+      otp_verifications: [],
+      scorers: []
     };
     this.initDefaultSeed();
   }
@@ -45,13 +48,20 @@ class RelationalMemoryStore {
   initDefaultSeed() {
     // 1. Users
     this.tables.users = [
-      { id: 'ADM-1001', name: 'System Administrator', email: 'admin@example.com', mobile: '9876543210', password_hash: '1234', role: 'ADMIN', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'ADM-1002', name: 'Chief Administrator', email: 'admin@cfvd.org', mobile: '9876543210', password_hash: 'admin123', role: 'ADMIN', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'SCR-101', name: 'S. Ramesh', email: 'ramesh@gmail.com', mobile: '9876543212', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'SCR-102', name: 'S. Ramesh', email: 'scorer@cfvd.org', mobile: '9876543212', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'SCR-103', name: 'K. Murugan', email: 'murugan@cfvd.org', mobile: '9876543213', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'PLY-201', name: 'Arun Pandian', email: 'player@example.com', mobile: '9876543214', password_hash: 'player123', role: 'PLAYER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() },
-      { id: 'USR-301', name: 'General User', email: 'user@example.com', mobile: '9876543215', password_hash: 'user123', role: 'USER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, created_at: new Date(), updated_at: new Date() }
+      { id: 'ADM-1001', name: 'System Administrator', email: 'admin@example.com', mobile: '9876543210', password_hash: '1234', role: 'ADMIN', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'ADM-1002', name: 'Chief Administrator', email: 'admin@cfvd.org', mobile: '9876543210', password_hash: 'admin123', role: 'ADMIN', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'SCR-101', name: 'S. Ramesh', email: 'ramesh@gmail.com', mobile: '9876543212', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'SCR-102', name: 'S. Ramesh', email: 'scorer@cfvd.org', mobile: '9876543212', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'SCR-103', name: 'K. Murugan', email: 'murugan@cfvd.org', mobile: '9876543213', password_hash: '1234', role: 'SCORER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'PLY-201', name: 'Arun Pandian', email: 'player@example.com', mobile: '9876543214', password_hash: 'player123', role: 'PLAYER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() },
+      { id: 'USR-301', name: 'General User', email: 'user@example.com', mobile: '9876543215', password_hash: 'user123', role: 'USER', status: 'ACTIVE', otp_hash: null, otp_expires_at: null, otp_verified_at: null, otp_attempts: 0, created_at: new Date(), updated_at: new Date() }
+    ];
+
+        // 1b. Official Scorers
+    this.tables.scorers = [
+      { id: 'SCR-101', full_name: 'S. Ramesh', email: 'ramesh@gmail.com', mobile: '9876543212', association: 'Virudhunagar District Cricket Association', status: 'APPROVED', otp_hash: null, otp_expires_at: null, otp_attempts: 0, otp_verified_at: null, created_at: new Date(), approved_at: new Date(), rejected_at: null, rejection_reason: null },
+      { id: 'SCR-102', full_name: 'S. Ramesh', email: 'scorer@cfvd.org', mobile: '9876543212', association: 'Tamil Nadu Cricket Association (TNCA)', status: 'APPROVED', otp_hash: null, otp_expires_at: null, otp_attempts: 0, otp_verified_at: null, created_at: new Date(), approved_at: new Date(), rejected_at: null, rejection_reason: null },
+      { id: 'SCR-103', full_name: 'K. Murugan', email: 'murugan@cfvd.org', mobile: '9876543213', association: 'Virudhunagar District Cricket Association', status: 'APPROVED', otp_hash: null, otp_expires_at: null, otp_attempts: 0, otp_verified_at: null, created_at: new Date(), approved_at: new Date(), rejected_at: null, rejection_reason: null }
     ];
 
     // 2. Tournament
@@ -59,15 +69,9 @@ class RelationalMemoryStore {
       { id: 'TOUR-2026', name: 'Virudhunagar Premier League (VPL) 2026', short_name: 'VPL 2026', season: '2026', format: 'T20', overs: 20, start_date: '2026-10-01', end_date: '2026-10-30', status: 'ACTIVE', created_at: new Date(), updated_at: new Date() }
     ];
 
-    // 3. Teams
-    this.tables.teams = [
-      { id: 'T005', name: 'Sattur Spartans', short_name: 'SSP', logo_url: '/assets/teams/ssp.png', city: 'Sattur', status: 'ACTIVE' },
-
-      { id: 'T001', name: 'Virudhunagar Strikers', short_name: 'VST', logo_url: '/assets/teams/vst.png', city: 'Virudhunagar', status: 'ACTIVE' },
-      { id: 'T002', name: 'Sivakasi Super Kings', short_name: 'SSK', logo_url: '/assets/teams/ssk.png', city: 'Sivakasi', status: 'ACTIVE' },
-      { id: 'T003', name: 'Aruppukottai Avengers', short_name: 'AKA', logo_url: '/assets/teams/aka.png', city: 'Aruppukottai', status: 'ACTIVE' },
-      { id: 'T004', name: 'Rajapalayam Royals', short_name: 'RPR', logo_url: '/assets/teams/rpr.png', city: 'Rajapalayam', status: 'ACTIVE' }
-    ];
+        // 3. Teams & Team Players (Initialized Empty for Real Data Only)
+    this.tables.teams = [];
+    this.tables.team_players = [];
 
     // 4. Players
     this.tables.players = [
@@ -416,8 +420,18 @@ function executeMemoryQuery(store, sql, params = []) {
         targetRows.forEach(r => {
           let pIdx = 0;
           assignments.forEach(assign => {
-            const colName = assign.split('=')[0].trim().toLowerCase();
-            r[colName] = setParams[pIdx++];
+            const parts = assign.split('=');
+            const colName = parts[0].trim().toLowerCase();
+            const valPart = parts[1] ? parts[1].trim() : '';
+            if (valPart.includes('?')) {
+              r[colName] = setParams[pIdx++];
+            } else if (valPart.toUpperCase() === 'NULL') {
+              r[colName] = null;
+            } else if (valPart.toUpperCase() === 'NOW()') {
+              r[colName] = new Date();
+            } else {
+              r[colName] = valPart.replace(/^['"]|['"]$/g, '');
+            }
           });
         });
 
@@ -449,8 +463,29 @@ function executeMemoryQuery(store, sql, params = []) {
 }
 
 function applyWhere(rows, condition, params) {
+  const cleanCond = (condition || '').trim();
+  if (!cleanCond) return rows;
+
+  // Support OR clauses (e.g. LOWER(team_id) = ? OR LOWER(coach_email) = ?)
+  if (/\s+OR\s+/i.test(cleanCond)) {
+    const parts = cleanCond.split(/\s+OR\s+/i);
+    let paramIdx = 0;
+    const resultSets = parts.map(part => {
+      const pCount = (part.match(/\?/g) || []).length;
+      const subParams = params.slice(paramIdx, paramIdx + pCount);
+      paramIdx += pCount;
+      return applyWhere(rows, part, subParams);
+    });
+
+    const resMap = new Map();
+    resultSets.forEach(subRows => {
+      subRows.forEach(r => resMap.set(r.id || JSON.stringify(r), r));
+    });
+    return Array.from(resMap.values());
+  }
+
   // Split condition by AND (case-insensitive)
-  const subConditions = condition.split(/\s+AND\s+/i);
+  const subConditions = cleanCond.split(/\s+AND\s+/i);
   let paramIdx = 0;
 
   const parsedConditions = subConditions.map(sub => {
@@ -459,6 +494,12 @@ function applyWhere(rows, condition, params) {
     if (eqMatch) {
       const col = eqMatch[1].toLowerCase();
       const val = params[paramIdx++];
+      return { col, val };
+    }
+    const literalMatch = trimmed.match(/^(?:LOWER\s*\(\s*)?([a-zA-Z0-9_]+)(?:\s*\))?\s*=\s*['"]?([^'"]+)['"]?$/i);
+    if (literalMatch) {
+      const col = literalMatch[1].toLowerCase();
+      const val = literalMatch[2].trim();
       return { col, val };
     }
     return null;
@@ -470,8 +511,10 @@ function applyWhere(rows, condition, params) {
       const rowVal = row[cond.col];
       const targetVal = cond.val;
 
-      if (cond.col === 'email') {
-        if (!rowVal || rowVal.toLowerCase() !== (targetVal || '').toLowerCase()) return false;
+      if (rowVal === undefined || rowVal === null) return false;
+
+      if (typeof targetVal === 'string' || typeof rowVal === 'string') {
+        if (String(rowVal).toLowerCase() !== String(targetVal).toLowerCase()) return false;
       } else {
         if (rowVal != targetVal) return false;
       }

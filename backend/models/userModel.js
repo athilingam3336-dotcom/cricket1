@@ -1,4 +1,4 @@
-/**
+﻿/**
  * models/userModel.js
  * MySQL User Model for Authentication, Profiles, and OTP persistence
  */
@@ -9,7 +9,7 @@ class UserModel {
   async findByEmail(email) {
     if (!email) return null;
     const cleanEmail = email.trim().toLowerCase();
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [cleanEmail]);
+    const [rows] = await db.query('SELECT * FROM users WHERE LOWER(email) = ?', [cleanEmail]);
     return rows && rows.length > 0 ? rows[0] : null;
   }
 
@@ -41,7 +41,7 @@ class UserModel {
   async updateStatusByEmail(email, status) {
     const cleanEmail = email.trim().toLowerCase();
     await db.query(
-      `UPDATE users SET status = ?, updated_at = NOW() WHERE email = ?`,
+      `UPDATE users SET status = ?, updated_at = NOW() WHERE LOWER(email) = ?`,
       [status, cleanEmail]
     );
     return this.findByEmail(cleanEmail);
@@ -61,17 +61,27 @@ class UserModel {
     return rows;
   }
 
-  async updateOtp(userId, { otp_hash, otp_expires_at }) {
+  async updateOtp(userId, { otp_hash, otp_expires_at, otp_attempts = 0 }) {
     await db.query(
-      `UPDATE users SET otp_hash = ?, otp_expires_at = ?, otp_verified_at = NULL, updated_at = NOW() WHERE id = ?`,
-      [otp_hash, otp_expires_at, userId]
+      `UPDATE users SET otp_hash = ?, otp_expires_at = ?, otp_attempts = ?, otp_verified_at = NULL, updated_at = NOW() WHERE id = ?`,
+      [otp_hash, otp_expires_at, otp_attempts, userId]
+    );
+    return this.findById(userId);
+  }
+
+  async incrementOtpAttempts(userId) {
+    const user = await this.findById(userId);
+    const newCount = (user?.otp_attempts || 0) + 1;
+    await db.query(
+      `UPDATE users SET otp_attempts = ?, updated_at = NOW() WHERE id = ?`,
+      [newCount, userId]
     );
     return this.findById(userId);
   }
 
   async markOtpVerified(userId) {
     await db.query(
-      `UPDATE users SET otp_verified_at = NOW(), otp_hash = NULL, otp_expires_at = NULL, updated_at = NOW() WHERE id = ?`,
+      `UPDATE users SET otp_verified_at = NOW(), otp_hash = NULL, otp_expires_at = NULL, otp_attempts = 0, updated_at = NOW() WHERE id = ?`,
       [userId]
     );
     return this.findById(userId);
@@ -79,10 +89,25 @@ class UserModel {
 
   async clearOtp(userId) {
     await db.query(
-      `UPDATE users SET otp_hash = NULL, otp_expires_at = NULL, updated_at = NOW() WHERE id = ?`,
+      `UPDATE users SET otp_hash = NULL, otp_expires_at = NULL, otp_attempts = 0, updated_at = NOW() WHERE id = ?`,
       [userId]
     );
     return this.findById(userId);
+  }
+
+  // Audit table support for otp_verifications
+  async recordOtpVerification({ email, role, otp_hash, expires_at }) {
+    try {
+      const id = `OTP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      await db.query(
+        `INSERT INTO otp_verifications (id, email, role, otp_hash, expires_at, attempt_count, created_at)
+         VALUES (?, ?, ?, ?, ?, 0, NOW())`,
+        [id, email.toLowerCase(), role, otp_hash, expires_at]
+      );
+    } catch (e) {
+      // Non-fatal logging for audit table
+      console.warn('[UserModel] Audit log to otp_verifications skipped:', e.message);
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal, Platform, ActivityIndicator } from 'react-native';
-import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 

@@ -257,8 +257,7 @@
             <li><a href="/admin-login" onclick="navigateToRoute('/admin-login', event); closeAllDropdowns();"><i
                   class="fa-solid fa-screwdriver-wrench text-gold"></i> <strong>Admin Login</strong> <small
                   style="display:block; font-size:0.75rem; color:#fde68a;">Federation Approvals Console</small></a></li>
-            <li><a href="/scorer-login" onclick="navigateToRoute('/scorer-login', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-satellite-dish text-gold"></i> <strong>Scorer Login</strong> <small
+            <li><a href="/scorer" onclick="navigateToRoute('/scorer', event); closeAllDropdowns();"><i class="fa-solid fa-satellite-dish text-gold"></i> <strong>Scorer Portal</strong> <small
                   style="display:block; font-size:0.75rem; color:#fde68a;">Match Day Live Scoring Panel</small></a></li>
           </ul>
         </div>
@@ -3342,7 +3341,7 @@
               <button class="admin-filter-pill active" data-scorer-filter="all"
                 onclick="filterAdminScorersList('all')">All (<span id="pillScorerAllCount">0</span>)</button>
               <button class="admin-filter-pill" data-scorer-filter="Pending"
-                onclick="filterAdminScorersList('Pending')">Pending (<span
+                onclick="filterAdminScorersList('Pending')">Pending Scorer Requests (<span
                   id="pillScorerPendingCount">0</span>)</button>
               <button class="admin-filter-pill" data-scorer-filter="Approved"
                 onclick="filterAdminScorersList('Approved')">Approved (<span
@@ -3363,80 +3362,6 @@
   </div>>
 
   <!-- ======================================================================= -->
-  <!-- PAGE 10: SCORER LOGIN (DEDICATED FULL PAGE / ROUTE)                     -->
-  <!-- ======================================================================= -->
-  <div id="page-scorer-login" class="app-page"
-    style="display:none; height: calc(100vh - 86px); display: flex; align-items: center; justify-content: center; padding-bottom: 2rem; position: relative;">
-
-    <!-- Absolute back button -->
-    <button class="btn btn-outline-gold" onclick="navigateToRoute('/', event)"
-      style="position: absolute; top: 2rem; left: 2rem;">
-      <i class="fa-solid fa-arrow-left"></i> Back to Main Site
-    </button>
-
-    <div class="container page-content-wrapper" style="padding-top: 0; padding-bottom: 0;">
-      <div class="page-login-box">
-        <div class="player-login-intro-box">
-          <div class="player-login-crest"><i class="fa-solid fa-satellite-dish text-gold"></i></div>
-          <div>
-            <h4
-              style="font-family:var(--font-header); font-size:1.25rem; font-weight:800; color:var(--text-white); margin-bottom:0.25rem;">
-              Official Scorer Authentication
-            </h4>
-            <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.45; margin:0;">
-              Authorized scorers panel deployed for District League and Championship fixtures.
-            </p>
-          </div>
-        </div>
-
-        <div id="pageScorerLoginAlert" class="alert-box" style="display:none; margin:1rem 0;"></div>
-
-        <form id="pageScorerLoginForm" onsubmit="handleScorerLoginSubmit(event)" style="margin-top:1.2rem;">
-          <div class="form-group" style="margin-bottom:1.2rem;">
-            <label for="scorerLoginName"
-              style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-user"></i> Scorer Name <span class="required" style="color:#ef4444;">*</span>
-            </label>
-            <input type="text" id="scorerLoginName" class="form-control" placeholder="e.g. S. Ramesh" required
-              style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
-          </div>
-
-          <div class="form-group" style="margin-bottom:1.2rem;">
-            <label for="scorerLoginEmail"
-              style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-envelope"></i> Scorer Email <span class="required" style="color:#ef4444;">*</span>
-            </label>
-            <input type="email" id="scorerLoginEmail" class="form-control" placeholder="e.g. ramesh@example.com"
-              required
-              style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
-          </div>
-
-          <div class="form-group" style="margin-bottom:1.5rem;">
-            <label for="scorerLoginOTP"
-              style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-lock"></i> Verification OTP (Default: 1234) <span class="required"
-                style="color:#ef4444;">*</span>
-            </label>
-            <input type="text" id="scorerLoginOTP" class="form-control" placeholder="Enter 4-digit OTP" value="1234"
-              required
-              style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
-            <div style="text-align: right; margin-top: 0.5rem;">
-              <a href="#" style="color:var(--text-muted); font-size:0.8rem; text-decoration:underline;">Resend OTP?</a>
-            </div>
-          </div>
-
-          <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
-            <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
-            <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Scoring Console
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================================= -->
   <!-- PAGE 11: SCORER DASHBOARD (DEDICATED FULL PAGE / ROUTE)                  -->
   <!-- ======================================================================= -->
   <div id="page-scorer-dashboard" class="app-page" style="display:none;">
@@ -3446,7 +3371,7 @@
           <div class="page-breadcrumbs">
             <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <a href="/scorer-login" onclick="navigateToRoute('/scorer-login', event)">Scorer</a>
+            <a href="/scorer" onclick="navigateToRoute('/scorer', event)">Scorer</a>
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
             <span class="current">Live Scoring Console</span>
           </div>

@@ -3577,7 +3577,6 @@ const VALID_ROUTES = [
   '/team',
   '/admin-login',
   '/admin',
-  '/scorer-login',
   '/scorer'
 ];
 
@@ -3618,7 +3617,7 @@ function navigateToRoute(route, event) {
   closeAllDropdowns();
 
   // If React Native Scorer Module interception is requested
-  if (route.includes('scorer-login')) {
+  if (route.includes('scorer')) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_SCORER_MODULE' }));
       return;
@@ -3676,8 +3675,8 @@ function navigateToRoute(route, event) {
     return;
   }
 
-  if (path === '/scorer' && !getActiveScorerSession()) {
-    navigateToRoute('/scorer-login');
+  if (path === '/scorer-login') {
+    navigateToRoute('/scorer', event);
     return;
   }
 
@@ -3796,10 +3795,7 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   } else if (path === '/admin') {
     pageId = 'page-admin-dashboard';
     pageTitle = 'Administration & Team Approvals Console | CFVD Official';
-  } else if (path === '/scorer-login') {
-    pageId = 'page-scorer-login';
-    pageTitle = 'Official Scorer Login | CFVD Official';
-  } else if (path === '/scorer') {
+  } else if (path === '/scorer-login' || path === '/scorer') {
     pageId = 'page-scorer-dashboard';
     pageTitle = 'Match Day Live Scoring Console | CFVD Official';
   }
@@ -4530,6 +4526,7 @@ function initAdminDashboard() {
   updateAdminSummaryCounts();
   renderAdminTeamsList();
   renderAdminScorersList();
+  refreshAdminScorersFromBackend();
   switchAdminTab(adminCurrentTab);
 }
 
@@ -4550,7 +4547,7 @@ function switchAdminTab(tab) {
 
   if (viewOverview) viewOverview.style.display = tab === 'overview' ? 'block' : 'none';
   if (viewTeams) viewTeams.style.display = tab === 'teams' ? 'block' : 'none';
-  if (viewScorers) viewScorers.style.display = tab === 'scorers' ? 'block' : 'none';
+  if (viewScorers) { viewScorers.style.display = tab === 'scorers' ? 'block' : 'none'; if (tab === 'scorers') refreshAdminScorersFromBackend(); }
 
   updateAdminSummaryCounts();
 
@@ -5095,7 +5092,7 @@ function renderAdminScorersList() {
             <span>${s.email}</span>
           </div>
           <div class="admin-item-meta-item">
-            <label>Contact Phone</label>
+            <label>Mobile</label>
             <span>${s.phone || 'N/A'}</span>
           </div>
           <div class="admin-item-meta-item">
@@ -5103,8 +5100,8 @@ function renderAdminScorersList() {
             <span>${regDate}</span>
           </div>
           <div class="admin-item-meta-item">
-            <label>Jurisdiction Taluk</label>
-            <span>${s.taluk || 'Virudhunagar'}</span>
+            <label>Cricket Association / District</label>
+            <span>${s.association || s.taluk || 'Virudhunagar District Cricket Association'}</span>
           </div>
         </div>
 
@@ -5205,6 +5202,35 @@ function openScorerDetailsModal(scorerId) {
   modal.style.display = 'flex';
 }
 
+
+async function refreshAdminScorersFromBackend() {
+  try {
+    const res = await fetch('http://localhost:5000/api/admin/scorers');
+    const data = await res.json();
+    if (data && data.success && Array.isArray(data.scorers)) {
+      const backendScorers = data.scorers.map(s => ({
+        scorerId: s.id || s.scorerId,
+        scorerName: s.full_name || s.scorerName || s.name,
+        email: s.email,
+        phone: s.mobile || s.phone,
+        association: s.association || 'Virudhunagar District Cricket Association',
+        status: (s.status === 'APPROVED' || s.status === 'Approved' || s.status === 'ACTIVE') ? 'Approved' : (s.status === 'REJECTED' || s.status === 'Rejected') ? 'Rejected' : 'Pending',
+        grade: s.association || s.grade || 'Official Scorer',
+        taluk: s.association ? s.association.split(' ')[0] : 'Virudhunagar',
+        registrationDate: s.created_at || s.registrationDate,
+        approvedAt: s.approved_at || s.approvedAt,
+        rejectedAt: s.rejected_at || s.rejectedAt,
+        rejectionReason: s.rejection_reason || s.rejectionReason
+      }));
+      persistScorers(backendScorers);
+      updateAdminSummaryCounts();
+      renderAdminScorersList();
+    }
+  } catch (err) {
+    console.warn('Backend sync failed, using cached scorers:', err);
+  }
+}
+
 function promptApproveScorer(scorerId) {
   const scorers = getAllScorers();
   const scorer = scorers.find(s => s.scorerId === scorerId);
@@ -5222,11 +5248,19 @@ function promptApproveScorer(scorerId) {
       scorer.approvedBy = 'admin@cfvd.org';
       scorer.rejectionReason = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
+      const targetId = encodeURIComponent(scorer.scorerId || scorer.email);
+      fetch(`http://localhost:5000/api/admin/scorers/${targetId}/approve`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
-      }).catch(console.error);
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId })
+      }).then(() => refreshAdminScorersFromBackend())
+        .catch(() => {
+          fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
+          }).catch(console.error);
+        });
 
       persistScorers(scorers);
       updateAdminSummaryCounts();
@@ -5256,11 +5290,19 @@ function promptRejectScorer(scorerId) {
       scorer.approvedAt = null;
       scorer.approvedBy = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
+      const targetId = encodeURIComponent(scorer.scorerId || scorer.email);
+      fetch(`http://localhost:5000/api/admin/scorers/${targetId}/reject`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
-      }).catch(console.error);
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, reason: scorer.rejectionReason })
+      }).then(() => refreshAdminScorersFromBackend())
+        .catch(() => {
+          fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
+          }).catch(console.error);
+        });
 
       persistScorers(scorers);
       updateAdminSummaryCounts();
@@ -5342,91 +5384,6 @@ function showAdminNotification(message) {
 /* --------------------------------------------------------------------------
    SCORER LOGIN & LIVE SCORING ACCESS CONTROL
    -------------------------------------------------------------------------- */
-function handleScorerLoginSubmit(e) {
-  e.preventDefault();
-
-  const nameInput = document.getElementById('scorerLoginName');
-  const emailInput = document.getElementById('scorerLoginEmail');
-  const otpInput = document.getElementById('scorerLoginOTP');
-  const alertBox = document.getElementById('pageScorerLoginAlert');
-
-  const scorerNameStr = nameInput ? nameInput.value.trim() : '';
-  const scorerEmailStr = emailInput ? emailInput.value.trim() : '';
-  const otpStr = otpInput ? otpInput.value.trim() : '';
-
-  if (otpStr !== '1234') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid OTP. Default for testing is <code>1234</code>.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Verify scorer approval status against database
-  const scorers = getAllScorers();
-  const matched = scorers.find(s =>
-    s.scorerName.toLowerCase() === scorerNameStr.toLowerCase() &&
-    s.email.toLowerCase() === scorerEmailStr.toLowerCase()
-  );
-
-  if (!matched) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Scorer record not found in federation registry.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 1. Pending Approval check
-  if (matched.status === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <div>
-          <strong>Pending Approval:</strong> Your scorer registration is still pending admin approval. Only approved scorers can access the Match Scoring Dashboard.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 2. Rejection check
-  if (matched.status === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Your scorer authorization has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matched.rejectionReason || 'Certification criteria not met'}</div>
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 3. Approved -> Grant access!
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    scorerId: matched.scorerId,
-    name: matched.scorerName,
-    email: matched.email,
-    grade: matched.grade,
-    status: 'Approved',
-    loginTime: new Date().toISOString()
-  };
-  saveActiveScorerSession(session);
-  updateAuthHeaderUI();
-  alert(`✓ Certified Scorer Authenticated! Welcome ${matched.scorerName}.`);
-  navigateToRoute('/scorer');
-}
-
 function handleScorerLogout() {
   clearActiveScorerSession();
   updateAuthHeaderUI();
@@ -5476,3 +5433,5 @@ window.addEventListener('message', function (event) {
     }
   }
 });
+
+

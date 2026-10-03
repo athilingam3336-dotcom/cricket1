@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,38 +8,61 @@ import {
   Image,
   ScrollView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from 'react-native';
-import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 
 export default function ScorerAuthScreen() {
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [otpSent, setOtpSent] = useState(false);
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [association, setAssociation] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  
+  const { navigate, onExit, params } = useScorerNavigation();
+
+  const [isLoginMode, setIsLoginMode] = useState<boolean>(params?.initialMode !== 'register');
+  const [otpSent, setOtpSent] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>(params?.initialEmail || '');
+  const [otp, setOtp] = useState<string>('');
+  const [name, setName] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [association, setAssociation] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
+  const [resendCountdown, setResendCountdown] = useState<number>(0);
+
+  // Confirmation Modal state
+  const [showConfirmationModal, setShowConfirmationModal] = useState<boolean>(false);
+
   // Status feedback states
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
 
-  const { navigate, onExit } = useScorerNavigation();
+  // Synchronize when navigation params change
+  useEffect(() => {
+    if (params?.initialMode === 'register') {
+      setIsLoginMode(false);
+    }
+    if (params?.initialEmail) {
+      setEmail(params.initialEmail);
+    }
+  }, [params]);
 
+  // Resend Countdown Timer
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // 1. Send OTP for Scorer Login
   const handleSendOTP = async () => {
     setStatusMessage(null);
     setStatusType(null);
 
     const cleanEmail = email.trim();
     if (!cleanEmail) {
-      setStatusMessage('Please enter your email address to receive an OTP.');
+      setStatusMessage('Please enter your email address.');
       setStatusType('error');
       return;
     }
@@ -52,154 +75,190 @@ export default function ScorerAuthScreen() {
     }
 
     setIsSendingOtp(true);
-    setStatusMessage(`Sending OTP to ${cleanEmail}...`);
+    setStatusMessage(`Verifying scorer accreditation for ${cleanEmail}...`);
     setStatusType('info');
 
     try {
-      const res = await ScorerApi.requestOtp(cleanEmail);
-      setOtpSent(true);
-      if (res && res.devOtp) {
-        setOtp(String(res.devOtp));
+      const res = await ScorerApi.sendScorerOtp(cleanEmail);
+      if (res && res.success) {
+        setOtpSent(true);
+        setResendCountdown(30);
+        setStatusMessage('OTP sent successfully. Check your registered email.');
+        setStatusType('success');
+      } else {
+        setOtpSent(false);
+        setStatusMessage(res?.message || 'Unable to send OTP. Please try again.');
+        setStatusType('error');
       }
-      setStatusMessage(res?.message || 'OTP sent successfully! Please check your email.');
-      setStatusType('success');
     } catch (err: any) {
-      const rawMsg = err.message || '';
-      let displayError = 'Unable to send OTP. Server error.';
+      setOtpSent(false);
 
-      if (rawMsg.toLowerCase().includes('pending')) {
-        displayError = '⏳ Your registration is PENDING admin approval. You can only log in once an administrator approves your account.';
-      } else if (rawMsg.toLowerCase().includes('rejected') || rawMsg.toLowerCase().includes('cancelled')) {
-        displayError = '❌ Your registration was REJECTED / CANCELLED by the administrator.';
-      } else if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
-        displayError = 'Email not registered. Please create an account below.';
-      } else if (rawMsg.toLowerCase().includes('rate limit') || rawMsg.toLowerCase().includes('too many') || rawMsg.toLowerCase().includes('wait')) {
-        displayError = rawMsg;
-      } else if (err.message) {
-        displayError = err.message;
+      // If account does NOT exist -> AUTOMATICALLY NAVIGATE to Register New Scorer page!
+      // DO NOT show "Email not registered" dead-end! Preserve entered email!
+      if (
+        err.notFound ||
+        err.status === 404 ||
+        (err.message && (
+          err.message.toLowerCase().includes('not found') ||
+          err.message.toLowerCase().includes('register first') ||
+          err.message.toLowerCase().includes('not registered')
+        ))
+      ) {
+        setIsLoginMode(false);
+        setOtpSent(false);
+        setStatusMessage(null);
+        setStatusType(null);
+        return;
       }
 
-      setStatusMessage(displayError);
+      // If account exists but status = PENDING:
+      if (err.scorerStatus === 'PENDING' || (err.message && err.message.toLowerCase().includes('pending admin approval'))) {
+        setStatusMessage('Your scorer registration is pending admin approval.');
+        setStatusType('error');
+        return;
+      }
+
+      // If account exists but status = REJECTED:
+      if (err.scorerStatus === 'REJECTED' || (err.message && err.message.toLowerCase().includes('rejected'))) {
+        setStatusMessage('Your scorer registration was rejected. Please contact the administrator.');
+        setStatusType('error');
+        return;
+      }
+
+      setStatusMessage(err.message || 'Unable to send OTP. Please try again.');
       setStatusType('error');
     } finally {
       setIsSendingOtp(false);
     }
   };
 
+  // 2. Verify Scorer OTP Login
   const handleLogin = async () => {
     setStatusMessage(null);
     setStatusType(null);
 
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    const cleanOtp = otp.trim();
+
+    if (!cleanEmail) {
       setStatusMessage('Please enter your email address.');
       setStatusType('error');
       return;
     }
 
-    if (!otp.trim()) {
+    if (!cleanOtp) {
       setStatusMessage('Please enter the OTP sent to your email.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Verifying credentials...');
+    setStatusMessage('Authenticating official scorer credentials...');
     setStatusType('info');
 
     try {
-      const res = await ScorerApi.verifyOtp(email.trim(), otp.trim());
-      setStatusMessage('Login successful! Redirecting...');
+      const res = await ScorerApi.verifyScorerOtp(cleanEmail, cleanOtp);
+      setStatusMessage('Authentication successful! Launching Scorer Dashboard...');
       setStatusType('success');
 
-      // Role-based redirection
-      const userRole = (res.user?.role || 'SCORER').toUpperCase();
       setTimeout(() => {
-        if (userRole === 'ADMIN') {
-          if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
-            window.location.reload();
-          } else {
-            navigate('Dashboard', { role: 'ADMIN', user: res.user });
-          }
-        } else if (userRole === 'SCORER') {
-          navigate('Dashboard', { user: res.user });
-        } else if (userRole === 'PLAYER') {
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            window.location.href = '/player';
-          } else {
-            navigate('Dashboard', { user: res.user });
-          }
-        } else {
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            window.location.href = '/home';
-          } else {
-            navigate('Dashboard', { user: res.user });
-          }
-        }
+        setIsLoading(false);
+        navigate('Dashboard', { user: res.scorer || res.user });
       }, 500);
     } catch (err: any) {
-      const rawMsg = err.message || '';
-      let displayError = 'Login failed. Network/server error.';
-
-      if (rawMsg.toLowerCase().includes('pending')) {
-        displayError = '⏳ Your registration is PENDING admin approval. You can only log in once an administrator approves your account.';
-      } else if (rawMsg.toLowerCase().includes('rejected') || rawMsg.toLowerCase().includes('cancelled')) {
-        displayError = '❌ Your registration was REJECTED / CANCELLED by the administrator.';
-      } else if (rawMsg.toLowerCase().includes('expired')) {
-        displayError = 'OTP expired. Please request a new OTP.';
-      } else if (rawMsg.toLowerCase().includes('invalid otp') || rawMsg.toLowerCase().includes('incorrect')) {
-        displayError = 'Invalid OTP. Please check and try again.';
-      } else if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
-        displayError = 'Email not registered. Please register an account.';
-      } else if (err.message) {
-        displayError = err.message;
-      }
-
-      setStatusMessage(displayError);
+      setStatusMessage(err.message || 'Invalid OTP. Please check and try again.');
       setStatusType('error');
-    } finally {
       setIsLoading(false);
     }
   };
 
+  // 3. Register New Scorer Submit
   const handleRegister = async () => {
     setStatusMessage(null);
     setStatusType(null);
 
-    if (!name.trim() || !email.trim()) {
-      setStatusMessage('Please fill all required fields.');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const cleanPhone = phone.trim();
+    const cleanAssociation = association.trim();
+
+    // Field validations
+    if (!cleanName) {
+      setStatusMessage('Please enter your Full Name.');
+      setStatusType('error');
+      return;
+    }
+
+    if (!cleanEmail) {
+      setStatusMessage('Please enter your Email Address.');
+      setStatusType('error');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      setStatusMessage('Please provide a valid Email Address.');
+      setStatusType('error');
+      return;
+    }
+
+    if (!cleanPhone) {
+      setStatusMessage('Please enter your Mobile Number.');
+      setStatusType('error');
+      return;
+    }
+
+    if (!cleanAssociation) {
+      setStatusMessage('Please enter your Cricket Association / District.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
+    setStatusMessage('Submitting scorer registration to Express.js backend...');
+    setStatusType('info');
+
     try {
-      const res = await ScorerApi.register({
-        name: name.trim(),
-        email: email.trim(),
-        mobile: phone.trim(),
-        password,
-        role: 'SCORER'
+      const res = await ScorerApi.registerScorer({
+        full_name: cleanName,
+        email: cleanEmail,
+        mobile: cleanPhone,
+        association: cleanAssociation
       });
 
-      setStatusMessage('✓ Registration submitted! Status: PENDING admin approval. You can log in once an administrator approves your account.');
-      setStatusType('info');
-    } catch (err: any) {
-      setStatusMessage(err.message || 'Registration failed.');
-      setStatusType('error');
-    } finally {
       setIsLoading(false);
+      setStatusMessage(null);
+      setStatusType(null);
+
+      // Show professional confirmation modal
+      setShowConfirmationModal(true);
+    } catch (err: any) {
+      setIsLoading(false);
+      if (err.scorerStatus === 'REJECTED' || (err.message && err.message.toLowerCase().includes('rejected'))) {
+        setStatusMessage('Your scorer registration was rejected. Please contact the administrator.');
+      } else {
+        setStatusMessage(err.message || 'Scorer registration failed. Please try again.');
+      }
+      setStatusType('error');
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onExit} style={styles.backBtn}>
-          <Text style={styles.backText}>← Exit to Main</Text>
+        <TouchableOpacity
+          onPress={() => {
+            if (onExit) onExit('Home');
+            else navigate('Auth');
+          }}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.backText}>← Back to Login</Text>
         </TouchableOpacity>
       </View>
-      
-      <ScrollView contentContainerStyle={styles.scroll}>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.cardContainer}>
           <View style={styles.logoContainer}>
             <Image
@@ -217,8 +276,8 @@ export default function ScorerAuthScreen() {
             </Text>
             <Text style={styles.subtitle}>
               {isLoginMode
-                ? (otpSent ? 'Enter the verification code sent to your email' : 'Enter your registered email to receive an OTP')
-                : 'Create an account to become an authorized scorer'}
+                ? (otpSent ? 'Enter the 6-digit verification code sent to your email' : 'Official match day scoring access for certified scorers & umpires')
+                : 'Accreditation request for official match day scoring panel'}
             </Text>
 
             {statusMessage && (
@@ -243,24 +302,11 @@ export default function ScorerAuthScreen() {
               </View>
             )}
 
-            {!isLoginMode && (
-              <>
-                <Text style={styles.label}>Full Name *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Your Name"
-                  placeholderTextColor="#9bb0cf"
-                  autoCapitalize="words"
-                />
-              </>
-            )}
-
             {isLoginMode ? (
+              // --- SCORER LOGIN MODE ---
               <>
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>Email Address *</Text>
+                  <Text style={styles.label}>Official Registered Email *</Text>
                   {otpSent && (
                     <TouchableOpacity
                       onPress={() => {
@@ -269,7 +315,7 @@ export default function ScorerAuthScreen() {
                         setStatusType(null);
                       }}
                     >
-                      <Text style={styles.editEmailText}>Change Email</Text>
+                      <Text style={styles.editEmailText}>Change</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -278,7 +324,7 @@ export default function ScorerAuthScreen() {
                   style={[styles.input, otpSent && styles.inputDisabled]}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="e.g. scorer@cfvd.org or athilingam3336@gmail.com"
+                  placeholder="e.g. scorer@cfvd.org"
                   keyboardType="email-address"
                   placeholderTextColor="#9bb0cf"
                   autoCapitalize="none"
@@ -286,61 +332,54 @@ export default function ScorerAuthScreen() {
                 />
 
                 {!otpSent ? (
-                  <>
-                    <TouchableOpacity
-                      style={styles.actionBtn}
-                      onPress={handleSendOTP}
-                      disabled={isSendingOtp}
-                    >
-                      {isSendingOtp ? (
-                        <ActivityIndicator color="#ffffff" />
-                      ) : (
-                        <Text style={styles.actionText}>Send OTP</Text>
-                      )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.secondaryLinkBtn}
-                      onPress={() => setOtpSent(true)}
-                    >
-                      <Text style={styles.secondaryLinkText}>
-                        Already have an OTP? Enter code directly →
-                      </Text>
-                    </TouchableOpacity>
-                  </>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={handleSendOTP}
+                    disabled={isSendingOtp}
+                    activeOpacity={0.8}
+                  >
+                    {isSendingOtp ? (
+                      <ActivityIndicator color="#020612" />
+                    ) : (
+                      <Text style={styles.actionText}>SEND SCORER OTP</Text>
+                    )}
+                  </TouchableOpacity>
                 ) : (
                   <>
-                    <Text style={styles.label}>Enter OTP *</Text>
-                    <View style={styles.passwordContainer}>
-                      <TextInput
-                        style={styles.passwordInput}
-                        value={otp}
-                        onChangeText={setOtp}
-                        secureTextEntry={!showPassword}
-                        placeholder="Enter OTP code"
-                        placeholderTextColor="#9bb0cf"
-                        keyboardType="number-pad"
-                        autoFocus
-                      />
-                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.label}>Enter 6-digit Scorer OTP *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={otp}
+                      onChangeText={setOtp}
+                      placeholder="Enter 6-digit Scorer OTP"
+                      maxLength={6}
+                      placeholderTextColor="#9bb0cf"
+                      keyboardType="number-pad"
+                      autoFocus
+                    />
 
                     <View style={styles.otpHelperRow}>
                       <TouchableOpacity
-                        style={styles.resendBtn}
+                        style={[
+                          styles.resendBtn,
+                          (isSendingOtp || isLoading || resendCountdown > 0) && { opacity: 0.6 }
+                        ]}
                         onPress={handleSendOTP}
-                        disabled={isSendingOtp || isLoading}
+                        disabled={isSendingOtp || isLoading || resendCountdown > 0}
                       >
                         <Text style={styles.resendText}>
-                          {isSendingOtp ? 'Sending...' : 'Resend OTP?'}
+                          {isSendingOtp
+                            ? 'Sending...'
+                            : resendCountdown > 0
+                            ? `Resend OTP in ${resendCountdown}s`
+                            : 'Resend OTP'}
                         </Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
                         onPress={() => {
                           setOtpSent(false);
+                          setOtp('');
                           setStatusMessage(null);
                           setStatusType(null);
                         }}
@@ -353,18 +392,45 @@ export default function ScorerAuthScreen() {
                       style={styles.actionBtn}
                       onPress={handleLogin}
                       disabled={isLoading || isSendingOtp}
+                      activeOpacity={0.8}
                     >
                       {isLoading ? (
-                        <ActivityIndicator color="#ffffff" />
+                        <ActivityIndicator color="#020612" />
                       ) : (
-                        <Text style={styles.actionText}>Verify & Login</Text>
+                        <Text style={styles.actionText}>Verify & Launch Scoring</Text>
                       )}
                     </TouchableOpacity>
                   </>
                 )}
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsLoginMode(false);
+                    setOtpSent(false);
+                    setStatusMessage(null);
+                    setStatusType(null);
+                  }}
+                  style={styles.linkBtn}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>
+                    Need scorer accreditation? <Text style={styles.linkHighlight}>Register New Scorer</Text>
+                  </Text>
+                </TouchableOpacity>
               </>
             ) : (
+              // --- REGISTER NEW SCORER MODE ---
               <>
+                <Text style={styles.label}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#9bb0cf"
+                  autoCapitalize="words"
+                />
+
                 <Text style={styles.label}>Email Address *</Text>
                 <TextInput
                   style={styles.input}
@@ -381,7 +447,7 @@ export default function ScorerAuthScreen() {
                   style={styles.input}
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="Enter mobile number"
+                  placeholder="e.g. 9876543210"
                   keyboardType="phone-pad"
                   placeholderTextColor="#9bb0cf"
                 />
@@ -391,7 +457,7 @@ export default function ScorerAuthScreen() {
                   style={styles.input}
                   value={association}
                   onChangeText={setAssociation}
-                  placeholder="e.g. Virudhunagar District"
+                  placeholder="e.g. Virudhunagar District Cricket Association"
                   placeholderTextColor="#9bb0cf"
                 />
 
@@ -399,75 +465,379 @@ export default function ScorerAuthScreen() {
                   style={styles.actionBtn}
                   onPress={handleRegister}
                   disabled={isLoading}
+                  activeOpacity={0.8}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#ffffff" />
+                    <ActivityIndicator color="#020612" />
                   ) : (
-                    <Text style={styles.actionText}>Register as Scorer</Text>
+                    <Text style={styles.actionText}>REGISTER AS SCORER</Text>
                   )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsLoginMode(true);
+                    setStatusMessage(null);
+                    setStatusType(null);
+                  }}
+                  style={styles.linkBtn}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.linkText}>
+                    Already have an approved account? <Text style={styles.linkHighlight}>Login</Text>
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
+          </View>
+        </View>
+
+        <SharedFooter />
+      </ScrollView>
+
+      {/* CONFIRMATION POPUP / MODAL AFTER REGISTRATION */}
+      {showConfirmationModal && (
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalCheckCircle}>
+              <Text style={styles.modalCheckMark}>{'\u2713'}</Text>
+            </View>
+
+            <Text style={styles.modalTitle}>Registration Submitted</Text>
+
+            <Text style={styles.modalBody}>
+              Your scorer registration has been submitted successfully.
+            </Text>
+
+            <View style={styles.statusBox}>
+              <Text style={styles.statusBoxText}>Status: PENDING ADMIN APPROVAL</Text>
+            </View>
+
+            <Text style={styles.modalNotice}>
+              An administrator must verify and approve your scorer account before you can access the Scorer Portal.
+            </Text>
 
             <TouchableOpacity
+              style={styles.modalOkBtn}
               onPress={() => {
-                setIsLoginMode(!isLoginMode);
-                setOtpSent(false);
-                setStatusMessage(null);
-                setStatusType(null);
+                setShowConfirmationModal(false);
+                setIsLoginMode(true);
+                if (onExit) {
+                  onExit('Home', { role: 'SCORER', scorerEmail: email.trim() });
+                } else {
+                  navigate('Auth');
+                }
               }}
-              style={styles.linkBtn}
+              activeOpacity={0.8}
             >
-              <Text style={styles.linkText}>
-                {isLoginMode ? "Don't have an account? Register" : "Already have an account? Login"}
-              </Text>
+              <Text style={styles.modalOkText}>OK</Text>
             </TouchableOpacity>
           </View>
         </View>
-        <SharedFooter />
-      </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent', width: '100%' },
-  header: { padding: 16, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 4 },
-  backBtn: { alignSelf: 'flex-start', padding: 8, paddingLeft: 0 },
-  backText: { color: '#eab308', fontSize: 18, fontWeight: 'bold' },
-  logoContainer: { alignItems: 'center', marginBottom: 24, marginTop: 10 },
-  logo: { width: 80, height: 80, marginBottom: 10 },
-  mainTitle: { color: '#1e293b', fontSize: 18, fontWeight: 'bold', letterSpacing: 1 },
-  mainSubtitle: { color: '#b45309', fontSize: 24, fontWeight: '900', letterSpacing: 1 },
-  scroll: { flexGrow: 1, width: '100%' },
-  cardContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16, paddingBottom: 40, width: '100%' },
-  card: { backgroundColor: '#ffffff', borderRadius: 12, padding: 24, borderWidth: 1, borderColor: '#e2e8f0', width: '100%', maxWidth: 450, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 5 },
-  title: { color: '#1e293b', fontSize: 22, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
-  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 20, textAlign: 'center' },
-  statusBanner: { padding: 12, borderRadius: 6, marginBottom: 16, borderWidth: 1 },
-  statusError: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
-  statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
-  statusInfo: { backgroundColor: '#eff6ff', borderColor: '#93c5fd' },
-  statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  statusTextError: { color: '#b91c1c' },
-  statusTextSuccess: { color: '#15803d' },
-  statusTextInfo: { color: '#1d4ed8' },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  label: { color: '#334155', fontSize: 13, marginBottom: 6, fontWeight: '700' },
-  editEmailText: { color: '#b45309', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline', marginBottom: 6 },
-  input: { backgroundColor: '#f8fafc', color: '#1e293b', borderWidth: 1, borderColor: '#cbd5e1', padding: 14, borderRadius: 6, marginBottom: 16, fontSize: 15 },
-  inputDisabled: { backgroundColor: '#f1f5f9', color: '#64748b' },
-  passwordContainer: { flexDirection: 'row', backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, marginBottom: 16, alignItems: 'center', paddingRight: 10 },
-  passwordInput: { flex: 1, color: '#1e293b', padding: 14, fontSize: 15 },
-  toggleText: { color: '#0f172a', fontSize: 16 },
-  otpHelperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  resendBtn: { paddingVertical: 4 },
-  resendText: { color: '#b45309', fontSize: 13, fontWeight: '600' },
-  changeEmailLink: { color: '#64748b', fontSize: 13, textDecorationLine: 'underline' },
-  secondaryLinkBtn: { marginTop: 14, alignItems: 'center', padding: 6 },
-  secondaryLinkText: { color: '#64748b', fontSize: 13, fontWeight: '500' },
-  actionBtn: { backgroundColor: '#eab308', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 4, shadowColor: '#eab308', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5 },
-  actionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 },
-  linkBtn: { marginTop: 24, alignItems: 'center' },
-  linkText: { color: '#b45309', textDecorationLine: 'underline', fontSize: 14, fontWeight: '500' }
+  container: {
+    flex: 1,
+    backgroundColor: '#020612',
+    width: '100%'
+  },
+  header: {
+    padding: 16,
+    backgroundColor: '#081226',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(212, 175, 55, 0.25)',
+    elevation: 4
+  },
+  backBtn: {
+    alignSelf: 'flex-start',
+    padding: 8,
+    paddingLeft: 0
+  },
+  backText: {
+    color: '#D4AF37',
+    fontSize: 15,
+    fontWeight: 'bold'
+  },
+  scroll: {
+    flexGrow: 1,
+    width: '100%'
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    paddingBottom: 40,
+    width: '100%'
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 10
+  },
+  logo: {
+    width: 75,
+    height: 75,
+    marginBottom: 10
+  },
+  mainTitle: {
+    color: '#e2e8f0',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1.2
+  },
+  mainSubtitle: {
+    color: '#D4AF37',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 1.2
+  },
+  card: {
+    backgroundColor: '#0a162e',
+    borderRadius: 14,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    width: '100%',
+    maxWidth: 450,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8
+  },
+  title: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    textAlign: 'center'
+  },
+  subtitle: {
+    color: '#94a3b8',
+    fontSize: 13,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 18
+  },
+  statusBanner: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1
+  },
+  statusError: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: '#ef4444'
+  },
+  statusSuccess: {
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    borderColor: '#22c55e'
+  },
+  statusInfo: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderColor: '#3b82f6'
+  },
+  statusText: {
+    fontSize: 13.5,
+    lineHeight: 19
+  },
+  statusTextError: {
+    color: '#fca5a5'
+  },
+  statusTextSuccess: {
+    color: '#86efac'
+  },
+  statusTextInfo: {
+    color: '#93c5fd'
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  label: {
+    color: '#e2e8f0',
+    fontSize: 13.5,
+    fontWeight: '600',
+    marginBottom: 6
+  },
+  editEmailText: {
+    color: '#D4AF37',
+    fontSize: 12.5,
+    fontWeight: '700'
+  },
+  input: {
+    backgroundColor: '#040d1f',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#ffffff',
+    fontSize: 14.5,
+    marginBottom: 16
+  },
+  inputDisabled: {
+    backgroundColor: 'rgba(4, 13, 31, 0.6)',
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    color: '#94a3b8'
+  },
+  actionBtn: {
+    backgroundColor: '#D4AF37',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+    marginBottom: 14,
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4
+  },
+  actionText: {
+    color: '#020612',
+    fontSize: 14.5,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase'
+  },
+  otpHelperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14
+  },
+  resendBtn: {
+    paddingVertical: 4
+  },
+  resendText: {
+    color: '#D4AF37',
+    fontSize: 12.5,
+    fontWeight: '700'
+  },
+  changeEmailLink: {
+    color: '#94a3b8',
+    fontSize: 12.5
+  },
+  linkBtn: {
+    marginTop: 10,
+    alignItems: 'center'
+  },
+  linkText: {
+    color: '#94a3b8',
+    fontSize: 13.5
+  },
+  linkHighlight: {
+    color: '#D4AF37',
+    fontWeight: 'bold'
+  },
+
+  // Modal Backdrop & Card
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    zIndex: 9999
+  },
+  modalCard: {
+    backgroundColor: '#0a162e',
+    borderRadius: 16,
+    padding: 28,
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#D4AF37',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 12
+  },
+  modalCheckCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(34, 197, 94, 0.18)',
+    borderWidth: 2,
+    borderColor: '#22c55e',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16
+  },
+  modalCheckMark: {
+    color: '#22c55e',
+    fontSize: 28,
+    fontWeight: '900'
+  },
+  modalTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 10,
+    textAlign: 'center',
+    letterSpacing: 0.3
+  },
+  modalBody: {
+    color: '#cbd5e1',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 20
+  },
+  statusBox: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    borderWidth: 1,
+    borderColor: '#eab308',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16
+  },
+  statusBoxText: {
+    color: '#fef08a',
+    fontSize: 12.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textAlign: 'center'
+  },
+  modalNotice: {
+    color: '#94a3b8',
+    fontSize: 13,
+    textAlign: 'center',
+    marginBottom: 22,
+    lineHeight: 19
+  },
+  modalOkBtn: {
+    backgroundColor: '#D4AF37',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4
+  },
+  modalOkText: {
+    color: '#020612',
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 0.8
+  }
 });

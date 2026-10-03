@@ -16,10 +16,47 @@ CREATE TABLE IF NOT EXISTS users (
   otp_hash VARCHAR(255) DEFAULT NULL,
   otp_expires_at DATETIME DEFAULT NULL,
   otp_verified_at DATETIME DEFAULT NULL,
+  otp_attempts INT DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_user_email (email),
   INDEX idx_user_role (role)
+);
+
+
+-- 1b. OTP Verifications & Security Audit
+CREATE TABLE IF NOT EXISTS otp_verifications (
+  id VARCHAR(64) PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  role ENUM('ADMIN', 'SCORER', 'PLAYER', 'USER') NOT NULL DEFAULT 'SCORER',
+  otp_hash VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  verified_at DATETIME DEFAULT NULL,
+  attempt_count INT DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_otp_email (email),
+  INDEX idx_otp_role (role)
+);
+
+
+-- 1c. Official Match Scorers
+CREATE TABLE IF NOT EXISTS scorers (
+  id VARCHAR(64) PRIMARY KEY,
+  full_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  mobile VARCHAR(50) NOT NULL,
+  association VARCHAR(255) NOT NULL,
+  status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+  otp_hash VARCHAR(255) DEFAULT NULL,
+  otp_expires_at DATETIME DEFAULT NULL,
+  otp_attempts INT DEFAULT 0,
+  otp_verified_at DATETIME DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  approved_at DATETIME DEFAULT NULL,
+  rejected_at DATETIME DEFAULT NULL,
+  rejection_reason TEXT DEFAULT NULL,
+  INDEX idx_scorer_email (email),
+  INDEX idx_scorer_status (status)
 );
 
 -- 2. Tournaments
@@ -40,13 +77,29 @@ CREATE TABLE IF NOT EXISTS tournaments (
 -- 3. Teams
 CREATE TABLE IF NOT EXISTS teams (
   id VARCHAR(64) PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  short_name VARCHAR(50),
-  logo_url TEXT,
-  city VARCHAR(100),
-  status VARCHAR(50) DEFAULT 'ACTIVE',
+  team_id VARCHAR(64) NOT NULL UNIQUE,
+  team_name VARCHAR(255) NOT NULL,
+  coach_name VARCHAR(255) NOT NULL,
+  coach_email VARCHAR(255) NOT NULL UNIQUE,
+  team_passkey_hash VARCHAR(255) NOT NULL,
+  status VARCHAR(50) DEFAULT 'APPROVED',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_team_id (team_id),
+  INDEX idx_coach_email (coach_email)
+);
+
+-- 3b. Team Players
+CREATE TABLE IF NOT EXISTS team_players (
+  id VARCHAR(64) PRIMARY KEY,
+  team_id VARCHAR(64) NOT NULL,
+  player_name VARCHAR(255) NOT NULL,
+  player_email VARCHAR(255) NOT NULL,
+  player_role VARCHAR(100) NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_tp_team (team_id),
+  INDEX idx_tp_email (player_email),
+  CONSTRAINT fk_tp_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 );
 
 -- 4. Players

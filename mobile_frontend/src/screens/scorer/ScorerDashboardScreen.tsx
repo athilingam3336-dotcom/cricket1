@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
-import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import MatchCard from '../../components/scorer/MatchCard';
 import { MatchData } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';

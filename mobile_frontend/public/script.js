@@ -168,36 +168,36 @@ function filterMatches(category) {
    -------------------------------------------------------------------------- */
 const tableDataSets = {
   div1: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w','w','nr','l','w'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w','l','w','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w','w','nr','l','w'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l','w','w','l','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l','l','nr','w','l'], crest: 'stars-crest', code: 'AKS' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SXI' },
-    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l','nr','l','l','w'], crest: 'thk-crest', code: 'TKC' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w', 'l', 'w', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l', 'w', 'w', 'l', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l', 'l', 'nr', 'w', 'l'], crest: 'stars-crest', code: 'AKS' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' },
+    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l', 'nr', 'l', 'l', 'w'], crest: 'thk-crest', code: 'TKC' }
   ],
   college: [
-    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w','w','w','nr','w'], crest: 'striker-crest', code: 'VHN' },
-    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w','nr','l','w','w'], crest: 'king-crest', code: 'PSR' },
-    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w','l','w','w','l'], crest: 'rcc-crest', code: 'ANJ' },
-    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l','w','nr','l','w'], crest: 'spw-crest', code: 'RRC' },
-    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l','l','l','w','l'], crest: 'stars-crest', code: 'KLU' },
-    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SFR' }
+    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'striker-crest', code: 'VHN' },
+    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w', 'nr', 'l', 'w', 'w'], crest: 'king-crest', code: 'PSR' },
+    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w', 'l', 'w', 'w', 'l'], crest: 'rcc-crest', code: 'ANJ' },
+    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'spw-crest', code: 'RRC' },
+    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l', 'l', 'l', 'w', 'l'], crest: 'stars-crest', code: 'KLU' },
+    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SFR' }
   ],
   t20: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w','w','w','w','l'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w','w','nr','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l','w','nr','w','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w','l','w','l','l'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l','l','nr','l','w'], crest: 'stars-crest', code: 'WPC' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l','l','nr','l','l'], crest: 'str-crest', code: 'SXI' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w', 'w', 'w', 'w', 'l'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w', 'w', 'nr', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l', 'w', 'nr', 'w', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w', 'l', 'w', 'l', 'l'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l', 'l', 'nr', 'l', 'w'], crest: 'stars-crest', code: 'WPC' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l', 'l', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' }
   ],
   school: [
-    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w','w','w','nr','w'], crest: 'kvs-crest', code: 'KVS' },
-    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w','w','l','w','w'], crest: 'pac-crest', code: 'PAC' },
-    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w','l','nr','w','l'], crest: 'spw-crest', code: 'SHN' },
-    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l','w','nr','l','w'], crest: 'str-crest', code: 'GMH' },
-    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l','l','w','l','l'], crest: 'stars-crest', code: 'SMH' }
+    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'kvs-crest', code: 'KVS' },
+    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w', 'w', 'l', 'w', 'w'], crest: 'pac-crest', code: 'PAC' },
+    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w', 'l', 'nr', 'w', 'l'], crest: 'spw-crest', code: 'SHN' },
+    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'str-crest', code: 'GMH' },
+    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l', 'l', 'w', 'l', 'l'], crest: 'stars-crest', code: 'SMH' }
   ]
 };
 
@@ -1036,7 +1036,7 @@ function handlePlayerRegistrationSubmit(e) {
    Clubs/Colleges/Schools/Districts
    No need to select players; team verifies players after Organiser confirmation
    -------------------------------------------------------------------------- */
-function verifyTeamRoster(teamName, isConfirmed) {
+async function verifyTeamRoster(teamName, isConfirmed) {
   if (!isConfirmed) {
     alert(`⏳ Organiser Confirmation Pending for ${teamName}!\n\nTeam roster verification is unlocked automatically once the Organiser grants tournament confirmation. Please await Organiser sign-off.`);
     return;
@@ -1894,118 +1894,121 @@ function hideValidationAlert() {
 /* --------------------------------------------------------------------------
    FORM SUBMISSION (Stores Team with status = 'Pending')
    -------------------------------------------------------------------------- */
-function handleTeamRegistrationSubmit(e) {
+async function handleTeamRegistrationSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById('team_reg_name');
   const coachNameInput = document.getElementById('coach_reg_name');
   const coachEmailInput = document.getElementById('coach_reg_email');
-  const logoInput = document.getElementById('team_reg_logo');
 
   const teamName = nameInput ? nameInput.value.trim() : '';
   const coachName = coachNameInput ? coachNameInput.value.trim() : '';
   const coachEmail = coachEmailInput ? coachEmailInput.value.trim().toLowerCase() : '';
-  const logo = logoInput ? logoInput.value.trim() : '';
 
   if (!teamName) {
-    showValidationAlert('Team Name is required.');
-    nameInput.focus();
+    if (typeof showValidationAlert === 'function') showValidationAlert('Please enter the Team Name.');
+    else alert('Please enter the Team Name.');
+    if (nameInput) nameInput.focus();
     return;
   }
   if (!coachName) {
-    showValidationAlert('Coach Name is required.');
-    coachNameInput.focus();
+    if (typeof showValidationAlert === 'function') showValidationAlert('Please enter the Coach Full Name.');
+    else alert('Please enter the Coach Full Name.');
+    if (coachNameInput) coachNameInput.focus();
     return;
   }
-  if (!coachEmail || !validateEmailAddress(coachEmail)) {
-    showValidationAlert('Please enter a valid Coach Email address (e.g. coach@example.com).');
-    coachEmailInput.focus();
-    return;
-  }
-  // Validate exactly 15 squad members requirement
-  if (currentSquadMembers.length !== 15) {
-    showValidationAlert(`15 players are required for team registration. Currently added: ${currentSquadMembers.length} / 15 players. Please enter ${15 - currentSquadMembers.length} more player(s).`);
-    document.getElementById('new_player_name')?.focus();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!coachEmail || !emailRegex.test(coachEmail)) {
+    if (typeof showValidationAlert === 'function') showValidationAlert('Please enter a valid Coach Email address (e.g. coach@example.com).');
+    else alert('Please enter a valid Coach Email address.');
+    if (coachEmailInput) coachEmailInput.focus();
     return;
   }
 
-  // Ensure coach email is not duplicated as a player email
-  const coachIsPlayer = currentSquadMembers.some(m => m.playerEmail.toLowerCase() === coachEmail);
-  if (coachIsPlayer) {
-    showValidationAlert(`Coach email "${coachEmail}" cannot be identical to a team member email.`);
-    coachEmailInput.focus();
+  if (!Array.isArray(currentSquadMembers) || currentSquadMembers.length !== 15) {
+    if (typeof showValidationAlert === 'function') showValidationAlert('Exactly 15 players are required for team registration. Currently added: ' + currentSquadMembers.length + '/15.');
+    else alert('Exactly 15 players are required for team registration. Currently added: ' + currentSquadMembers.length + '/15.');
     return;
   }
 
-  hideValidationAlert();
+  const playerEmailsSet = new Set();
+  for (let i = 0; i < currentSquadMembers.length; i++) {
+    const p = currentSquadMembers[i];
+    if (!p.playerName || !p.playerName.trim()) {
+      alert('Player #' + (i + 1) + ' is missing a name.');
+      return;
+    }
+    const pEmail = (p.playerEmail || '').trim().toLowerCase();
+    if (!pEmail || !emailRegex.test(pEmail)) {
+      alert('Player #' + (i + 1) + ' (' + p.playerName + ') has an invalid email.');
+      return;
+    }
+    if (playerEmailsSet.has(pEmail)) {
+      alert('Duplicate player email address "' + pEmail + '" found within the squad.');
+      return;
+    }
+    playerEmailsSet.add(pEmail);
+  }
 
-  const teamId = 'TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000);
-  const newTeam = {
-    teamId,
-    teamName,
-    coach: {
-      name: coachName,
-      email: coachEmail
-    },
-    logo: logo || 'assets/logo_transparent.png',
-    members: currentSquadMembers.map(m => ({
-      playerId: null, // prepared for future player-side account verification
-      playerName: m.playerName,
-      playerEmail: m.playerEmail
-    })),
-    registrationDate: new Date().toISOString(),
-    status: 'Pending',
-    adminApprovalStatus: 'Pending',
-    rejectionReason: null,
-    approvedBy: null,
-    approvedAt: null
-  };
+  try {
+    const res = await fetch('/api/teams/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        teamName,
+        coachName,
+        coachEmail,
+        players: currentSquadMembers.map(m => ({
+          name: m.playerName,
+          email: m.playerEmail,
+          role: m.role || 'Batter'
+        }))
+      })
+    });
 
-  const teams = getStoredTeams();
-  teams.unshift(newTeam);
-  saveStoredTeams(teams);
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (typeof showValidationAlert === 'function') showValidationAlert(data.message || 'Team registration failed.');
+      else alert(data.message || 'Team registration failed.');
+      return;
+    }
 
-  // Reset form
-  e.target.reset();
-  currentSquadMembers = [];
-  renderSquadMembersTable();
+    const regTeam = data.team;
 
-  // Switch to status view
-  showTeamRegSubView('status');
-  const queryInput = document.getElementById('statusQueryInput');
-  if (queryInput) queryInput.value = teamId;
-  renderTeamStatusCard(newTeam);
+    e.target.reset();
+    currentSquadMembers = [];
+    if (typeof renderSquadMembersTable === 'function') renderSquadMembersTable();
 
-  // Update Admin view
-  updateAdminPendingBadge();
-  renderAdminTeamsList();
-
-  // Show prominent success banner on Team Registration page
-  const successBanner = document.getElementById('teamRegSuccessBanner');
-  if (successBanner) {
-    successBanner.style.display = 'block';
-    successBanner.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
-        <div>
-          <h4><i class="fa-solid fa-circle-check"></i> Team Registration Application Submitted Successfully!</h4>
-          <p><strong>Team:</strong> ${teamName} • <strong>Team ID:</strong> <span class="badge gold" style="font-size:0.85rem; padding:0.2rem 0.5rem;">${teamId}</span></p>
-          <p><strong>Coach:</strong> ${coachName} (${coachEmail}) • <strong>Enrolled Squad:</strong> ${newTeam.members.length} / 15 Players</p>
-          <p style="margin-top:0.6rem; color:#fef08a;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>Status:</strong> PENDING ADMIN APPROVAL — Your team application has been recorded in the database and is queued for official governing council review.</p>
+    const successBanner = document.getElementById('teamRegSuccessBanner');
+    if (successBanner) {
+      successBanner.style.display = 'block';
+      successBanner.innerHTML = `
+        <div style="padding:1.2rem; background:rgba(10,24,56,0.95); border:2px solid #eab308; border-radius:12px;">
+          <h4 style="color:#22c55e; margin:0 0 0.5rem 0;"><i class="fa-solid fa-circle-check"></i> TEAM REGISTRATION SUCCESSFUL!</h4>
+          <p style="color:#ffffff; margin:0 0 0.3rem 0;"><strong>Team:</strong> ${regTeam.teamName} • <strong>Head Coach:</strong> ${regTeam.coachName} (${regTeam.coachEmail})</p>
+          <p style="color:#fef08a; margin:0 0 0.5rem 0;"><strong>GENERATED TEAM ID:</strong> <code style="font-size:1.1rem; color:#eab308; background:#040d1f; padding:0.2rem 0.6rem; border-radius:4px;">${regTeam.teamId}</code></p>
+          <div style="background:rgba(234,179,8,0.15); border:1px solid #eab308; border-radius:6px; padding:0.8rem; margin-top:0.5rem;">
+            <div style="color:#94a3b8; font-size:0.8rem;">GENERATED TEAM PASSKEY (ONE-TIME DISPLAY)</div>
+            <div style="color:#fef08a; font-size:1.4rem; font-weight:900; letter-spacing:2px; margin-top:0.2rem;">${regTeam.passkey}</div>
+            <div style="color:#ca8a04; font-size:0.75rem; margin-top:0.2rem;">⚠️ Please save these login credentials now to sign into Team Login.</div>
+          </div>
+          <div style="margin-top:1rem; display:flex; gap:0.6rem;">
+            <button class="btn btn-gold" onclick="navigateToRoute('/team-login', event)">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Go to Team Login
+            </button>
+          </div>
         </div>
-        <button class="btn btn-sm btn-outline-gold" onclick="document.getElementById('teamRegSuccessBanner').style.display='none'" style="background:rgba(0,0,0,0.3); border-color:#fff; color:#fff;">
-          <i class="fa-solid fa-xmark"></i> Dismiss
-        </button>
-      </div>
-    `;
-    successBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+      `;
+      successBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-  alert(`✓ Team Registration Application Submitted Successfully!\n\nTeam: ${teamName}\nTeam ID: ${teamId}\nCoach: ${coachName} (${coachEmail})\nTotal Members: ${newTeam.members.length}\nStatus: PENDING ADMIN APPROVAL\n\nYour application has been stored and is now queued for administrator review.`);
+    alert('✓ Team Registration Successful!\n\nTeam Name: ' + regTeam.teamName + '\nTeam ID: ' + regTeam.teamId + '\nCoach: ' + regTeam.coachName + '\nTeam Passkey: ' + regTeam.passkey + '\n\n15 Squad Players Enrolled Successfully.');
+
+  } catch (err) {
+    alert('Failed to connect to registration server. Please try again.');
+  }
 }
 
-/* --------------------------------------------------------------------------
-   CHECK TEAM STATUS
-   -------------------------------------------------------------------------- */
 function searchTeamRegistrationStatus() {
   const queryInput = document.getElementById('statusQueryInput');
   const resultBox = document.getElementById('teamStatusResultBox');
@@ -2022,8 +2025,8 @@ function searchTeamRegistrationStatus() {
   }
 
   const teams = getStoredTeams();
-  const matched = teams.find(t => 
-    t.teamId.toLowerCase() === query || 
+  const matched = teams.find(t =>
+    t.teamId.toLowerCase() === query ||
     t.coach.email.toLowerCase() === query ||
     t.teamName.toLowerCase().includes(query)
   );
@@ -2241,8 +2244,8 @@ function renderAdminTeamsList() {
 
   if (!container) return;
 
-  const filtered = currentAdminFilter === 'all' 
-    ? teams 
+  const filtered = currentAdminFilter === 'all'
+    ? teams
     : teams.filter(t => t.status === currentAdminFilter);
 
   if (filtered.length === 0) {
@@ -3569,7 +3572,6 @@ const SCORER_SESSION_KEY = 'cfvd_scorer_session';
 const VALID_ROUTES = [
   '/',
   '/home',
-  '/login',
   '/team-registration',
   '/player-registration',
   '/player-login',
@@ -3578,7 +3580,6 @@ const VALID_ROUTES = [
   '/team',
   '/admin-login',
   '/admin',
-  '/scorer-login',
   '/scorer'
 ];
 
@@ -3619,7 +3620,7 @@ function navigateToRoute(route, event) {
   closeAllDropdowns();
 
   // If React Native Scorer Module interception is requested
-  if (route.includes('scorer-login')) {
+  if (route.includes('scorer')) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_SCORER_MODULE' }));
       return;
@@ -3639,9 +3640,9 @@ function navigateToRoute(route, event) {
 
   // Guard protected routes
   if (path === '/player' && !getActivePlayerSession()) {
-    navigateToRoute('/login?role=player');
+    navigateToRoute('/player-login');
     setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('playerLoginAlert');
+      const alertBox = document.getElementById('playerLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Player Name and Email to access your Player Dashboard.</div>';
@@ -3652,9 +3653,9 @@ function navigateToRoute(route, event) {
   }
 
   if (path === '/team' && !getActiveTeamSession()) {
-    navigateToRoute('/login?role=team');
+    navigateToRoute('/team-login');
     setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageTeamLoginAlert');
+      const alertBox = document.getElementById('pageTeamLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Team ID to access your Team Dashboard.</div>';
@@ -3665,9 +3666,9 @@ function navigateToRoute(route, event) {
   }
 
   if (path === '/admin' && sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
-    navigateToRoute('/login?role=admin');
+    navigateToRoute('/admin-login');
     setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageAdminLoginAlert');
+      const alertBox = document.getElementById('pageAdminLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Administrator passkey authentication required.</div>';
@@ -3677,8 +3678,8 @@ function navigateToRoute(route, event) {
     return;
   }
 
-  if (path === '/scorer' && !getActiveScorerSession()) {
-    navigateToRoute('/scorer-login');
+  if (path === '/scorer-login') {
+    navigateToRoute('/scorer', event);
     return;
   }
 
@@ -3700,7 +3701,7 @@ function navigateToRoute(route, event) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify(routeMsg));
     }
-  } catch (e) {}
+  } catch (e) { }
 
   renderCurrentRoute(targetRoute, true);
 }
@@ -3729,7 +3730,7 @@ function navigateToSection(sectionId, tab, event) {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(sectionMsg, '*');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const currentRoute = getCurrentRouteFromUrl();
   const [basePath] = currentRoute.split('?');
@@ -3773,28 +3774,31 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   let pageId = 'page-home';
   let pageTitle = 'Cricket Federation of Virudhunagar District | Official Governing Body';
 
-  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login') {
-    pageId = 'page-login';
-    pageTitle = 'Federation Portal Login | CFVD Official';
-  } else if (path === '/team-registration') {
+  if (path === '/team-registration') {
     pageId = 'page-team-registration';
     pageTitle = 'Team Registration & Squad Roster | CFVD Official';
   } else if (path === '/player-registration') {
     pageId = 'page-player-registration';
     pageTitle = 'Player Registration | CFVD Official';
+  } else if (path === '/player-login') {
+    pageId = 'page-player-login';
+    pageTitle = 'Player Login | CFVD Official';
   } else if (path === '/player') {
     pageId = 'page-player-dashboard';
     pageTitle = 'Player Dashboard & Profile | CFVD Official';
+  } else if (path === '/team-login') {
+    pageId = 'page-team-login';
+    pageTitle = 'Team & Coach Login | CFVD Official';
   } else if (path === '/team') {
     pageId = 'page-team-dashboard';
     pageTitle = 'Team Dashboard & Squad Roster | CFVD Official';
+  } else if (path === '/admin-login') {
+    pageId = 'page-admin-login';
+    pageTitle = 'Administrator Login | CFVD Official';
   } else if (path === '/admin') {
     pageId = 'page-admin-dashboard';
     pageTitle = 'Administration & Team Approvals Console | CFVD Official';
-  } else if (path === '/scorer-login') {
-    pageId = 'page-scorer-login';
-    pageTitle = 'Official Scorer Login | CFVD Official';
-  } else if (path === '/scorer') {
+  } else if (path === '/scorer-login' || path === '/scorer') {
     pageId = 'page-scorer-dashboard';
     pageTitle = 'Match Day Live Scoring Console | CFVD Official';
   }
@@ -3825,7 +3829,7 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   const footer = document.querySelector('.main-footer');
   const header = document.querySelector('.main-header');
   const isScorerRoute = path === '/scorer-login' || path === '/scorer';
-  
+
   if (footer) {
     footer.style.display = isScorerRoute ? 'none' : 'block';
   }
@@ -3834,15 +3838,7 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   }
 
   // Route-specific screen actions
-  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login') {
-    let role = params.get('role');
-    if (!role) {
-      if (path === '/team-login') role = 'team';
-      else if (path === '/admin-login') role = 'admin';
-      else role = 'player';
-    }
-    switchLoginRole(role);
-  } else if (path === '/team-registration') {
+  if (path === '/team-registration') {
     const subTab = params.get('tab') === 'status' ? 'status' : 'form';
     showTeamRegSubView(subTab);
     renderSquadMembersTable();
@@ -3905,19 +3901,19 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
  */
 function updateNavbarActiveRoute(path) {
   const homeLink = document.getElementById('navLinkHome');
-  const loginBtn = document.getElementById('headerLoginBtn');
-  const scorerBtn = document.getElementById('headerScorerBtn');
+  const regDropdown = document.getElementById('navDropdownReg');
+  const loginDropdown = document.getElementById('navDropdownLogin');
 
   if (homeLink) homeLink.classList.remove('active');
-  if (loginBtn) loginBtn.classList.remove('active-route');
-  if (scorerBtn) scorerBtn.classList.remove('active-route');
+  if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.remove('active-route');
+  if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.remove('active-route');
 
   if (path === '/' || path === '/home') {
     if (homeLink) homeLink.classList.add('active');
-  } else if (path === '/login' || (path.includes('login') && !path.includes('scorer')) || path === '/player' || path === '/team' || path === '/admin') {
-    if (loginBtn) loginBtn.classList.add('active-route');
-  } else if (path === '/scorer-login' || path === '/scorer') {
-    if (scorerBtn) scorerBtn.classList.add('active-route');
+  } else if (path.includes('registration')) {
+    if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.add('active-route');
+  } else if (path.includes('login') || path === '/player' || path === '/team' || path === '/admin' || path === '/scorer') {
+    if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.add('active-route');
   }
 }
 
@@ -3957,556 +3953,6 @@ function initMultiPageRouting() {
   // Initial load
   const initialRoute = getCurrentRouteFromUrl();
   renderCurrentRoute(initialRoute, false);
-}
-
-/* ==========================================================================
-   MODULE: UNIFIED COMMON LOGIN CONTROLLER
-   Unified Login portal adhering to the Scorer Login visual reference,
-   role tabs (Player, Team, Admin), OTP verification flow, and standard
-   "Don't have an account? Register" link.
-   ========================================================================== */
-
-let commonActiveRole = 'player';
-let commonOtpCountdownInterval = null;
-
-function switchLoginRole(role) {
-  commonActiveRole = role || 'player';
-
-  const tabPlayer = document.getElementById('tabBtnPlayer');
-  const tabTeam = document.getElementById('tabBtnTeam');
-  const tabScorer = document.getElementById('tabBtnScorer');
-  const tabAdmin = document.getElementById('tabBtnAdmin');
-
-  const panelPlayer = document.getElementById('panelLoginPlayer');
-  const panelTeam = document.getElementById('panelLoginTeam');
-  const panelScorer = document.getElementById('panelLoginScorer');
-  const panelAdmin = document.getElementById('panelLoginAdmin');
-
-  const regLink = document.getElementById('commonRegisterLink');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  if (alertBox) {
-    alertBox.style.display = 'none';
-    alertBox.innerHTML = '';
-  }
-
-  // Toggle active tab buttons
-  if (tabPlayer) {
-    tabPlayer.classList.toggle('active', commonActiveRole === 'player');
-    tabPlayer.setAttribute('aria-selected', commonActiveRole === 'player');
-  }
-  if (tabTeam) {
-    tabTeam.classList.toggle('active', commonActiveRole === 'team');
-    tabTeam.setAttribute('aria-selected', commonActiveRole === 'team');
-  }
-  if (tabScorer) {
-    tabScorer.classList.toggle('active', commonActiveRole === 'scorer');
-    tabScorer.setAttribute('aria-selected', commonActiveRole === 'scorer');
-  }
-  if (tabAdmin) {
-    tabAdmin.classList.toggle('active', commonActiveRole === 'admin');
-    tabAdmin.setAttribute('aria-selected', commonActiveRole === 'admin');
-  }
-
-  // Toggle panels
-  if (panelPlayer) panelPlayer.style.display = commonActiveRole === 'player' ? 'block' : 'none';
-  if (panelTeam) panelTeam.style.display = commonActiveRole === 'team' ? 'block' : 'none';
-  if (panelScorer) panelScorer.style.display = commonActiveRole === 'scorer' ? 'block' : 'none';
-  if (panelAdmin) panelAdmin.style.display = commonActiveRole === 'admin' ? 'block' : 'none';
-
-  // Update dynamic registration link target
-  if (regLink) {
-    if (commonActiveRole === 'team') {
-      regLink.setAttribute('href', '/team-registration');
-      regLink.setAttribute('data-target', '/team-registration');
-      regLink.textContent = 'Register Team';
-    } else if (commonActiveRole === 'scorer') {
-      regLink.setAttribute('href', '/scorer-login');
-      regLink.setAttribute('data-target', '/scorer-login');
-      regLink.textContent = 'Register as Match Scorer';
-    } else {
-      regLink.setAttribute('href', '/player-registration');
-      regLink.setAttribute('data-target', '/player-registration');
-      regLink.textContent = 'Register';
-    }
-  }
-}
-
-function switchCommonScorerMethod(method) {
-  const pillOtp = document.getElementById('commonScorerPillOtp');
-  const pillPin = document.getElementById('commonScorerPillPin');
-  const viewOtp = document.getElementById('commonScorerViewOtp');
-  const viewPin = document.getElementById('commonScorerViewPin');
-
-  if (pillOtp) pillOtp.classList.toggle('active', method === 'otp');
-  if (pillPin) pillPin.classList.toggle('active', method === 'pin');
-  if (viewOtp) viewOtp.style.display = method === 'otp' ? 'block' : 'none';
-  if (viewPin) viewPin.style.display = method === 'pin' ? 'block' : 'none';
-}
-
-function handleCommonScorerSendOTP(e) {
-  if (e) e.preventDefault();
-  const emailInput = document.getElementById('commonScorerLoginEmail');
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (!email) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <div>Please enter your official Scorer email address.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const step1 = document.getElementById('commonScorerStep1');
-  const step2 = document.getElementById('commonScorerStep2');
-  const targetLabel = document.getElementById('commonScorerOtpTarget');
-  if (targetLabel) targetLabel.textContent = email;
-  if (step1) step1.style.display = 'none';
-  if (step2) step2.style.display = 'block';
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>OTP verification code sent to <strong>${email}</strong>. (Development demo OTP: 1234)</div>`;
-    alertBox.style.display = 'flex';
-  }
-}
-
-function handleCommonScorerVerifyOTP() {
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Scorer authorized successfully! Redirecting to Match Scoring Console...</div>';
-    alertBox.style.display = 'flex';
-  }
-  setTimeout(() => {
-    navigateToRoute('/scorer');
-  }, 600);
-}
-
-function handleCommonScorerPinLogin(e) {
-  if (e) e.preventDefault();
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Official PIN verified! Launching Scorer Portal...</div>';
-    alertBox.style.display = 'flex';
-  }
-  setTimeout(() => {
-    navigateToRoute('/scorer');
-  }, 600);
-}
-
-function handleCommonRegisterNavigate(e) {
-  if (e) e.preventDefault();
-  const regLink = document.getElementById('commonRegisterLink');
-  const target = (regLink && (regLink.getAttribute('data-target') || regLink.getAttribute('href'))) || '/player-registration';
-  navigateToRoute(target);
-}
-
-function prefillCommonPlayer(name, email) {
-  const nameInput = document.getElementById('commonPlayerLoginName');
-  const emailInput = document.getElementById('commonPlayerLoginEmail');
-  if (nameInput) nameInput.value = name;
-  if (emailInput) emailInput.value = email;
-
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-info';
-    alertBox.innerHTML = `<i class="fa-solid fa-circle-check text-gold"></i> <div>Credentials filled for <strong>${name}</strong>. Click 'Send OTP' to proceed.</div>`;
-    alertBox.style.display = 'flex';
-  }
-}
-
-function handleCommonPlayerSendOTP(e) {
-  if (e) e.preventDefault();
-  const nameInput = document.getElementById('commonPlayerLoginName');
-  const emailInput = document.getElementById('commonPlayerLoginEmail');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  const name = nameInput ? nameInput.value.trim() : '';
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-
-  if (!name || !email) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Player Name and Player Email ID.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Check stored teams
-  const teams = getStoredTeams();
-  let matchedPlayer = null;
-  let matchedTeam = null;
-  let memberIndex = -1;
-
-  for (const team of teams) {
-    if (!Array.isArray(team.members)) continue;
-    for (let i = 0; i < team.members.length; i++) {
-      const m = team.members[i];
-      const mName = (m.playerName || '').trim().toLowerCase();
-      const mEmail = (m.playerEmail || '').trim().toLowerCase();
-
-      const emailMatches = mEmail === email;
-      const nameMatches = mName === name.toLowerCase() ||
-        mName.startsWith(name.toLowerCase() + ' ') ||
-        mName.includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(mName);
-
-      if (emailMatches && nameMatches) {
-        matchedPlayer = m;
-        matchedTeam = team;
-        memberIndex = i;
-        break;
-      }
-    }
-    if (matchedPlayer) break;
-  }
-
-  // Dynamic fallback mock player so any credential can test smoothly
-  if (!matchedPlayer || !matchedTeam) {
-    matchedTeam = teams.find(t => (t.status || t.adminApprovalStatus) === 'Approved') || teams[0];
-    if (!matchedTeam) {
-      matchedTeam = {
-        teamId: 'CFVD-TM-9999',
-        teamName: 'Virudhunagar Strikers',
-        status: 'Approved',
-        coach: { name: 'S. Rajesh', email: 'coach@strikerscc.org' },
-        members: []
-      };
-      teams.push(matchedTeam);
-    }
-    matchedPlayer = {
-      playerId: `CFVD-PLY-${Math.floor(1000 + Math.random() * 9000)}`,
-      playerName: name,
-      playerEmail: email,
-      role: 'All Rounder',
-      battingStyle: 'Right Hand Bat',
-      bowlingStyle: 'Right Arm Fast Medium',
-      jerseyNumber: '18'
-    };
-    if (!Array.isArray(matchedTeam.members)) matchedTeam.members = [];
-    matchedTeam.members.push(matchedPlayer);
-    memberIndex = matchedTeam.members.length - 1;
-    saveStoredTeams(teams);
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left" style="font-size:1.2rem; flex-shrink:0;"></i>
-        <div>
-          <strong>Pending Approval:</strong> Your team registration is still pending admin approval.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban" style="font-size:1.2rem; flex-shrink:0;"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Your team registration has been rejected.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Approved! Store data and switch to Step 2 OTP
-  pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
-  if (alertBox) alertBox.style.display = 'none';
-
-  const targetEl = document.getElementById('commonPlayerOtpTarget');
-  if (targetEl) targetEl.textContent = `${name} (${email})`;
-
-  const step1 = document.getElementById('commonPlayerStep1');
-  const step2 = document.getElementById('commonPlayerStep2');
-  if (step1) step1.style.display = 'none';
-  if (step2) step2.style.display = 'block';
-
-  // Clear OTP inputs
-  for (let i = 0; i < 6; i++) {
-    const box = document.getElementById(`cOtp${i}`);
-    if (box) box.value = '';
-  }
-  const firstBox = document.getElementById('cOtp0');
-  if (firstBox) firstBox.focus();
-
-  startCommonOTPCountdown();
-}
-
-function startCommonOTPCountdown() {
-  let seconds = 30;
-  const timerSpan = document.getElementById('commonOtpResendTimer');
-  const countdownEl = document.getElementById('commonOtpCountdown');
-  const resendBtn = document.getElementById('btnCommonResendOTP');
-
-  if (timerSpan) timerSpan.style.display = 'inline-block';
-  if (resendBtn) resendBtn.style.display = 'none';
-  if (countdownEl) countdownEl.textContent = seconds;
-
-  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
-  commonOtpCountdownInterval = setInterval(() => {
-    seconds--;
-    if (countdownEl) countdownEl.textContent = seconds;
-    if (seconds <= 0) {
-      clearInterval(commonOtpCountdownInterval);
-      if (timerSpan) timerSpan.style.display = 'none';
-      if (resendBtn) resendBtn.style.display = 'inline-block';
-    }
-  }, 1000);
-}
-
-function handleCommonResendOTP() {
-  startCommonOTPCountdown();
-  const alertBox = document.getElementById('commonPlayerOtpAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-info';
-    alertBox.innerHTML = '<i class="fa-solid fa-paper-plane text-gold"></i> <div>New OTP has been sent! Use <strong>1234</strong> or <strong>123456</strong> for testing.</div>';
-    alertBox.style.display = 'flex';
-  }
-}
-
-function backToCommonPlayerStep1() {
-  const step1 = document.getElementById('commonPlayerStep1');
-  const step2 = document.getElementById('commonPlayerStep2');
-  if (step1) step1.style.display = 'block';
-  if (step2) step2.style.display = 'none';
-  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
-}
-
-function commonOtpInput(el, index) {
-  if (el.value.length >= 1) {
-    el.value = el.value.slice(-1);
-    const nextBox = document.getElementById(`cOtp${index + 1}`);
-    if (nextBox) {
-      nextBox.focus();
-    } else {
-      handleCommonVerifyOTP();
-    }
-  }
-}
-
-function commonOtpKeydown(e, index) {
-  if (e.key === 'Backspace' && !e.target.value) {
-    const prevBox = document.getElementById(`cOtp${index - 1}`);
-    if (prevBox) prevBox.focus();
-  }
-}
-
-function commonOtpPaste(e) {
-  e.preventDefault();
-  const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
-  if (pasteData) {
-    for (let i = 0; i < 6; i++) {
-      const box = document.getElementById(`cOtp${i}`);
-      if (box) box.value = pasteData[i] || '';
-    }
-    const lastIdx = Math.min(pasteData.length, 6) - 1;
-    const targetBox = document.getElementById(`cOtp${lastIdx}`);
-    if (targetBox) targetBox.focus();
-    if (pasteData.length >= 4) {
-      handleCommonVerifyOTP();
-    }
-  }
-}
-
-function handleCommonVerifyOTP() {
-  let otpValue = '';
-  for (let i = 0; i < 6; i++) {
-    const box = document.getElementById(`cOtp${i}`);
-    if (box) otpValue += box.value;
-  }
-
-  const alertBox = document.getElementById('commonPlayerOtpAlert');
-
-  if (!otpValue || otpValue.length < 4) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the OTP code (1234 or 123456).</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (otpValue.startsWith('1234') || otpValue === '123456' || otpValue.length >= 4) {
-    if (!pendingPlayerLoginData) {
-      const nameInput = document.getElementById('commonPlayerLoginName');
-      const emailInput = document.getElementById('commonPlayerLoginEmail');
-      const name = nameInput ? nameInput.value.trim() : 'R. Saravanan';
-      const email = emailInput ? emailInput.value.trim().toLowerCase() : 'saravanan.r@strikerscc.org';
-
-      const teams = getStoredTeams();
-      let matchedPlayer = null;
-      let matchedTeam = null;
-      let memberIndex = -1;
-      for (const team of teams) {
-        if (!Array.isArray(team.members)) continue;
-        for (let i = 0; i < team.members.length; i++) {
-          const m = team.members[i];
-          if ((m.playerEmail || '').trim().toLowerCase() === email) {
-            matchedPlayer = m;
-            matchedTeam = team;
-            memberIndex = i;
-            break;
-          }
-        }
-        if (matchedPlayer) break;
-      }
-      if (matchedPlayer && matchedTeam) {
-        pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
-      }
-    }
-
-    if (pendingPlayerLoginData) {
-      const { matchedPlayer, matchedTeam, memberIndex } = pendingPlayerLoginData;
-
-      if (!matchedPlayer.playerId) {
-        matchedPlayer.playerId = `CFVD-PLY-${matchedTeam.teamId.slice(-4)}-${(memberIndex + 1).toString().padStart(2, '0')}`;
-      }
-      if (!matchedPlayer.role) matchedPlayer.role = 'Batsman';
-      if (!matchedPlayer.battingStyle) matchedPlayer.battingStyle = 'Right Hand Bat';
-      if (!matchedPlayer.bowlingStyle) matchedPlayer.bowlingStyle = 'Right Arm Medium';
-      if (!matchedPlayer.jerseyNumber) matchedPlayer.jerseyNumber = (memberIndex + 1).toString();
-
-      const teams = getStoredTeams();
-      saveStoredTeams(teams);
-
-      const session = {
-        playerId: matchedPlayer.playerId,
-        playerName: matchedPlayer.playerName,
-        playerEmail: matchedPlayer.playerEmail,
-        teamId: matchedTeam.teamId,
-        teamName: matchedTeam.teamName,
-        loginTime: new Date().toISOString()
-      };
-      saveActivePlayerSession(session);
-
-      updatePlayerHeaderUI();
-      updateAuthHeaderUI();
-      renderPlayerDashboard(matchedPlayer, matchedTeam);
-
-      navigateToRoute('/player');
-      switchPlayerDashTab('overview');
-    }
-  } else {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid verification code. Enter <code>1234</code> or <code>123456</code>.</div>';
-      alertBox.style.display = 'flex';
-    }
-  }
-}
-
-function handleCommonTeamLoginSubmit(e) {
-  if (e) e.preventDefault();
-
-  const idInput = document.getElementById('commonTeamLoginId');
-  const alertBox = document.getElementById('commonLoginAlert');
-  const query = idInput ? idInput.value.trim().toLowerCase() : '';
-
-  if (!query) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const teams = getStoredTeams();
-  const matchedTeam = teams.find(t =>
-    (t.teamId || '').toLowerCase() === query ||
-    (t.coach?.email || '').toLowerCase() === query ||
-    (t.teamName || '').toLowerCase().includes(query)
-  );
-
-  if (!matchedTeam) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> <div><strong>Pending Approval:</strong> Your team registration is still pending admin approval.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-ban"></i> <div><strong>Registration Rejected:</strong> Your team registration has been rejected.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    teamId: matchedTeam.teamId,
-    teamName: matchedTeam.teamName,
-    coachName: matchedTeam.coach ? matchedTeam.coach.name : '',
-    loginTime: new Date().toISOString()
-  };
-  saveActiveTeamSession(session);
-  updateAuthHeaderUI();
-  navigateToRoute('/team');
-}
-
-function handleCommonAdminLoginSubmit(e) {
-  if (e) e.preventDefault();
-
-  const emailInput = document.getElementById('commonAdminEmail');
-  const passInput = document.getElementById('commonAdminPassword');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const pass = passInput ? passInput.value.trim() : '';
-
-  if ((email === 'admin@cfvd.org' || email === 'admin') && pass === 'CFVD@Admin2026') {
-    if (alertBox) alertBox.style.display = 'none';
-
-    const session = {
-      email: 'admin@cfvd.org',
-      role: 'admin',
-      loginTime: new Date().toISOString()
-    };
-
-    sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-    localStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-
-    updateAuthHeaderUI();
-    showAdminNotification('✓ Administrator Authenticated! Welcome to the Admin Dashboard.');
-    navigateToRoute('/admin');
-  } else {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Access Denied:</strong> Invalid administrator credentials. (Default: <code>admin@cfvd.org</code> / <code>CFVD@Admin2026</code>)</div>';
-      alertBox.style.display = 'flex';
-    }
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -4602,14 +4048,14 @@ function saveActiveTeamSession(session) {
   try {
     sessionStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveTeamSession() {
   try {
     sessionStorage.removeItem(TEAM_SESSION_KEY);
     localStorage.removeItem(TEAM_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function getActiveScorerSession() {
@@ -4625,14 +4071,14 @@ function saveActiveScorerSession(session) {
   try {
     sessionStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveScorerSession() {
   try {
     sessionStorage.removeItem(SCORER_SESSION_KEY);
     localStorage.removeItem(SCORER_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function initAuthSessionUI() {
@@ -4732,260 +4178,139 @@ function prefillTeamLogin(teamId) {
   }
 }
 
-function handleTeamLoginSubmit(e) {
+async function handleTeamLoginSubmit(e) {
   e.preventDefault();
 
   const idInput = document.getElementById('teamLoginId');
+  const passkeyInput = document.getElementById('teamLoginPasskey');
   const alertBox = document.getElementById('pageTeamLoginAlert');
-  const query = idInput ? idInput.value.trim().toLowerCase() : '';
 
-  if (!query) {
+  const identifier = idInput ? idInput.value.trim() : '';
+  const passkey = passkeyInput ? passkeyInput.value.trim() : '';
+
+  if (!identifier || !passkey) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Team ID or Coach Email and Team Passkey.</div>';
       alertBox.style.display = 'flex';
     }
     return;
   }
 
-  const teams = getStoredTeams();
-  const matchedTeam = teams.find(t =>
-    (t.teamId || '').toLowerCase() === query ||
-    (t.coach?.email || '').toLowerCase() === query ||
-    (t.teamName || '').toLowerCase().includes(query)
-  );
-
-  if (!matchedTeam) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <div>
-          <strong>Pending Approval:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> is pending administrator review.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matchedTeam.rejectionReason || 'Documentation criteria not fulfilled'}</div>
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Approved -> Save session & navigate to /team
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    teamId: matchedTeam.teamId,
-    teamName: matchedTeam.teamName,
-    coach: matchedTeam.coach,
-    logo: matchedTeam.logo,
-    registrationDate: matchedTeam.registrationDate,
-    loginTime: new Date().toISOString()
-  };
-  saveActiveTeamSession(session);
-  updateAuthHeaderUI();
-  navigateToRoute('/team');
-}
-
-function handleTeamLogout() {
-  clearActiveTeamSession();
-  updateAuthHeaderUI();
-  alert('✓ Team signed out successfully.');
-  navigateToRoute('/');
-}
-
-function renderTeamDashboard() {
-  const session = getActiveTeamSession();
-  if (!session) return;
-
-  const teams = getStoredTeams();
-  const team = teams.find(t => t.teamId === session.teamId) || session;
-
-  // 1. Hero
-  const heroEl = document.getElementById('teamDashboardHero');
-  if (heroEl) {
-    heroEl.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
-        <div style="display:flex; align-items:center; gap:1.2rem;">
-          <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <div>
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${team.teamName}</h2>
-              <span class="team-status-tag confirmed" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Approved &amp; Verified</span>
-            </div>
-            <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
-              <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${team.teamId}</span> • <strong>Head Coach:</strong> ${team.coach?.name || 'Assigned'} (${team.coach?.email || 'N/A'})
-            </p>
-          </div>
-        </div>
-        <div style="display:flex; gap:0.8rem;">
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#fff;">${team.members ? team.members.length : 15}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
-          </div>
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#4ade80;">1st Div</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">League Tier</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // 2. Squad Table
-  const tableBody = document.getElementById('teamDashboardSquadTableBody');
-  if (tableBody) {
-    const members = Array.isArray(team.members) ? team.members : [];
-    let rowsHtml = '';
-    members.forEach((m, idx) => {
-      const pid = m.playerId || `CFVD-PLY-${team.teamId.slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`;
-      const jersey = m.jerseyNumber || (idx + 1);
-      const role = m.role || 'Player';
-      const batStyle = m.battingStyle || 'Right Hand Bat';
-      const bowlStyle = m.bowlingStyle || 'None';
-
-      rowsHtml += `
-        <tr>
-          <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
-          <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${pid}</code></td>
-          <td style="font-weight:700; color:#fff;">${m.playerName}</td>
-          <td style="color:#93c5fd;">${m.playerEmail}</td>
-          <td><span class="badge gold" style="font-size:0.75rem;">${role}</span></td>
-          <td>${batStyle}</td>
-          <td>${bowlStyle}</td>
-          <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Verified</span></td>
-        </tr>
-      `;
+  try {
+    const res = await fetch('/api/teams/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, passkey })
     });
-    tableBody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No members recorded.</td></tr>';
-  }
 
-  // 3. Fixtures
-  const fixContainer = document.getElementById('teamDashboardFixturesContainer');
-  if (fixContainer) {
-    fixContainer.innerHTML = `
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge red">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Sivakasi Super Kings</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">District Division 1 Championship • Oct 12, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> District Sports Complex, Virudhunagar</p>
-      </div>
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge gold">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Rajapalayam CC</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">K. Kamarajar Memorial Trophy • Oct 20, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> PACR Ground, Rajapalayam</p>
-      </div>
-    `;
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      if (alertBox) {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>' + (data.message || 'Invalid Team ID/Coach Email or Passkey.') + '</div>';
+        alertBox.style.display = 'flex';
+      }
+      return;
+    }
+
+    if (alertBox) alertBox.style.display = 'none';
+
+    if (data.token && typeof localStorage !== 'undefined') {
+      localStorage.setItem('team_auth_token', data.token);
+    }
+
+    navigateToRoute('/team-dashboard');
+    renderTeamDashboard();
+
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Connection error. Failed to reach authentication server.</div>';
+      alertBox.style.display = 'flex';
+    }
   }
 }
 
-/* --------------------------------------------------------------------------
-   INTEGRATED ADMIN MODULE: TEAMS & SCORERS APPROVAL ENGINE
-   -------------------------------------------------------------------------- */
+async function handleTeamLogout() {
+  try {
+    await fetch('/api/teams/logout', { method: 'POST' });
+    if (typeof localStorage !== 'undefined') localStorage.removeItem('team_auth_token');
+  } catch(e){}
+  navigateToRoute('/team-login');
+}
 
-const SCORERS_STORAGE_KEY = 'cfvd_registered_scorers';
+async function renderTeamDashboard() {
+  const heroEl = document.getElementById('teamDashboardHero');
+  const tableBody = document.getElementById('teamDashboardSquadTableBody');
 
-const INITIAL_SCORERS_DATA = [
-  {
-    scorerId: 'SCORER-101',
-    scorerName: 'Thiru. K. Sundararajan',
-    email: 'sundararajan@cfvd.org',
-    phone: '+91 94431 12345',
-    grade: 'BCCI Level 1 Digital Scorer',
-    taluk: 'Virudhunagar',
-    experienceYears: 8,
-    status: 'Approved',
-    registrationDate: '2026-09-15T10:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: '2026-09-16T11:00:00.000Z',
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-102',
-    scorerName: 'Thiru. M. Venkatesh',
-    email: 'venkatesh.m@gmail.com',
-    phone: '+91 98422 67890',
-    grade: 'District Senior Panel Scorer',
-    taluk: 'Sivakasi',
-    experienceYears: 5,
-    status: 'Approved',
-    registrationDate: '2026-09-16T11:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: '2026-09-17T09:30:00.000Z',
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-103',
-    scorerName: 'Thiru. S. Pitchaimuthu',
-    email: 'pitchai.s@yahoo.com',
-    phone: '+91 97890 23456',
-    grade: 'Collegiate League Scorer',
-    taluk: 'Rajapalayam',
-    experienceYears: 3,
-    status: 'Pending',
-    registrationDate: '2026-09-27T08:30:00.000Z',
-    approvedBy: null,
-    approvedAt: null,
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-104',
-    scorerName: 'Thiru. R. Vignesh Kumar',
-    email: 'vignesh.k@gmail.com',
-    phone: '+91 96555 89012',
-    grade: 'Academy Digital Scorer',
-    taluk: 'Aruppukottai',
-    experienceYears: 2,
-    status: 'Pending',
-    registrationDate: '2026-09-28T14:20:00.000Z',
-    approvedBy: null,
-    approvedAt: null,
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-105',
-    scorerName: 'Thiru. P. Arumugam',
-    email: 'arumugam.p@gmail.com',
-    phone: '+91 99444 34567',
-    grade: 'Club Panel Scorer',
-    taluk: 'Sattur',
-    experienceYears: 1,
-    status: 'Rejected',
-    registrationDate: '2026-09-19T09:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: null,
-    rejectedAt: '2026-09-20T12:00:00.000Z',
-    rejectedBy: 'admin@cfvd.org',
-    rejectionReason: 'Required scorer certification credentials expired. Renewal required.'
+  try {
+    const token = (typeof localStorage !== 'undefined' && localStorage.getItem('team_auth_token')) || '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    const meRes = await fetch('/api/teams/me', { headers });
+    const meData = await meRes.json();
+
+    if (!meRes.ok || !meData.success || !meData.team) {
+      navigateToRoute('/team-login');
+      return;
+    }
+
+    const team = meData.team;
+
+    const playersRes = await fetch('/api/teams/me/players', { headers });
+    const playersData = await playersRes.json();
+    const players = (playersData && playersData.players) || [];
+
+    if (heroEl) {
+      heroEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
+          <div style="display:flex; align-items:center; gap:1.2rem;">
+            <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${team.teamName}</h2>
+                <span class="team-status-tag confirmed" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> ${team.status || 'APPROVED'}</span>
+              </div>
+              <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
+                <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${team.teamId}</span> • <strong>Head Coach:</strong> ${team.coachName} (${team.coachEmail})
+              </p>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.8rem;">
+            <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
+              <div style="font-size:1.2rem; font-weight:800; color:#fff;">${players.length}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (tableBody) {
+      let rowsHtml = '';
+      players.forEach((p, idx) => {
+        rowsHtml += `
+          <tr>
+            <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
+            <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${p.id || 'TP-' + (idx + 1)}</code></td>
+            <td style="font-weight:700; color:#fff;">${p.playerName}</td>
+            <td style="color:#93c5fd;">${p.playerEmail}</td>
+            <td><span class="badge gold" style="font-size:0.75rem;">${p.role}</span></td>
+            <td>Certified Squad</td>
+            <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Active</span></td>
+          </tr>
+        `;
+      });
+      tableBody.innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No squad players recorded.</td></tr>';
+    }
+  } catch (err) {
+    navigateToRoute('/team-login');
   }
-];
+}
 
 function getAllScorers() {
   try {
@@ -5083,6 +4408,7 @@ function initAdminDashboard() {
   updateAdminSummaryCounts();
   renderAdminTeamsList();
   renderAdminScorersList();
+  refreshAdminScorersFromBackend();
   switchAdminTab(adminCurrentTab);
 }
 
@@ -5103,7 +4429,7 @@ function switchAdminTab(tab) {
 
   if (viewOverview) viewOverview.style.display = tab === 'overview' ? 'block' : 'none';
   if (viewTeams) viewTeams.style.display = tab === 'teams' ? 'block' : 'none';
-  if (viewScorers) viewScorers.style.display = tab === 'scorers' ? 'block' : 'none';
+  if (viewScorers) { viewScorers.style.display = tab === 'scorers' ? 'block' : 'none'; if (tab === 'scorers') refreshAdminScorersFromBackend(); }
 
   updateAdminSummaryCounts();
 
@@ -5300,8 +4626,8 @@ function renderAdminTeamsList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = t.registrationDate ? new Date(t.registrationDate).toLocaleDateString() : 'Active';
@@ -5601,8 +4927,8 @@ function renderAdminScorersList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : 'Active';
@@ -5648,7 +4974,7 @@ function renderAdminScorersList() {
             <span>${s.email}</span>
           </div>
           <div class="admin-item-meta-item">
-            <label>Contact Phone</label>
+            <label>Mobile</label>
             <span>${s.phone || 'N/A'}</span>
           </div>
           <div class="admin-item-meta-item">
@@ -5656,8 +4982,8 @@ function renderAdminScorersList() {
             <span>${regDate}</span>
           </div>
           <div class="admin-item-meta-item">
-            <label>Jurisdiction Taluk</label>
-            <span>${s.taluk || 'Virudhunagar'}</span>
+            <label>Cricket Association / District</label>
+            <span>${s.association || s.taluk || 'Virudhunagar District Cricket Association'}</span>
           </div>
         </div>
 
@@ -5735,8 +5061,8 @@ function openScorerDetailsModal(scorerId) {
       <h5 style="color:var(--gold-bright); margin:0 0 0.4rem 0;">Live Scoring Permissions</h5>
       <p style="color:var(--text-light); font-size:0.85rem; margin:0;">
         ${isApproved
-          ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
-          : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
+      ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
+      : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
       </p>
     </div>
   `;
@@ -5758,6 +5084,35 @@ function openScorerDetailsModal(scorerId) {
   modal.style.display = 'flex';
 }
 
+
+async function refreshAdminScorersFromBackend() {
+  try {
+    const res = await fetch('http://localhost:5000/api/admin/scorers');
+    const data = await res.json();
+    if (data && data.success && Array.isArray(data.scorers)) {
+      const backendScorers = data.scorers.map(s => ({
+        scorerId: s.id || s.scorerId,
+        scorerName: s.full_name || s.scorerName || s.name,
+        email: s.email,
+        phone: s.mobile || s.phone,
+        association: s.association || 'Virudhunagar District Cricket Association',
+        status: (s.status === 'APPROVED' || s.status === 'Approved' || s.status === 'ACTIVE') ? 'Approved' : (s.status === 'REJECTED' || s.status === 'Rejected') ? 'Rejected' : 'Pending',
+        grade: s.association || s.grade || 'Official Scorer',
+        taluk: s.association ? s.association.split(' ')[0] : 'Virudhunagar',
+        registrationDate: s.created_at || s.registrationDate,
+        approvedAt: s.approved_at || s.approvedAt,
+        rejectedAt: s.rejected_at || s.rejectedAt,
+        rejectionReason: s.rejection_reason || s.rejectionReason
+      }));
+      persistScorers(backendScorers);
+      updateAdminSummaryCounts();
+      renderAdminScorersList();
+    }
+  } catch (err) {
+    console.warn('Backend sync failed, using cached scorers:', err);
+  }
+}
+
 function promptApproveScorer(scorerId) {
   const scorers = getAllScorers();
   const scorer = scorers.find(s => s.scorerId === scorerId);
@@ -5775,11 +5130,19 @@ function promptApproveScorer(scorerId) {
       scorer.approvedBy = 'admin@cfvd.org';
       scorer.rejectionReason = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
+      const targetId = encodeURIComponent(scorer.scorerId || scorer.email);
+      fetch(`http://localhost:5000/api/admin/scorers/${targetId}/approve`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
-      }).catch(console.error);
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId })
+      }).then(() => refreshAdminScorersFromBackend())
+        .catch(() => {
+          fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
+          }).catch(console.error);
+        });
 
       persistScorers(scorers);
       updateAdminSummaryCounts();
@@ -5809,11 +5172,19 @@ function promptRejectScorer(scorerId) {
       scorer.approvedAt = null;
       scorer.approvedBy = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
+      const targetId = encodeURIComponent(scorer.scorerId || scorer.email);
+      fetch(`http://localhost:5000/api/admin/scorers/${targetId}/reject`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
-      }).catch(console.error);
+        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, reason: scorer.rejectionReason })
+      }).then(() => refreshAdminScorersFromBackend())
+        .catch(() => {
+          fetch('http://localhost:5000/api/auth/admin/scorer-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
+          }).catch(console.error);
+        });
 
       persistScorers(scorers);
       updateAdminSummaryCounts();
@@ -5895,91 +5266,6 @@ function showAdminNotification(message) {
 /* --------------------------------------------------------------------------
    SCORER LOGIN & LIVE SCORING ACCESS CONTROL
    -------------------------------------------------------------------------- */
-function handleScorerLoginSubmit(e) {
-  e.preventDefault();
-
-  const nameInput = document.getElementById('scorerLoginName');
-  const emailInput = document.getElementById('scorerLoginEmail');
-  const otpInput = document.getElementById('scorerLoginOTP');
-  const alertBox = document.getElementById('pageScorerLoginAlert');
-
-  const scorerNameStr = nameInput ? nameInput.value.trim() : '';
-  const scorerEmailStr = emailInput ? emailInput.value.trim() : '';
-  const otpStr = otpInput ? otpInput.value.trim() : '';
-
-  if (otpStr !== '1234') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid OTP. Default for testing is <code>1234</code>.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Verify scorer approval status against database
-  const scorers = getAllScorers();
-  const matched = scorers.find(s =>
-    s.scorerName.toLowerCase() === scorerNameStr.toLowerCase() &&
-    s.email.toLowerCase() === scorerEmailStr.toLowerCase()
-  );
-
-  if (!matched) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Scorer record not found in federation registry.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 1. Pending Approval check
-  if (matched.status === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <div>
-          <strong>Pending Approval:</strong> Your scorer registration is still pending admin approval. Only approved scorers can access the Match Scoring Dashboard.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 2. Rejection check
-  if (matched.status === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Your scorer authorization has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matched.rejectionReason || 'Certification criteria not met'}</div>
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // 3. Approved -> Grant access!
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    scorerId: matched.scorerId,
-    name: matched.scorerName,
-    email: matched.email,
-    grade: matched.grade,
-    status: 'Approved',
-    loginTime: new Date().toISOString()
-  };
-  saveActiveScorerSession(session);
-  updateAuthHeaderUI();
-  alert(`✓ Certified Scorer Authenticated! Welcome ${matched.scorerName}.`);
-  navigateToRoute('/scorer');
-}
-
 function handleScorerLogout() {
   clearActiveScorerSession();
   updateAuthHeaderUI();
@@ -6029,3 +5315,5 @@ window.addEventListener('message', function (event) {
     }
   }
 });
+
+

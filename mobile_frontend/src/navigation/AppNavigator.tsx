@@ -45,11 +45,9 @@ export default function AppNavigator({
 
   const navigate = (screen: AppScreenName, screenParams?: any) => {
     setParams(screenParams || null);
-    if (screen === 'Home') {
-      setScreenHistory(['Home']);
-    } else {
-      setScreenHistory((prev) => [...prev.filter((s) => s !== screen), screen]);
-    }
+    // Always reset history to a fresh single-screen stack.
+    // This guarantees Back from any screen goes to Home, never to a stale previous screen.
+    setScreenHistory([screen]);
 
     // Update browser URL if on Web
     if (Platform.OS === 'web' && typeof window !== 'undefined') {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MatchData } from '../../data/scorerMockData';
-import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 
 interface Props {
   match: MatchData;

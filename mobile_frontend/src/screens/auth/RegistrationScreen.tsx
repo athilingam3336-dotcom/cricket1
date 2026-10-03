@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
-import { ScorerApi } from '../../services/api';
+import { ScorerApi, TeamApi } from '../../services/api';
 
 export interface SquadPlayer {
   id: string;
@@ -31,23 +31,7 @@ const COMMON_ROLES = [
   'All-Rounder'
 ];
 
-const SAMPLE_15_SQUAD: Array<{ name: string; email: string; role: string }> = [
-  { name: 'R. Saravanan', email: 'saravanan.r@strikerscc.org', role: 'Captain' },
-  { name: 'S. Karthik', email: 'karthik.s@strikerscc.org', role: 'Vice Captain' },
-  { name: 'K. Murugan', email: 'murugan.k@strikerscc.org', role: 'Wicket Keeper' },
-  { name: 'V. Vignesh', email: 'vignesh.v@strikerscc.org', role: 'Bowler' },
-  { name: 'M. Ashwin Kumar', email: 'ashwin.k@strikerscc.org', role: 'All-Rounder' },
-  { name: 'P. Vijay Anand', email: 'vijay.a@strikerscc.org', role: 'Batter' },
-  { name: 'B. Dinesh Babu', email: 'dinesh.b@strikerscc.org', role: 'Batter' },
-  { name: 'T. Praveen Raj', email: 'praveen.r@strikerscc.org', role: 'Bowler' },
-  { name: 'A. Suresh Kumar', email: 'suresh.k@strikerscc.org', role: 'Bowler' },
-  { name: 'N. Bala Murugan', email: 'bala.m@strikerscc.org', role: 'Bowler' },
-  { name: 'G. Arun Pandian', email: 'arun.p@strikerscc.org', role: 'Batter' },
-  { name: 'C. Manikandan', email: 'manikandan.c@strikerscc.org', role: 'All-Rounder' },
-  { name: 'E. Gokul Nath', email: 'gokul.n@strikerscc.org', role: 'Bowler' },
-  { name: 'L. Selva Ganesh', email: 'selva.g@strikerscc.org', role: 'Batter' },
-  { name: 'D. Rajesh', email: 'rajesh.d@strikerscc.org', role: 'Wicket Keeper' }
-];
+
 
 export default function RegistrationScreen() {
   const { navigate } = useAppNavigation();
@@ -70,6 +54,15 @@ export default function RegistrationScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
+  // Success Confirmation Modal State
+  const [successData, setSuccessData] = useState<{
+    teamId: string;
+    teamName: string;
+    coachName: string;
+    coachEmail: string;
+    passkey: string;
+  } | null>(null);
+
 
   const validateEmail = (val: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
@@ -145,28 +138,7 @@ export default function RegistrationScreen() {
   };
 
   // 1-Click Auto-Fill 15 Sample Players
-  const handleAutoFillSampleSquad = () => {
-    if (!teamName.trim()) {
-      setTeamName('Virudhunagar Strikers Cricket Club');
-    }
-    if (!coachName.trim()) {
-      setCoachName('S. Murugan (NIS Certified Coach)');
-    }
-    if (!coachEmail.trim()) {
-      setCoachEmail('coach.murugan@strikerscc.org');
-    }
-
-    const squad: SquadPlayer[] = SAMPLE_15_SQUAD.map((item, idx) => ({
-      id: `sample-${idx + 1}-${Date.now()}`,
-      name: item.name,
-      email: item.email,
-      role: item.role
-    }));
-
-    setPlayers(squad);
-    setStatusMessage('⚡ Sample squad loaded! Team details and all 15 squad players added. You can edit, remove, or submit.');
-    setStatusType('success');
-  };
+  
 
   // Clear all added players
   const handleClearAllPlayers = () => {
@@ -180,124 +152,74 @@ export default function RegistrationScreen() {
     setStatusMessage(null);
     setStatusType(null);
 
-    // 1. Validate Team Name
-    if (!teamName.trim()) {
-      setStatusMessage('Please enter Team Name.');
+    const cleanTeam = teamName.trim();
+    const cleanCoach = coachName.trim();
+    const cleanEmail = coachEmail.trim().toLowerCase();
+
+    if (!cleanTeam) {
+      setStatusMessage('Please enter the Official Team Name.');
       setStatusType('error');
       return;
     }
 
-    // 2. Validate Coach Name
-    if (!coachName.trim()) {
-      setStatusMessage('Please enter Coach Full Name.');
+    if (!cleanCoach) {
+      setStatusMessage('Please enter the Coach Full Name.');
       setStatusType('error');
       return;
     }
 
-    // 3. Validate Coach Email
-    if (!coachEmail.trim() || !validateEmail(coachEmail)) {
-      setStatusMessage('Please enter a valid Coach Email ID (e.g. coach@example.com).');
+    if (!cleanEmail || !validateEmail(cleanEmail)) {
+      setStatusMessage('Please enter a valid Coach Email address (e.g. coach@example.com).');
       setStatusType('error');
       return;
     }
 
-    // 4. Validate Exactly 15 Players
     if (players.length !== 15) {
-      setStatusMessage(
-        `Team registration requires exactly 15 players. Currently added: ${players.length} / 15 players (Need ${15 - players.length} more).`
-      );
+      setStatusMessage(`Exactly 15 players are required. Currently added: ${players.length}/15.`);
       setStatusType('error');
       return;
     }
 
-    // 5. Validate Coach Email vs Player Emails
-    const cleanCoachEmail = coachEmail.trim().toLowerCase();
-    const coachConflict = players.find((p) => p.email.toLowerCase() === cleanCoachEmail);
-    if (coachConflict) {
-      setStatusMessage(`Coach email "${cleanCoachEmail}" cannot be identical to player "${coachConflict.name}".`);
-      setStatusType('error');
-      return;
-    }
-
-    // 6. Check Declaration
     if (!agreed) {
-      setStatusMessage('Please accept the TNCA & CFVD team declaration to proceed.');
+      setStatusMessage('Please agree to the District Cricket Federation Team Registration Terms & Conditions.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Registering Team and 15 Squad Players with CFVD Secretariat...');
+    setStatusMessage('Submitting 15-player team registration to database...');
     setStatusType('info');
 
-    const teamId = 'TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000);
-    const passkey = 'PASS-' + Math.floor(1000 + Math.random() * 9000);
-
-    const teamRecord = {
-      teamId,
-      passkey,
-      teamName: teamName.trim(),
-      coach: {
-        name: coachName.trim(),
-        email: cleanCoachEmail
-      },
-      squad: players.map((p, idx) => ({
-        jerseyNo: idx + 1,
-        playerName: p.name.trim(),
-        playerEmail: p.email.trim().toLowerCase(),
-        role: p.role
-      })),
-      status: 'Pending',
-      registrationDate: new Date().toISOString()
-    };
-
-    // Store in localStorage on web
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      try {
-        const stored = JSON.parse(localStorage.getItem('cricket_registered_teams') || '[]');
-        stored.unshift(teamRecord);
-        localStorage.setItem('cricket_registered_teams', JSON.stringify(stored));
-      } catch (e) {}
-    }
-
-    // Attempt backend registration
     try {
-      await ScorerApi.registerTeam({
-        teamName: teamRecord.teamName,
-        coachName: teamRecord.coach.name,
-        coachEmail: teamRecord.coach.email,
-        players: teamRecord.squad.map((s) => ({
-          name: s.playerName,
-          email: s.playerEmail
+      const res = await TeamApi.registerTeam({
+        teamName: cleanTeam,
+        coachName: cleanCoach,
+        coachEmail: cleanEmail,
+        players: players.map(p => ({
+          name: p.name.trim(),
+          email: p.email.trim().toLowerCase(),
+          role: p.role.trim()
         }))
       });
-    } catch (apiErr) {
-      // Backend fallback continues gracefully
-    }
 
-    setIsLoading(false);
-    setStatusMessage(`✓ Team "${teamRecord.teamName}" Registered Successfully with 15 Players!`);
-    setStatusType('success');
-
-    const summaryMsg =
-      `Team Name: ${teamRecord.teamName}\n` +
-      `Team Registration ID: ${teamId}\n` +
-      `Secret Passkey: ${passkey}\n` +
-      `Coach: ${teamRecord.coach.name} (${teamRecord.coach.email})\n` +
-      `Squad: 15 / 15 Players Enrolled\n` +
-      `Status: Pending District Verification\n\n` +
-      `Please save your Team ID and Passkey to log in to the Team Portal.`;
-
-    if (Platform.OS === 'web') {
-      alert(`✓ Team Registration Submitted Successfully!\n\n${summaryMsg}`);
-      navigate('Login');
-    } else {
-      Alert.alert('✓ Team Registration Submitted', summaryMsg, [
-        {
-          text: 'Go to Team Login',
-          onPress: () => navigate('Login')
-        }
-      ]);
+      if (res && res.success && res.team) {
+        setIsLoading(false);
+        setSuccessData({
+          teamId: res.team.teamId,
+          teamName: res.team.teamName,
+          coachName: res.team.coachName,
+          coachEmail: res.team.coachEmail,
+          passkey: res.team.passkey
+        });
+      } else {
+        setIsLoading(false);
+        setStatusMessage(res?.message || 'Registration failed. Please try again.');
+        setStatusType('error');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      setStatusMessage(err.message || 'Registration failed due to a server error. Please try again.');
+      setStatusType('error');
     }
   };
 
@@ -306,8 +228,8 @@ export default function RegistrationScreen() {
       <View style={styles.container}>
         {/* Top Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('Login')} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backText}>← Back to Login</Text>
+          <TouchableOpacity onPress={() => navigate('Home')} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>← Back to Home</Text>
           </TouchableOpacity>
         </View>
 
@@ -487,26 +409,17 @@ export default function RegistrationScreen() {
               </View>
 
               {/* Quick Helper Actions */}
-              <View style={styles.quickActionsRow}>
-                <TouchableOpacity
-                  style={styles.autoFillBtn}
-                  onPress={handleAutoFillSampleSquad}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.autoFillBtnText}>⚡ Quick Add 15 Sample Players</Text>
-                </TouchableOpacity>
-
-                {players.length > 0 && (
+              {players.length > 0 && (
+                <View style={styles.quickActionsRow}>
                   <TouchableOpacity
                     style={styles.clearBtn}
                     onPress={handleClearAllPlayers}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.clearBtnText}>Clear List</Text>
+                    <Text style={styles.clearBtnText}>Clear Squad List</Text>
                   </TouchableOpacity>
-                )}
-              </View>
-
+                </View>
+              )}
               {/* ============================================================== */}
               {/* SECTION 3: ADDED PLAYERS LIST                                  */}
               {/* ============================================================== */}
@@ -597,7 +510,7 @@ export default function RegistrationScreen() {
               {/* Link to Login */}
               <View style={styles.loginPromptRow}>
                 <Text style={styles.promptNormalText}>Already registered? </Text>
-                <TouchableOpacity onPress={() => navigate('Login')} activeOpacity={0.7}>
+                <TouchableOpacity onPress={() => navigate('Home')} activeOpacity={0.7}>
                   <Text style={styles.loginLinkText}>Login to Team Portal</Text>
                 </TouchableOpacity>
               </View>
@@ -605,7 +518,99 @@ export default function RegistrationScreen() {
           </View>
 
         </ScrollView>
-      </View>
+      
+      {/* SUCCESS CONFIRMATION MODAL WITH ONE-TIME PASSKEY DISPLAY */}
+      {successData && (
+        <View style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(2, 6, 18, 0.88)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+          zIndex: 99999
+        }}>
+          <View style={{
+            backgroundColor: '#0a162e',
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 480,
+            borderWidth: 1.5,
+            borderColor: '#eab308',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.5,
+            shadowRadius: 16,
+            elevation: 12
+          }}>
+            <View style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: 'rgba(34, 197, 94, 0.18)',
+              borderWidth: 2,
+              borderColor: '#22c55e',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 14
+            }}>
+              <Text style={{ color: '#22c55e', fontSize: 28, fontWeight: 'bold' }}>✓</Text>
+            </View>
+
+            <Text style={{ color: '#ffffff', fontSize: 20, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' }}>
+              TEAM REGISTRATION SUCCESSFUL
+            </Text>
+            <Text style={{ color: '#94a3b8', fontSize: 13, marginBottom: 16, textAlign: 'center' }}>
+              Official 15-player squad roster enrolled in database.
+            </Text>
+
+            <View style={{ width: '100%', backgroundColor: '#040d1f', borderRadius: 10, padding: 16, borderWidth: 1, borderColor: '#1e293b', marginBottom: 18 }}>
+              <Text style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>TEAM NAME</Text>
+              <Text style={{ color: '#ffffff', fontSize: 15, fontWeight: 'bold', marginBottom: 10 }}>{successData.teamName}</Text>
+
+              <Text style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>GENERATED TEAM ID (LOGIN IDENTIFIER)</Text>
+              <Text style={{ color: '#eab308', fontSize: 18, fontWeight: '900', letterSpacing: 1, marginBottom: 10 }}>{successData.teamId}</Text>
+
+              <Text style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>HEAD COACH</Text>
+              <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '600', marginBottom: 10 }}>{successData.coachName} ({successData.coachEmail})</Text>
+
+              <Text style={{ color: '#94a3b8', fontSize: 12, marginBottom: 2 }}>GENERATED TEAM PASSKEY (ONE-TIME DISPLAY)</Text>
+              <View style={{ backgroundColor: 'rgba(234, 179, 8, 0.15)', borderWidth: 1, borderColor: '#eab308', borderRadius: 6, padding: 10, alignItems: 'center' }}>
+                <Text style={{ color: '#fef08a', fontSize: 22, fontWeight: '900', letterSpacing: 3 }}>{successData.passkey}</Text>
+                <Text style={{ color: '#ca8a04', fontSize: 11, marginTop: 4, fontWeight: '700' }}>⚠️ Save this passkey now. It will not be shown again.</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#eab308',
+                paddingVertical: 14,
+                paddingHorizontal: 28,
+                borderRadius: 8,
+                width: '100%',
+                alignItems: 'center'
+              }}
+              onPress={() => {
+                const idToPass = successData.teamId;
+                setSuccessData(null);
+                navigate('Home');
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={{ color: '#020612', fontSize: 14.5, fontWeight: '900', letterSpacing: 0.5 }}>
+                GO TO TEAM LOGIN
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+</View>
     </SharedBackground>
   );
 }
