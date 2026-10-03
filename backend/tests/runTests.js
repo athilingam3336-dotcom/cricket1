@@ -1,3 +1,4 @@
+process.env.NODE_ENV = 'test';
 const userModel = require('../models/userModel');
 const crypto = require('crypto');
 const { requireAdminAuth, requireScorerAuth } = require('../middleware/authMiddleware');
@@ -180,6 +181,123 @@ async function runAllTests() {
     const profile = await authService.getProfile('SCR-101');
     assert.strictEqual(profile.id, 'SCR-101');
     assert.strictEqual(profile.name, 'S. Ramesh');
+  });
+
+  console.log('\n--- 1b. DEDICATED SCORER OTP & SECURITY TESTS ---');
+
+  await test('SCORER TEST 1: POST /api/auth/scorer/send-otp for registered scorer -> OTP stored in DB, no plain OTP in response', async () => {
+    otpService.resetRateLimit('scorer@cfvd.org');
+    const res = await authService.requestScorerOtp('scorer@cfvd.org');
+    assert.strictEqual(res.success, true);
+    assert.strictEqual(res.message, 'OTP sent successfully');
+    assert(!res.otp, 'Plain OTP must NOT be returned');
+    assert(!res.devOtp, 'devOtp must NOT be returned');
+
+    const user = await userModel.findByEmail('scorer@cfvd.org');
+    assert(user.otp_hash, 'otp_hash must be saved in database');
+    assert(user.otp_expires_at, 'otp_expires_at must be saved');
+  });
+
+  await test('SCORER TEST 2: POST /api/auth/scorer/send-otp rate limiting cooldown enforcement', async () => {
+    try {
+      await authService.requestScorerOtp('scorer@cfvd.org');
+      assert.fail('Should have been blocked by 30s cooldown rate limit');
+    } catch (err) {
+      assert.strictEqual(err.status, 429);
+      assert(err.message.includes('Please wait') || err.message.includes('attempts'));
+    }
+    otpService.resetRateLimit('scorer@cfvd.org');
+  });
+
+  await test('SCORER TEST 3: POST /api/auth/scorer/send-otp with unregistered email -> 404 Not Found', async () => {
+    try {
+      await authService.requestScorerOtp('unknown_scorer@example.com');
+      assert.fail('Should have rejected unregistered email');
+    } catch (err) {
+      assert.strictEqual(err.status, 404);
+      assert(err.message.toLowerCase().includes('not found') || err.message.toLowerCase().includes('register'));
+    }
+  });
+
+  await test('SCORER TEST 4: POST /api/auth/scorer/send-otp with non-scorer role -> 403 Forbidden', async () => {
+    try {
+      await authService.requestScorerOtp('player@example.com');
+      assert.fail('Should have rejected non-scorer role');
+    } catch (err) {
+      assert.strictEqual(err.status, 403);
+      assert(err.message.toLowerCase().includes('not registered as a scorer'));
+    }
+  });
+
+  await test('SCORER TEST 5: POST /api/auth/scorer/verify-otp with valid OTP -> JWT token & role SCORER', async () => {
+    const user = await userModel.findByEmail('scorer@cfvd.org');
+    const knownOtp = '654321';
+    const knownHash = otpService.hashOtp(knownOtp);
+    await userModel.updateOtp(user.id, {
+      otp_hash: knownHash,
+      otp_expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      otp_attempts: 0
+    });
+
+    const verifyRes = await authService.verifyScorerOtp('scorer@cfvd.org', knownOtp);
+    assert.strictEqual(verifyRes.success, true);
+    assert.strictEqual(verifyRes.user.role, 'SCORER');
+    assert(verifyRes.token, 'JWT token must be issued');
+
+    // Invalidate check: OTP should be cleared from database after verification
+    const refreshed = await userModel.findByEmail('scorer@cfvd.org');
+    assert(!refreshed.otp_hash, 'otp_hash must be cleared after verification');
+  });
+
+  await test('SCORER TEST 6: POST /api/auth/scorer/verify-otp reusing previously used OTP -> Fails', async () => {
+    try {
+      await authService.verifyScorerOtp('scorer@cfvd.org', '654321');
+      assert.fail('Reused OTP must be rejected');
+    } catch (err) {
+      assert.strictEqual(err.status, 400);
+      assert(err.message.toLowerCase().includes('no active otp') || err.message.toLowerCase().includes('request an otp'));
+    }
+  });
+
+  await test('SCORER TEST 7: POST /api/auth/scorer/verify-otp with wrong OTP increments attempts', async () => {
+    const user = await userModel.findByEmail('scorer@cfvd.org');
+    const knownOtp = '345678';
+    const knownHash = otpService.hashOtp(knownOtp);
+    await userModel.updateOtp(user.id, {
+      otp_hash: knownHash,
+      otp_expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      otp_attempts: 0
+    });
+
+    try {
+      await authService.verifyScorerOtp('scorer@cfvd.org', '999999');
+      assert.fail('Should fail on wrong OTP');
+    } catch (err) {
+      assert.strictEqual(err.status, 400);
+      assert(err.message.toLowerCase().includes('invalid otp'));
+    }
+
+    const refreshed = await userModel.findByEmail('scorer@cfvd.org');
+    assert.strictEqual(refreshed.otp_attempts, 1);
+  });
+
+  await test('SCORER TEST 8: POST /api/auth/scorer/verify-otp with expired OTP -> Fails', async () => {
+    const user = await userModel.findByEmail('scorer@cfvd.org');
+    const knownOtp = '223344';
+    const knownHash = otpService.hashOtp(knownOtp);
+    await userModel.updateOtp(user.id, {
+      otp_hash: knownHash,
+      otp_expires_at: new Date(Date.now() - 1000), // Expired 1 second ago
+      otp_attempts: 0
+    });
+
+    try {
+      await authService.verifyScorerOtp('scorer@cfvd.org', knownOtp);
+      assert.fail('Should fail on expired OTP');
+    } catch (err) {
+      assert.strictEqual(err.status, 400);
+      assert(err.message.toLowerCase().includes('expired'));
+    }
   });
 
   console.log('\n--- 2. SCORER DASHBOARD & ASSIGNMENTS ---');
@@ -487,6 +605,145 @@ async function runAllTests() {
       assert.fail('Should reject with 409 conflict');
     } catch (err) {
       assert(err.status === 409 || err.status === 400 || err.message.includes('Conflict') || err.message.includes('not'));
+    }
+  });
+
+  
+  console.log('\n--- 11. SCORER REGISTRATION, ADMIN APPROVAL & LOGIN FLOW ---');
+  let newScorerId = null;
+
+  await test('REGISTER: New scorer submits registration -> Status PENDING in MySQL', async () => {
+    const regRes = await authService.registerScorer({
+      full_name: 'Athi Lingam',
+      email: 'athi.new@example.com',
+      mobile: '9876543299',
+      association: 'Virudhunagar District Cricket Association'
+    });
+
+    assert.strictEqual(regRes.success, true);
+    assert.strictEqual(regRes.status, 'PENDING');
+    assert(regRes.scorer.id, 'Scorer ID must be generated');
+    newScorerId = regRes.scorer.id;
+
+    // Verify row in MySQL scorers table
+    const [rows] = await db.query('SELECT * FROM scorers WHERE email = ?', ['athi.new@example.com']);
+    assert(rows && rows.length > 0, 'Scorer must exist in MySQL scorers table');
+    assert.strictEqual(rows[0].status, 'PENDING', 'MySQL status must be PENDING');
+    assert.strictEqual(rows[0].full_name, 'Athi Lingam');
+    assert.strictEqual(rows[0].mobile, '9876543299');
+    assert.strictEqual(rows[0].association, 'Virudhunagar District Cricket Association');
+  });
+
+  await test('REGISTER: Duplicate registration returns PENDING status without duplication', async () => {
+    const dupRes = await authService.registerScorer({
+      full_name: 'Athi Lingam',
+      email: 'athi.new@example.com',
+      mobile: '9876543299',
+      association: 'Virudhunagar District Cricket Association'
+    });
+
+    assert.strictEqual(dupRes.success, true);
+    assert.strictEqual(dupRes.status, 'PENDING');
+  });
+
+  await test('LOGIN ATTEMPT: PENDING Scorer cannot request login OTP (403)', async () => {
+    try {
+      await authService.requestScorerOtp('athi.new@example.com');
+      assert.fail('Should block pending scorer from requesting OTP');
+    } catch (err) {
+      assert.strictEqual(err.status, 403);
+      assert.strictEqual(err.scorerStatus, 'PENDING');
+      assert(err.message.includes('pending admin approval'));
+    }
+  });
+
+  await test('LOGIN ATTEMPT: Unregistered email returns 404 with notFound: true', async () => {
+    try {
+      await authService.requestScorerOtp('completely_unknown@example.com');
+      assert.fail('Should reject unregistered email');
+    } catch (err) {
+      assert.strictEqual(err.status, 404);
+      assert.strictEqual(err.notFound, true);
+    }
+  });
+
+  await test('ADMIN: List pending scorer requests includes new registration', async () => {
+    const pending = await authService.getPendingScorers();
+    assert(Array.isArray(pending), 'Must return array of pending scorers');
+    const athi = pending.find(s => s.email === 'athi.new@example.com');
+    assert(athi, 'New scorer must appear under Pending Scorer Requests');
+    assert.strictEqual(athi.full_name, 'Athi Lingam');
+    assert.strictEqual(athi.status, 'PENDING');
+    assert.strictEqual(athi.association, 'Virudhunagar District Cricket Association');
+  });
+
+  await test('ADMIN: Approve scorer -> status changes to APPROVED with approved_at timestamp', async () => {
+    const approveRes = await authService.approveScorer(newScorerId);
+    assert.strictEqual(approveRes.success, true);
+    assert.strictEqual(approveRes.scorer.status, 'APPROVED');
+    assert(approveRes.scorer.approved_at, 'approved_at timestamp must be set');
+
+    // Verify in database
+    const [rows] = await db.query('SELECT * FROM scorers WHERE id = ?', [newScorerId]);
+    assert.strictEqual(rows[0].status, 'APPROVED');
+    assert(rows[0].approved_at, 'approved_at must be populated in DB');
+  });
+
+  await test('SCORER LOGIN AFTER APPROVAL: Request OTP & verify -> Success & JWT token', async () => {
+    otpService.resetRateLimit('athi.new@example.com');
+    const otpRes = await authService.requestScorerOtp('athi.new@example.com');
+    assert.strictEqual(otpRes.success, true);
+    assert.strictEqual(otpRes.message, 'OTP sent successfully');
+
+    // Deterministic verify
+    const testOtp = '819203';
+    const testHash = otpService.hashOtp(testOtp);
+    await userModel.updateOtp(newScorerId, {
+      otp_hash: testHash,
+      otp_expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      otp_attempts: 0
+    });
+    const scorerModel = require('../models/scorerModel');
+    await scorerModel.updateOtp(newScorerId, {
+      otp_hash: testHash,
+      otp_expires_at: new Date(Date.now() + 5 * 60 * 1000),
+      otp_attempts: 0
+    });
+
+    const verifyRes = await authService.verifyScorerOtp('athi.new@example.com', testOtp);
+    assert.strictEqual(verifyRes.success, true);
+    assert.strictEqual(verifyRes.user.role, 'SCORER');
+    assert(verifyRes.token, 'JWT token must be issued on successful login');
+  });
+
+  await test('ADMIN: Reject scorer -> status changes to REJECTED with rejected_at timestamp', async () => {
+    // Register candidate to reject
+    const regReject = await authService.registerScorer({
+      full_name: 'Rejected Candidate',
+      email: 'candidate.reject@example.com',
+      mobile: '9876543288',
+      association: 'Sivakasi Taluk'
+    });
+
+    const rejectRes = await authService.rejectScorer(regReject.scorer.id, 'Certification documentation invalid');
+    assert.strictEqual(rejectRes.success, true);
+    assert.strictEqual(rejectRes.scorer.status, 'REJECTED');
+    assert(rejectRes.scorer.rejected_at, 'rejected_at timestamp must be set');
+    assert.strictEqual(rejectRes.scorer.rejection_reason, 'Certification documentation invalid');
+
+    // Verify in database
+    const [rows] = await db.query('SELECT * FROM scorers WHERE id = ?', [regReject.scorer.id]);
+    assert.strictEqual(rows[0].status, 'REJECTED');
+  });
+
+  await test('LOGIN ATTEMPT: REJECTED Scorer cannot request login OTP (403)', async () => {
+    try {
+      await authService.requestScorerOtp('candidate.reject@example.com');
+      assert.fail('Should block rejected scorer from requesting OTP');
+    } catch (err) {
+      assert.strictEqual(err.status, 403);
+      assert.strictEqual(err.scorerStatus, 'REJECTED');
+      assert(err.message.includes('rejected'));
     }
   });
 
