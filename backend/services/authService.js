@@ -372,6 +372,80 @@ class AuthService {
       created_at: user.created_at
     };
   }
+
+  /**
+   * Register a new Team with Coach and 15 Squad Players
+   */
+  async registerTeam(payload) {
+    const { teamName, coachName, coachEmail, players, taluk } = payload;
+    if (!teamName || !teamName.trim()) {
+      throw { status: 400, message: 'Team Name is required.' };
+    }
+    if (!coachName || !coachName.trim()) {
+      throw { status: 400, message: 'Coach Name is required.' };
+    }
+    if (!coachEmail || !coachEmail.trim() || !coachEmail.includes('@')) {
+      throw { status: 400, message: 'Valid Coach Email ID is required.' };
+    }
+    if (!Array.isArray(players) || players.length !== 15) {
+      throw {
+        status: 400,
+        message: `Exactly 15 squad players are required for team registration. Received: ${Array.isArray(players) ? players.length : 0}`
+      };
+    }
+
+    const cleanCoachEmail = coachEmail.trim().toLowerCase();
+
+    // Validate each of the 15 players
+    for (let i = 0; i < players.length; i++) {
+      const p = players[i];
+      if (!p.name || !p.name.trim()) {
+        throw { status: 400, message: `Player #${i + 1} Name is required.` };
+      }
+      if (!p.email || !p.email.trim() || !p.email.includes('@')) {
+        throw { status: 400, message: `Valid Email ID for Player #${i + 1} (${p.name || 'Unnamed'}) is required.` };
+      }
+      if (p.email.trim().toLowerCase() === cleanCoachEmail) {
+        throw { status: 400, message: `Coach email cannot be identical to Player #${i + 1} email.` };
+      }
+    }
+
+    // Check for duplicate player emails
+    const playerEmails = players.map(p => p.email.trim().toLowerCase());
+    const duplicateEmail = playerEmails.find((item, index) => playerEmails.indexOf(item) !== index);
+    if (duplicateEmail) {
+      throw { status: 400, message: `Duplicate player email found: "${duplicateEmail}". Each of the 15 players must have a unique email.` };
+    }
+
+    const teamId = 'TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000);
+    const passkey = 'PASS-' + Math.floor(1000 + Math.random() * 9000);
+
+    const teamRecord = {
+      teamId,
+      passkey,
+      teamName: teamName.trim(),
+      coach: {
+        name: coachName.trim(),
+        email: cleanCoachEmail
+      },
+      taluk: taluk || 'Virudhunagar',
+      players: players.map((p, idx) => ({
+        jerseyNo: idx + 1,
+        name: p.name.trim(),
+        email: p.email.trim().toLowerCase()
+      })),
+      status: 'Pending',
+      registrationDate: new Date().toISOString()
+    };
+
+    console.log(`\n🏏 [TEAM REGISTRATION] Team: "${teamRecord.teamName}" | Coach: ${teamRecord.coach.name} (${teamRecord.coach.email}) | Squad: 15 Players Registered\n`);
+
+    return {
+      success: true,
+      message: 'Team registered successfully with 15 squad players pending administrative verification.',
+      team: teamRecord
+    };
+  }
 }
 
 module.exports = new AuthService();

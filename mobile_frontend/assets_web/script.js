@@ -168,36 +168,36 @@ function filterMatches(category) {
    -------------------------------------------------------------------------- */
 const tableDataSets = {
   div1: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w','w','nr','l','w'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w','l','w','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w','w','nr','l','w'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l','w','w','l','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l','l','nr','w','l'], crest: 'stars-crest', code: 'AKS' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SXI' },
-    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l','nr','l','l','w'], crest: 'thk-crest', code: 'TKC' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w', 'l', 'w', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l', 'w', 'w', 'l', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l', 'l', 'nr', 'w', 'l'], crest: 'stars-crest', code: 'AKS' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' },
+    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l', 'nr', 'l', 'l', 'w'], crest: 'thk-crest', code: 'TKC' }
   ],
   college: [
-    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w','w','w','nr','w'], crest: 'striker-crest', code: 'VHN' },
-    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w','nr','l','w','w'], crest: 'king-crest', code: 'PSR' },
-    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w','l','w','w','l'], crest: 'rcc-crest', code: 'ANJ' },
-    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l','w','nr','l','w'], crest: 'spw-crest', code: 'RRC' },
-    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l','l','l','w','l'], crest: 'stars-crest', code: 'KLU' },
-    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SFR' }
+    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'striker-crest', code: 'VHN' },
+    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w', 'nr', 'l', 'w', 'w'], crest: 'king-crest', code: 'PSR' },
+    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w', 'l', 'w', 'w', 'l'], crest: 'rcc-crest', code: 'ANJ' },
+    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'spw-crest', code: 'RRC' },
+    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l', 'l', 'l', 'w', 'l'], crest: 'stars-crest', code: 'KLU' },
+    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SFR' }
   ],
   t20: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w','w','w','w','l'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w','w','nr','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l','w','nr','w','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w','l','w','l','l'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l','l','nr','l','w'], crest: 'stars-crest', code: 'WPC' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l','l','nr','l','l'], crest: 'str-crest', code: 'SXI' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w', 'w', 'w', 'w', 'l'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w', 'w', 'nr', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l', 'w', 'nr', 'w', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w', 'l', 'w', 'l', 'l'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l', 'l', 'nr', 'l', 'w'], crest: 'stars-crest', code: 'WPC' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l', 'l', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' }
   ],
   school: [
-    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w','w','w','nr','w'], crest: 'kvs-crest', code: 'KVS' },
-    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w','w','l','w','w'], crest: 'pac-crest', code: 'PAC' },
-    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w','l','nr','w','l'], crest: 'spw-crest', code: 'SHN' },
-    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l','w','nr','l','w'], crest: 'str-crest', code: 'GMH' },
-    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l','l','w','l','l'], crest: 'stars-crest', code: 'SMH' }
+    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'kvs-crest', code: 'KVS' },
+    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w', 'w', 'l', 'w', 'w'], crest: 'pac-crest', code: 'PAC' },
+    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w', 'l', 'nr', 'w', 'l'], crest: 'spw-crest', code: 'SHN' },
+    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'str-crest', code: 'GMH' },
+    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l', 'l', 'w', 'l', 'l'], crest: 'stars-crest', code: 'SMH' }
   ]
 };
 
@@ -2022,8 +2022,8 @@ function searchTeamRegistrationStatus() {
   }
 
   const teams = getStoredTeams();
-  const matched = teams.find(t => 
-    t.teamId.toLowerCase() === query || 
+  const matched = teams.find(t =>
+    t.teamId.toLowerCase() === query ||
     t.coach.email.toLowerCase() === query ||
     t.teamName.toLowerCase().includes(query)
   );
@@ -2241,8 +2241,8 @@ function renderAdminTeamsList() {
 
   if (!container) return;
 
-  const filtered = currentAdminFilter === 'all' 
-    ? teams 
+  const filtered = currentAdminFilter === 'all'
+    ? teams
     : teams.filter(t => t.status === currentAdminFilter);
 
   if (filtered.length === 0) {
@@ -3699,7 +3699,7 @@ function navigateToRoute(route, event) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify(routeMsg));
     }
-  } catch (e) {}
+  } catch (e) { }
 
   renderCurrentRoute(targetRoute, true);
 }
@@ -3728,7 +3728,7 @@ function navigateToSection(sectionId, tab, event) {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(sectionMsg, '*');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const currentRoute = getCurrentRouteFromUrl();
   const [basePath] = currentRoute.split('?');
@@ -3830,7 +3830,7 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   const footer = document.querySelector('.main-footer');
   const header = document.querySelector('.main-header');
   const isScorerRoute = path === '/scorer-login' || path === '/scorer';
-  
+
   if (footer) {
     footer.style.display = isScorerRoute ? 'none' : 'block';
   }
@@ -4049,14 +4049,14 @@ function saveActiveTeamSession(session) {
   try {
     sessionStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveTeamSession() {
   try {
     sessionStorage.removeItem(TEAM_SESSION_KEY);
     localStorage.removeItem(TEAM_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function getActiveScorerSession() {
@@ -4072,14 +4072,14 @@ function saveActiveScorerSession(session) {
   try {
     sessionStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveScorerSession() {
   try {
     sessionStorage.removeItem(SCORER_SESSION_KEY);
     localStorage.removeItem(SCORER_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function initAuthSessionUI() {
@@ -4747,8 +4747,8 @@ function renderAdminTeamsList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = t.registrationDate ? new Date(t.registrationDate).toLocaleDateString() : 'Active';
@@ -5048,8 +5048,8 @@ function renderAdminScorersList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : 'Active';
@@ -5182,8 +5182,8 @@ function openScorerDetailsModal(scorerId) {
       <h5 style="color:var(--gold-bright); margin:0 0 0.4rem 0;">Live Scoring Permissions</h5>
       <p style="color:var(--text-light); font-size:0.85rem; margin:0;">
         ${isApproved
-          ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
-          : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
+      ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
+      : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
       </p>
     </div>
   `;
@@ -5463,3 +5463,16 @@ function openPlayerPortalModal() {
 function openRegistrationModal(prefCategory) {
   navigateToRoute('/player-registration');
 }
+
+// Listen for parent messages (e.g. from React Native Shell or AppNavigator)
+window.addEventListener('message', function (event) {
+  if (!event.data) return;
+  if (event.data.type === 'NAVIGATE' || event.data.type === 'ROUTE_CHANGE') {
+    const route = event.data.route;
+    if (route === '/' || route === '/home' || route === '') {
+      renderCurrentRoute('/', true);
+    } else if (route) {
+      renderCurrentRoute(route, true);
+    }
+  }
+});

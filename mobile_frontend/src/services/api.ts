@@ -103,6 +103,19 @@ export const ScorerApi = {
     return res;
   },
 
+  registerTeam: async (payload: {
+    teamName: string;
+    coachName: string;
+    coachEmail: string;
+    taluk?: string;
+    players: Array<{ name: string; email: string }>;
+  }) => {
+    return request('/auth/register-team', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
   getProfile: async () => {
     return request('/auth/me');
   },

@@ -114,6 +114,23 @@ class AuthController {
   }
 
   /**
+   * POST /api/auth/register-team
+   * Team Registration (Team Name, Coach Name, Coach Email, 15 Squad Players)
+   */
+  async registerTeam(req, res) {
+    try {
+      const result = await authService.registerTeam(req.body);
+      res.status(201).json(result);
+    } catch (err) {
+      const status = err.status || 400;
+      res.status(status).json({
+        success: false,
+        message: err.message || 'Team registration failed'
+      });
+    }
+  }
+
+  /**
    * GET /api/auth/me
    */
   async getMe(req, res) {

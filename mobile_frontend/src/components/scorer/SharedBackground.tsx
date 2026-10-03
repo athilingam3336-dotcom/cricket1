@@ -30,8 +30,8 @@ export default function SharedBackground({ children }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: '#fdfbf7' }]}>
       {/* Stadium Background for Mobile */}
-      <ImageBackground 
-        source={require('../../../public/stadium.jpg')} 
+      <ImageBackground
+        source={require('../../../public/stadium.jpg')}
         style={styles.absoluteFill}
         imageStyle={styles.stadiumImage}
       >
@@ -40,7 +40,7 @@ export default function SharedBackground({ children }: Props) {
           colors={['rgba(246, 242, 233, 0.84)', 'rgba(248, 244, 235, 0.96)']}
           style={styles.absoluteFill}
         />
-        
+
         {/* Top Glow Canopy */}
         <LinearGradient
           colors={['rgba(255, 255, 255, 0.96)', 'rgba(254, 217, 102, 0.4)', 'transparent']}
@@ -49,8 +49,8 @@ export default function SharedBackground({ children }: Props) {
 
         {/* Floating Watermark Logo */}
         <View style={styles.watermarkContainer}>
-          <Image 
-            source={require('../../../public/watermark.png')} 
+          <Image
+            source={require('../../../public/watermark.png')}
             style={styles.watermarkImage}
             resizeMode="contain"
           />
@@ -72,7 +72,11 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   absoluteFill: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   stadiumImage: {
     opacity: 0.12,
@@ -85,7 +89,11 @@ const styles = StyleSheet.create({
     height: 400,
   },
   watermarkContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
     opacity: 0.45,

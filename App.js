@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons, FontAwesome5, Ionicons, FontAwesome6 } from '@expo/vector-icons';
 import { INLINED_HTML } from './src/generated/inlinedHtml';
+import RegistrationModal from './src/components/RegistrationModal';
 import { localAssets } from './src/utils/assets';
 import {
   MATCHES_DATA,
@@ -65,6 +66,13 @@ export default function App() {
   const [modalTab, setModalTab] = useState('summary');
 
   const [registrationModalVisible, setRegistrationModalVisible] = useState(false);
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [loginRole, setLoginRole] = useState('player');
+  const [loginInput, setLoginInput] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginOtp, setLoginOtp] = useState('');
+  const [loginOtpSent, setLoginOtpSent] = useState(false);
+
   const [regCategory, setRegCategory] = useState('player_senior');
   const [regName, setRegName] = useState('');
   const [regDob, setRegDob] = useState('');
@@ -101,7 +109,13 @@ export default function App() {
     setScorecardModalVisible(true);
   };
 
+  const openLogin = () => {
+    setLoginModalVisible(true);
+    setMobileMenuOpen(false);
+  };
+
   const openRegistration = (prefCategory = 'player_senior') => {
+    setLoginModalVisible(false);
     setRegCategory(prefCategory);
     setRegistrationModalVisible(true);
     setMobileMenuOpen(false);
@@ -259,9 +273,9 @@ export default function App() {
               </TouchableOpacity>
 
               <View style={styles.headerActions}>
-                <TouchableOpacity style={[styles.btn, styles.btnGold, styles.btnSm]} onPress={() => openRegistration('player_senior')}>
-                  <FontAwesome5 name="id-card" size={11} color="#000" />
-                  <Text style={styles.btnGoldText}>Register</Text>
+                <TouchableOpacity style={[styles.btn, styles.btnGold, styles.btnSm]} onPress={openLogin}>
+                  <FontAwesome5 name="sign-in-alt" size={11} color="#000" />
+                  <Text style={styles.btnGoldText}>Login</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.themeBtn, { borderColor: colors.borderLight }]} onPress={toggleTheme}>
@@ -406,6 +420,153 @@ export default function App() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Registration Modal */}
+      <RegistrationModal
+        visible={registrationModalVisible}
+        onClose={() => setRegistrationModalVisible(false)}
+        theme={{
+          surface: colors.bgCard,
+          border: colors.goldBorder,
+          borderLight: colors.borderLight,
+          primary: colors.goldPrimary,
+          text: colors.textWhite,
+          textSecondary: colors.textMuted,
+          accentGold: colors.goldPrimary,
+          surfaceElevated: colors.bgDark,
+        }}
+        initialCategory={regCategory}
+      />
+
+      {/* Common Login Modal (styled after Scorer reference) */}
+      <Modal
+        visible={loginModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setLoginModalVisible(false)}
+      >
+        <View style={styles.authModalBackdrop}>
+          <View style={[styles.authModalCard, { backgroundColor: colors.bgCard, borderColor: colors.goldBorder }]}>
+            <View style={styles.authModalHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.authModalTitle, { color: colors.textWhite }]}>Federation Portal Login</Text>
+                <Text style={[styles.authModalSubtitle, { color: colors.textMuted }]}>
+                  Official portal access for players, clubs, and administrators
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setLoginModalVisible(false)} style={styles.authCloseBtn}>
+                <Ionicons name="close" size={20} color={colors.textWhite} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Role Switcher */}
+            <View style={[styles.authRoleTabs, { backgroundColor: colors.navyAbyss, borderColor: colors.borderLight }]}>
+              <TouchableOpacity
+                style={[styles.authRoleTab, loginRole === 'player' && styles.authRoleTabActive]}
+                onPress={() => { setLoginRole('player'); setLoginOtpSent(false); }}
+              >
+                <Text style={[styles.authRoleTabText, { color: loginRole === 'player' ? '#000' : colors.textMuted }]}>Player</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.authRoleTab, loginRole === 'team' && styles.authRoleTabActive]}
+                onPress={() => { setLoginRole('team'); setLoginOtpSent(false); }}
+              >
+                <Text style={[styles.authRoleTabText, { color: loginRole === 'team' ? '#000' : colors.textMuted }]}>Team / Club</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.authRoleTab, loginRole === 'admin' && styles.authRoleTabActive]}
+                onPress={() => { setLoginRole('admin'); setLoginOtpSent(false); }}
+              >
+                <Text style={[styles.authRoleTabText, { color: loginRole === 'admin' ? '#000' : colors.textMuted }]}>Admin</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Input field */}
+            <Text style={[styles.authInputLabel, { color: colors.textWhite }]}>
+              {loginRole === 'player' ? 'Registered Email or Mobile *' : loginRole === 'team' ? 'Team Registration ID *' : 'Admin Email *'}
+            </Text>
+            <TextInput
+              style={[styles.authTextInput, { borderColor: colors.borderLight, color: colors.textWhite }]}
+              value={loginInput}
+              onChangeText={setLoginInput}
+              placeholder={loginRole === 'player' ? 'e.g. saravanan.r@strikerscc.org' : loginRole === 'team' ? 'e.g. TEAM-VRD-1001' : 'e.g. admin@cfvd.org'}
+              placeholderTextColor="#9bb0cf"
+              autoCapitalize="none"
+            />
+
+            {loginRole === 'player' ? (
+              !loginOtpSent ? (
+                <TouchableOpacity
+                  style={[styles.authSubmitBtn, { backgroundColor: colors.goldPrimary }]}
+                  onPress={() => {
+                    if (!loginInput.trim()) {
+                      Alert.alert('Required', 'Please enter your email or mobile.');
+                      return;
+                    }
+                    setLoginOtpSent(true);
+                    setLoginOtp('1234');
+                    Alert.alert('OTP Sent', 'Verification OTP sent! (Dev default: 1234)');
+                  }}
+                >
+                  <Text style={styles.authSubmitBtnText}>Send OTP</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  <Text style={[styles.authInputLabel, { color: colors.textWhite }]}>Enter OTP Code *</Text>
+                  <TextInput
+                    style={[styles.authTextInput, { borderColor: colors.borderLight, color: colors.textWhite }]}
+                    value={loginOtp}
+                    onChangeText={setLoginOtp}
+                    placeholder="Enter 4-digit OTP (e.g. 1234)"
+                    placeholderTextColor="#9bb0cf"
+                    keyboardType="number-pad"
+                  />
+                  <TouchableOpacity
+                    style={[styles.authSubmitBtn, { backgroundColor: colors.goldPrimary }]}
+                    onPress={() => {
+                      Alert.alert('✓ Login Successful', 'Welcome to the CFVD Player Portal!', [
+                        { text: 'OK', onPress: () => { setLoginModalVisible(false); setLoginOtpSent(false); setLoginInput(''); } }
+                      ]);
+                    }}
+                  >
+                    <Text style={styles.authSubmitBtnText}>Verify & Login</Text>
+                  </TouchableOpacity>
+                </>
+              )
+            ) : (
+              <>
+                <Text style={[styles.authInputLabel, { color: colors.textWhite }]}>{loginRole === 'team' ? 'Passkey *' : 'Master Password *'}</Text>
+                <TextInput
+                  style={[styles.authTextInput, { borderColor: colors.borderLight, color: colors.textWhite }]}
+                  value={loginPassword}
+                  onChangeText={setLoginPassword}
+                  placeholder="Enter Password"
+                  placeholderTextColor="#9bb0cf"
+                  secureTextEntry={true}
+                />
+                <TouchableOpacity
+                  style={[styles.authSubmitBtn, { backgroundColor: colors.goldPrimary }]}
+                  onPress={() => {
+                    Alert.alert('✓ Login Successful', `Authenticated as ${loginRole.toUpperCase()}!`, [
+                      { text: 'OK', onPress: () => { setLoginModalVisible(false); setLoginInput(''); setLoginPassword(''); } }
+                    ]);
+                  }}
+                >
+                  <Text style={styles.authSubmitBtnText}>Login</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Standard Registration Prompt: "Don't have an account? Register" */}
+            <View style={styles.authRegisterPromptRow}>
+              <Text style={[styles.authPromptNormalText, { color: colors.textMuted }]}>Don't have an account? </Text>
+              <TouchableOpacity onPress={() => openRegistration(loginRole === 'team' ? 'club' : 'player_senior')}>
+                <Text style={[styles.authRegisterLinkText, { color: colors.goldPrimary }]}>Register</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -741,5 +902,118 @@ const styles = StyleSheet.create({
   btnOutlineGoldText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+
+  /* Auth Modal Styles */
+  authModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  authModalCard: {
+    width: '100%',
+    maxWidth: 440,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  authModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  authModalTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  authModalSubtitle: {
+    fontSize: 12.5,
+    marginTop: 2,
+    marginBottom: 16,
+    lineHeight: 17,
+  },
+  authCloseBtn: {
+    padding: 4,
+  },
+  authRoleTabs: {
+    flexDirection: 'row',
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 3,
+    marginBottom: 16,
+  },
+  authRoleTab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+  },
+  authRoleTabActive: {
+    backgroundColor: '#D4AF37',
+  },
+  authRoleTabText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  authInputLabel: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    marginBottom: 6,
+    marginTop: 6,
+  },
+  authTextInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  authSubmitBtn: {
+    paddingVertical: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  authSubmitBtnText: {
+    color: '#000',
+    fontWeight: '900',
+    fontSize: 14,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  authRegisterPromptRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  authPromptNormalText: {
+    fontSize: 13,
+  },
+  authRegisterLinkText: {
+    fontSize: 13,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
   },
 });

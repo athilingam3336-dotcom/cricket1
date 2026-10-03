@@ -10,6 +10,7 @@ export default function Header({
   toggleTheme,
   floodlightMode,
   cycleFloodlightMode,
+  onOpenLogin,
   onOpenRegister,
 }) {
   const currentFl = floodlightStyles[floodlightMode] || floodlightStyles.on;
@@ -44,14 +45,14 @@ export default function Header({
 
         {/* Action Controls */}
         <View style={styles.controlsRow}>
-          {/* Register Pill Button */}
+          {/* Single Main Auth Option: Login */}
           <TouchableOpacity
-            style={[styles.registerBtn, { backgroundColor: theme.primary }]}
-            onPress={onOpenRegister}
+            style={[styles.loginBtn, { backgroundColor: theme.primary }]}
+            onPress={onOpenLogin || onOpenRegister}
             activeOpacity={0.8}
           >
-            <FontAwesome5 name="id-card" size={11} color="#000" />
-            <Text style={styles.registerBtnText}>Register</Text>
+            <FontAwesome5 name="sign-in-alt" size={11} color="#000" />
+            <Text style={styles.loginBtnText}>Login</Text>
           </TouchableOpacity>
 
           {/* Floodlight Toggle */}
@@ -156,6 +157,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  loginBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  loginBtnText: {
+    color: '#000',
+    fontWeight: '800',
+    fontSize: 11,
+    letterSpacing: 0.3,
   },
   registerBtn: {
     flexDirection: 'row',

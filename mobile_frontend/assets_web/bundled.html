@@ -7635,6 +7635,160 @@ body.theme-light .admin-modal-header h3 {
   justify-content: flex-end;
   gap: 0.8rem;
 }
+
+/* ==========================================================================
+   MODULE: UNIFIED AUTHENTICATION SYSTEM (SCORER-ALIGNED DESIGN)
+   ========================================================================== */
+.auth-page-wrapper {
+  min-height: calc(100vh - 86px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  position: relative;
+  width: 100%;
+}
+
+.auth-back-btn {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.auth-role-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: rgba(10, 24, 56, 0.75);
+  padding: 5px;
+  border-radius: 8px;
+  border: 1px solid var(--gold-border);
+  margin-bottom: 1.5rem;
+}
+
+body.theme-light .auth-role-tabs {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.auth-role-tab {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.65rem 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.auth-role-tab:hover {
+  color: var(--text-white);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+body.theme-light .auth-role-tab:hover {
+  color: #0f172a;
+  background: rgba(184, 134, 11, 0.08);
+}
+
+.auth-role-tab.active {
+  background: var(--gold-bright);
+  color: #000000;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);
+}
+
+body.theme-light .auth-role-tab.active {
+  background: #b45309;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(180, 83, 9, 0.3);
+}
+
+.auth-bottom-prompt {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.22);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.auth-bottom-prompt span {
+  color: var(--text-muted);
+}
+
+body.theme-light .auth-bottom-prompt span {
+  color: #64748b;
+}
+
+.auth-bottom-prompt a {
+  color: var(--gold-bright);
+  font-weight: 700;
+  text-decoration: underline;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.auth-bottom-prompt a:hover {
+  color: #fde68a;
+}
+
+body.theme-light .auth-bottom-prompt a {
+  color: #b45309;
+}
+
+body.theme-light .auth-bottom-prompt a:hover {
+  color: #78350f;
+}
+
+.nav-auth-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .auth-page-wrapper {
+    padding: 1.5rem 0.8rem;
+    align-items: flex-start;
+  }
+
+  .auth-back-btn {
+    position: static;
+    margin-bottom: 1.2rem;
+    align-self: flex-start;
+  }
+
+  .auth-role-tab {
+    font-size: 0.78rem;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .page-login-box {
+    padding: 1.5rem 1.1rem;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
 </style>
 </head>
 <body class="theme-light floodlights-off">
@@ -7783,34 +7937,12 @@ body.theme-light .admin-modal-header h3 {
       </nav>
 
       <!-- Action Button, Theme Toggle & Mobile Hamburger -->
-            <div class="header-actions">
-        <!-- Separate Registration Dropdown Button -->
-        <div class="reg-header-dropdown" id="headerRegDropdown">
-          <button class="btn btn-gold btn-sm dropdown-toggle" id="headerRegBtn" onclick="toggleHeaderRegDropdown(event)" title="CFVD Official Registrations">
-            <i class="fa-solid fa-id-card-clip"></i> <span id="headerRegBtnLabel">Registration</span> <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; margin-left:0.2rem;"></i>
-          </button>
-          <ul class="dropdown-menu reg-dropdown-menu" id="headerRegMenu">
-            <li><a href="/team-registration" onclick="navigateToRoute('/team-registration', event); closeAllDropdowns();"><i class="fa-solid fa-users-line text-gold"></i> <strong>Team Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">15 Players Squad Roster</small></a></li>
-            <li><a href="/player-registration" onclick="navigateToRoute('/player-registration', event); closeAllDropdowns();"><i class="fa-solid fa-user-plus text-gold"></i> <strong>Player Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">District Official Enrollment</small></a></li>
-            <li><a href="javascript:void(0)" onclick="openInstitutionModal(); closeAllDropdowns();"><i class="fa-solid fa-building-columns"></i> <strong>Institution Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Clubs, Colleges, Schools</small></a></li>
-            <li><a href="javascript:void(0)" onclick="openOfficialsRegisterModal(); closeAllDropdowns();"><i class="fa-solid fa-clipboard-user"></i> <strong>Scorer Registration</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Official Digital &amp; Paper Scorer</small></a></li>
-            <li style="border-top:1px solid rgba(212,175,55,0.25); margin:0.35rem 0;"></li>
-            <li><a href="/team-registration?tab=status" onclick="navigateToRoute('/team-registration?tab=status', event); closeAllDropdowns();"><i class="fa-solid fa-magnifying-glass"></i> Check Team Registration Status</a></li>
-          </ul>
-        </div>
-
-        <!-- Separate Login Dropdown Button -->
-        <div class="login-header-dropdown" id="headerLoginDropdown">
-          <button class="btn btn-outline-gold btn-sm dropdown-toggle" id="headerLoginBtn" onclick="toggleHeaderLoginDropdown(event)" title="CFVD Portals Login">
-            <i class="fa-solid fa-circle-user"></i> <span id="headerLoginBtnLabel">Login</span> <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; margin-left:0.2rem;"></i>
-          </button>
-          <ul class="dropdown-menu reg-dropdown-menu" id="headerLoginMenu">
-            <li><a href="/player-login" onclick="navigateToRoute('/player-login', event); closeAllDropdowns();"><i class="fa-solid fa-circle-user text-gold"></i> <strong>Player Login</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Official Player Sign In &amp; Dashboard</small></a></li>
-            <li><a href="/team-login" onclick="navigateToRoute('/team-login', event); closeAllDropdowns();"><i class="fa-solid fa-shield-halved text-gold"></i> <strong>Team Login</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Coach &amp; Club Team Dashboard</small></a></li>
-            <li><a href="/admin-login" onclick="navigateToRoute('/admin-login', event); closeAllDropdowns();"><i class="fa-solid fa-screwdriver-wrench text-gold"></i> <strong>Admin Login</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Federation Approvals Console</small></a></li>
-            <li><a href="/scorer-login" onclick="navigateToRoute('/scorer-login', event); closeAllDropdowns();"><i class="fa-solid fa-satellite-dish text-gold"></i> <strong>Scorer Login</strong> <small style="display:block; font-size:0.75rem; color:#fde68a;">Match Day Live Scoring Panel</small></a></li>
-          </ul>
-        </div>
+      <!-- Action Button, Theme Toggle & Mobile Hamburger -->
+      <div class="header-actions">
+        <!-- Single Direct Login Option (Opens Login Box with All Roles Separated) -->
+        <a href="/login" class="btn btn-gold btn-sm nav-auth-btn" id="headerLoginBtn" onclick="navigateToRoute('/login', event)" title="Sign in to Federation Portals">
+          <i class="fa-solid fa-circle-user"></i> <span id="headerLoginBtnLabel">Login</span>
+        </a>
 
         <!-- Dynamic User Session Pill Button -->
         <div class="login-header-dropdown" id="headerUserSessionDropdown" style="display:none;">
@@ -9505,6 +9637,9 @@ body.theme-light .admin-modal-header h3 {
                 </button>
               </div>
             </div>
+            <div style="text-align:center; margin-top:1.2rem; font-size:0.92rem; color:var(--text-muted);">
+              <span>Already registered?</span> <a href="/login?role=team" onclick="navigateToRoute('/login?role=team', event)" style="color:var(--gold-bright); font-weight:700; text-decoration:underline; margin-left:0.3rem;">Team Login</a>
+            </div>
           </form>
         </div>
 
@@ -9679,13 +9814,304 @@ body.theme-light .admin-modal-header h3 {
           <button type="submit" class="btn btn-gold btn-block btn-lg">
             <i class="fa-solid fa-check-circle"></i> Submit Registration &amp; Lock Team Allocation
           </button>
+          <div style="text-align:center; margin-top:1.2rem; font-size:0.92rem; color:var(--text-muted);">
+            <span>Already have an account?</span> <a href="/login" onclick="navigateToRoute('/login', event)" style="color:var(--gold-bright); font-weight:700; text-decoration:underline; margin-left:0.3rem;">Login to Account</a>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
   <!-- ======================================================================= -->
-  <!-- PAGE 4: PLAYER LOGIN (DEDICATED FULL PAGE / ROUTE)                      -->
+  <!-- PAGE: COMMON FEDERATION LOGIN (UNIFIED AUTHENTICATION PORTAL)           -->
+  <!-- ======================================================================= -->
+  <div id="page-login" class="app-page auth-page-wrapper" style="display:none;">
+    
+    <!-- Top-Left Back Button -->
+    <button class="btn btn-outline-gold auth-back-btn" onclick="navigateToRoute('/', event)">
+      <i class="fa-solid fa-arrow-left"></i> Back to Main Site
+    </button>
+
+    <div class="container page-content-wrapper" style="padding-top: 0; padding-bottom: 0;">
+      <div class="page-login-box">
+        
+        <!-- Header / Intro Box (Scorer-consistent visual styling) -->
+        <div class="player-login-intro-box">
+          <div class="player-login-crest"><i class="fa-solid fa-shield-halved text-gold"></i></div>
+          <div>
+            <h4 style="font-family:var(--font-header); font-size:1.25rem; font-weight:800; color:var(--text-white); margin-bottom:0.25rem;">
+              Federation Portal Login
+            </h4>
+            <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.45; margin:0;">
+              Official sign-in portal for District Players, Team Coaches, and Administrators.
+            </p>
+          </div>
+        </div>
+
+        <!-- Role Selector Tab Bar (Matches Scorer visual hierarchy) -->
+        <div class="auth-role-tabs" role="tablist">
+          <button type="button" class="auth-role-tab active" id="tabBtnPlayer" onclick="switchLoginRole('player')" role="tab" aria-selected="true">
+            <i class="fa-solid fa-user"></i> Player
+          </button>
+          <button type="button" class="auth-role-tab" id="tabBtnTeam" onclick="switchLoginRole('team')" role="tab" aria-selected="false">
+            <i class="fa-solid fa-shield-halved"></i> Team / Coach
+          </button>
+          <button type="button" class="auth-role-tab" id="tabBtnScorer" onclick="switchLoginRole('scorer')" role="tab" aria-selected="false">
+            <i class="fa-solid fa-satellite-dish"></i> Scorer
+          </button>
+          <button type="button" class="auth-role-tab" id="tabBtnAdmin" onclick="switchLoginRole('admin')" role="tab" aria-selected="false">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Admin
+          </button>
+        </div>
+
+        <!-- Alert Notification Box -->
+        <div id="commonLoginAlert" class="alert-box" style="display:none; margin:1rem 0;"></div>
+
+        <!-- TAB 1: PLAYER LOGIN PANEL -->
+        <div id="panelLoginPlayer" class="auth-role-panel" style="display:block;">
+          <!-- Step 1: Identity & OTP Request -->
+          <div id="commonPlayerStep1" style="display:block;">
+            <form id="commonPlayerLoginForm" onsubmit="handleCommonPlayerSendOTP(event)" style="margin-top:0.8rem;">
+              <div class="form-group" style="margin-bottom:1.2rem;">
+                <label for="commonPlayerLoginName" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                  <i class="fa-solid fa-user"></i> Player Name <span class="required" style="color:#ef4444;">*</span>
+                </label>
+                <input type="text" id="commonPlayerLoginName" class="form-control" placeholder="e.g. Arun or R. Saravanan" required autocomplete="name" style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+              </div>
+
+              <div class="form-group" style="margin-bottom:1.2rem;">
+                <label for="commonPlayerLoginEmail" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                  <i class="fa-solid fa-envelope"></i> Player Email ID <span class="required" style="color:#ef4444;">*</span>
+                </label>
+                <input type="email" id="commonPlayerLoginEmail" class="form-control" placeholder="e.g. arun@gmail.com" required autocomplete="email" style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+              </div>
+
+              <div style="display:flex; gap:0.8rem; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
+                <button type="submit" id="btnCommonPlayerSendOTP" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                  <i class="fa-solid fa-paper-plane"></i> Send OTP
+                </button>
+              </div>
+            </form>
+
+            <!-- Test Verification Helper Profiles -->
+            <div class="player-login-helpers-card" style="margin-top:1.5rem; padding:0.9rem; border-radius:8px; background:rgba(212,175,55,0.06); border:1px dashed var(--gold-border);">
+              <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.45rem;">
+                <i class="fa-solid fa-circle-info text-gold"></i>
+                <strong style="color:var(--gold-bright); font-size:0.82rem;">Test Profiles (Click to prefill):</strong>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.5rem; font-size:0.78rem;">
+                <div class="test-profile-chip" onclick="prefillCommonPlayer('R. Saravanan', 'saravanan.r@strikerscc.org')" style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.5rem; border-radius:6px; border:1px solid rgba(34,197,94,0.4);" title="Click to prefill">
+                  <span class="badge green" style="font-size:0.65rem; padding:0.1rem 0.3rem;">APPROVED</span>
+                  <div style="font-weight:700; color:#fff; margin-top:2px;">R. Saravanan</div>
+                </div>
+                <div class="test-profile-chip" onclick="prefillCommonPlayer('Arun', 'arun@gmail.com')" style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.5rem; border-radius:6px; border:1px solid rgba(245,158,11,0.4);" title="Click to prefill">
+                  <span class="badge gold" style="font-size:0.65rem; padding:0.1rem 0.3rem;">PENDING</span>
+                  <div style="font-weight:700; color:#fff; margin-top:2px;">Arun</div>
+                </div>
+                <div class="test-profile-chip" onclick="prefillCommonPlayer('Karthik', 'karthik@satturcc.com')" style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.5rem; border-radius:6px; border:1px solid rgba(239,68,68,0.4);" title="Click to prefill">
+                  <span class="badge red" style="font-size:0.65rem; padding:0.1rem 0.3rem;">REJECTED</span>
+                  <div style="font-weight:700; color:#fff; margin-top:2px;">Karthik</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: OTP Verification -->
+          <div id="commonPlayerStep2" style="display:none;">
+            <div style="text-align:center; margin-bottom:1.2rem;">
+              <h5 style="color:var(--text-white); font-weight:700; margin-bottom:0.3rem;">Enter Verification Code</h5>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                OTP sent to <strong id="commonPlayerOtpTarget" style="color:var(--gold-bright);"></strong>
+              </p>
+            </div>
+
+            <div id="commonPlayerOtpAlert" class="alert-box" style="display:none; margin:1rem 0;"></div>
+
+            <div style="display:flex; justify-content:center; gap:0.4rem; margin:1.2rem 0;" id="commonOtpInputsGroup">
+              <input type="text" maxlength="1" id="cOtp0" class="otp-digit-box form-control" oninput="commonOtpInput(this, 0)" onkeydown="commonOtpKeydown(event, 0)" onpaste="commonOtpPaste(event)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+              <input type="text" maxlength="1" id="cOtp1" class="otp-digit-box form-control" oninput="commonOtpInput(this, 1)" onkeydown="commonOtpKeydown(event, 1)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+              <input type="text" maxlength="1" id="cOtp2" class="otp-digit-box form-control" oninput="commonOtpInput(this, 2)" onkeydown="commonOtpKeydown(event, 2)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+              <input type="text" maxlength="1" id="cOtp3" class="otp-digit-box form-control" oninput="commonOtpInput(this, 3)" onkeydown="commonOtpKeydown(event, 3)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+              <input type="text" maxlength="1" id="cOtp4" class="otp-digit-box form-control" oninput="commonOtpInput(this, 4)" onkeydown="commonOtpKeydown(event, 4)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+              <input type="text" maxlength="1" id="cOtp5" class="otp-digit-box form-control" oninput="commonOtpInput(this, 5)" onkeydown="commonOtpKeydown(event, 5)" style="width:42px; height:48px; text-align:center; font-size:1.3rem; font-weight:800; color:#fff; background:#0a1838; border:1.5px solid var(--gold-border); border-radius:8px;">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:1rem 0; font-size:0.85rem;">
+              <span id="commonOtpResendTimer" style="color:var(--text-muted);">Resend in <strong id="commonOtpCountdown" style="color:var(--gold-bright);">30</strong>s</span>
+              <button type="button" id="btnCommonResendOTP" onclick="handleCommonResendOTP()" class="btn btn-outline-gold btn-sm" style="display:none;">Resend OTP</button>
+              <a href="javascript:void(0)" onclick="backToCommonPlayerStep1()" style="color:var(--text-muted); text-decoration:underline;">Change Email</a>
+            </div>
+
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end; margin-top:1.5rem;">
+              <button type="button" class="btn btn-outline-danger" onclick="backToCommonPlayerStep1()">Back</button>
+              <button type="button" class="btn btn-gold btn-lg" onclick="handleCommonVerifyOTP()" style="padding:0.75rem 2rem;">
+                <i class="fa-solid fa-check"></i> Verify &amp; Login
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: TEAM & COACH LOGIN PANEL -->
+        <div id="panelLoginTeam" class="auth-role-panel" style="display:none;">
+          <form id="commonTeamLoginForm" onsubmit="handleCommonTeamLoginSubmit(event)" style="margin-top:0.8rem;">
+            <div class="form-group" style="margin-bottom:1.2rem;">
+              <label for="commonTeamLoginId" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                <i class="fa-solid fa-shield-halved"></i> Team ID or Coach Email <span class="required" style="color:#ef4444;">*</span>
+              </label>
+              <input type="text" id="commonTeamLoginId" class="form-control" placeholder="e.g. TEAM-VRD-1001 or rajendran@strikerscc.org" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+              <label for="commonTeamLoginPasskey" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                <i class="fa-solid fa-key"></i> Team Passkey (Default: Team@2026) <span class="required" style="color:#ef4444;">*</span>
+              </label>
+              <input type="password" id="commonTeamLoginPasskey" class="form-control" value="Team@2026" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+            </div>
+
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+              <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
+              <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Team Dashboard
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 3: ADMINISTRATOR LOGIN PANEL -->
+        <div id="panelLoginAdmin" class="auth-role-panel" style="display:none;">
+          <form id="commonAdminLoginForm" onsubmit="handleCommonAdminLoginSubmit(event)" style="margin-top:0.8rem;">
+            <div class="form-group" style="margin-bottom:1.2rem;">
+              <label for="commonAdminEmail" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                <i class="fa-solid fa-envelope"></i> Admin Email <span class="required" style="color:#ef4444;">*</span>
+              </label>
+              <input type="email" id="commonAdminEmail" class="form-control" value="admin@cfvd.org" placeholder="e.g. admin@cfvd.org" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+              <label for="commonAdminPassword" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                <i class="fa-solid fa-lock"></i> Password <span class="required" style="color:#ef4444;">*</span>
+              </label>
+              <input type="password" id="commonAdminPassword" class="form-control" value="CFVD@Admin2026" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+            </div>
+
+            <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+              <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
+              <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                <i class="fa-solid fa-lock-open"></i> Administrator Sign In
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 3: SCORER LOGIN PANEL (WITH SEPARATE OPTIONS) -->
+        <div id="panelLoginScorer" class="auth-role-panel" style="display:none;">
+          <!-- Scorer Method Selector Pills -->
+          <div style="display:flex; justify-content:center; gap:0.6rem; margin:1rem 0 1.2rem 0;">
+            <button type="button" class="btn btn-sm btn-gold active" id="commonScorerPillOtp" onclick="switchCommonScorerMethod('otp')" style="border-radius:20px; padding:0.45rem 1.1rem; font-weight:700; font-size:0.85rem;">
+              <i class="fa-solid fa-envelope"></i> Official Email OTP
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-gold" id="commonScorerPillPin" onclick="switchCommonScorerMethod('pin')" style="border-radius:20px; padding:0.45rem 1.1rem; font-weight:700; font-size:0.85rem;">
+              <i class="fa-solid fa-key"></i> Passkey / Match PIN
+            </button>
+          </div>
+
+          <!-- Method 1: Email OTP -->
+          <div id="commonScorerViewOtp" style="display:block;">
+            <div id="commonScorerStep1" style="display:block;">
+              <form id="commonScorerOtpForm" onsubmit="handleCommonScorerSendOTP(event)" style="margin-top:0.6rem;">
+                <div class="form-group" style="margin-bottom:1.2rem;">
+                  <label for="commonScorerLoginEmail" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                    <i class="fa-solid fa-envelope"></i> Registered Scorer Email <span class="required" style="color:#ef4444;">*</span>
+                  </label>
+                  <input type="email" id="commonScorerLoginEmail" class="form-control" value="ramesh@example.com" placeholder="e.g. ramesh@example.com or scorer@cfvd.org" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+                </div>
+
+                <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                  <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
+                  <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Send OTP
+                  </button>
+                </div>
+              </form>
+
+              <!-- Quick Test Profiles -->
+              <div class="player-login-helpers-card" style="margin-top:1.2rem; padding:0.8rem; border-radius:8px; background:rgba(212,175,55,0.06); border:1px dashed var(--gold-border);">
+                <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+                  <i class="fa-solid fa-circle-info text-gold"></i>
+                  <strong style="color:var(--gold-bright); font-size:0.82rem;">Demo Scorer (Click to prefill):</strong>
+                </div>
+                <div class="test-profile-chip" onclick="document.getElementById('commonScorerLoginEmail').value='ramesh@example.com'" style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.45rem 0.75rem; border-radius:6px; border:1px solid rgba(212,175,55,0.4); display:inline-block;" title="Click to prefill">
+                  <span class="badge gold" style="font-size:0.65rem; padding:0.1rem 0.3rem;">CERTIFIED</span>
+                  <span style="font-weight:700; color:#fff; margin-left:6px; font-size:0.8rem;">S. Ramesh (ramesh@example.com)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Verify OTP -->
+            <div id="commonScorerStep2" style="display:none;">
+              <div style="text-align:center; margin-bottom:1.2rem;">
+                <h5 style="color:var(--text-white); font-weight:700; margin-bottom:0.3rem;">Enter Scorer Verification Code</h5>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                  OTP code sent to <strong id="commonScorerOtpTarget" style="color:var(--gold-bright);">ramesh@example.com</strong>
+                </p>
+              </div>
+
+              <div class="form-group" style="margin-bottom:1.4rem;">
+                <label for="commonScorerLoginOtpInput" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                  <i class="fa-solid fa-key"></i> 4-Digit OTP Code (Demo: 1234) <span class="required" style="color:#ef4444;">*</span>
+                </label>
+                <input type="text" id="commonScorerLoginOtpInput" class="form-control" value="1234" placeholder="Enter 1234" maxlength="6" style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border); text-align:center; font-size:1.1rem; letter-spacing:4px; font-weight:700;">
+              </div>
+
+              <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('commonScorerStep2').style.display='none'; document.getElementById('commonScorerStep1').style.display='block';">Back</button>
+                <button type="button" class="btn btn-gold btn-lg" onclick="handleCommonScorerVerifyOTP()" style="padding:0.75rem 2rem;">
+                  <i class="fa-solid fa-circle-check"></i> Verify &amp; Launch Console
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Method 2: Passkey / Match PIN -->
+          <div id="commonScorerViewPin" style="display:none;">
+            <form id="commonScorerPinForm" onsubmit="handleCommonScorerPinLogin(event)" style="margin-top:0.6rem;">
+              <div class="form-group" style="margin-bottom:1.2rem;">
+                <label for="commonScorerIdInput" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                  <i class="fa-solid fa-id-badge"></i> Scorer ID / Accreditation Code <span class="required" style="color:#ef4444;">*</span>
+                </label>
+                <input type="text" id="commonScorerIdInput" class="form-control" value="SCR-101" placeholder="e.g. SCR-101" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+              </div>
+
+              <div class="form-group" style="margin-bottom:1.4rem;">
+                <label for="commonScorerPinInput" style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+                  <i class="fa-solid fa-lock"></i> Match PIN / Passkey <span class="required" style="color:#ef4444;">*</span>
+                </label>
+                <input type="password" id="commonScorerPinInput" class="form-control" value="SCR-2026" placeholder="Enter PIN / Passkey" required style="width:100%; height:44px; background:#0a1838; color:#fff; border:1px solid var(--gold-border);">
+              </div>
+
+              <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
+                <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
+                <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                  <i class="fa-solid fa-satellite-dish"></i> Access Scorer Portal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Standard Registration Prompt (The required prompt) -->
+        <div class="auth-bottom-prompt">
+          <span>Don't have an account?</span>
+          <a href="/player-registration" id="commonRegisterLink" onclick="handleCommonRegisterNavigate(event)">Register</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- PAGE 4: PLAYER LOGIN (ALIASED TO COMMON LOGIN)                          -->
   <!-- ======================================================================= -->
   <div id="page-player-login" class="app-page" style="display:none; padding-top: 1.5rem;">
 
@@ -10585,15 +11011,15 @@ body.theme-light .admin-modal-header h3 {
         </div>
       </div>
     </div>
-  </div>>
+  </div>
 
   <!-- ======================================================================= -->
   <!-- PAGE 10: SCORER LOGIN (DEDICATED FULL PAGE / ROUTE)                     -->
   <!-- ======================================================================= -->
-  <div id="page-scorer-login" class="app-page" style="display:none; height: calc(100vh - 86px); display: flex; align-items: center; justify-content: center; padding-bottom: 2rem; position: relative;">
+  <div id="page-scorer-login" class="app-page auth-page-wrapper" style="display:none;">
     
     <!-- Absolute back button -->
-    <button class="btn btn-outline-gold" onclick="navigateToRoute('/', event)" style="position: absolute; top: 2rem; left: 2rem;">
+    <button class="btn btn-outline-gold auth-back-btn" onclick="navigateToRoute('/', event)">
       <i class="fa-solid fa-arrow-left"></i> Back to Main Site
     </button>
 
@@ -15142,6 +15568,7 @@ const SCORER_SESSION_KEY = 'cfvd_scorer_session';
 const VALID_ROUTES = [
   '/',
   '/home',
+  '/login',
   '/team-registration',
   '/player-registration',
   '/player-login',
@@ -15211,9 +15638,9 @@ function navigateToRoute(route, event) {
 
   // Guard protected routes
   if (path === '/player' && !getActivePlayerSession()) {
-    navigateToRoute('/player-login');
+    navigateToRoute('/login?role=player');
     setTimeout(() => {
-      const alertBox = document.getElementById('playerLoginAlert');
+      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('playerLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Player Name and Email to access your Player Dashboard.</div>';
@@ -15224,9 +15651,9 @@ function navigateToRoute(route, event) {
   }
 
   if (path === '/team' && !getActiveTeamSession()) {
-    navigateToRoute('/team-login');
+    navigateToRoute('/login?role=team');
     setTimeout(() => {
-      const alertBox = document.getElementById('pageTeamLoginAlert');
+      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageTeamLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Team ID to access your Team Dashboard.</div>';
@@ -15237,9 +15664,9 @@ function navigateToRoute(route, event) {
   }
 
   if (path === '/admin' && sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
-    navigateToRoute('/admin-login');
+    navigateToRoute('/login?role=admin');
     setTimeout(() => {
-      const alertBox = document.getElementById('pageAdminLoginAlert');
+      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageAdminLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Administrator passkey authentication required.</div>';
@@ -15345,33 +15772,24 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   let pageId = 'page-home';
   let pageTitle = 'Cricket Federation of Virudhunagar District | Official Governing Body';
 
-  if (path === '/team-registration') {
+  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login' || path === '/scorer-login') {
+    pageId = 'page-login';
+    pageTitle = 'Federation Portal Login | CFVD Official';
+  } else if (path === '/team-registration') {
     pageId = 'page-team-registration';
     pageTitle = 'Team Registration & Squad Roster | CFVD Official';
   } else if (path === '/player-registration') {
     pageId = 'page-player-registration';
     pageTitle = 'Player Registration | CFVD Official';
-  } else if (path === '/player-login') {
-    pageId = 'page-player-login';
-    pageTitle = 'Player Login | CFVD Official';
   } else if (path === '/player') {
     pageId = 'page-player-dashboard';
     pageTitle = 'Player Dashboard & Profile | CFVD Official';
-  } else if (path === '/team-login') {
-    pageId = 'page-team-login';
-    pageTitle = 'Team & Coach Login | CFVD Official';
   } else if (path === '/team') {
     pageId = 'page-team-dashboard';
     pageTitle = 'Team Dashboard & Squad Roster | CFVD Official';
-  } else if (path === '/admin-login') {
-    pageId = 'page-admin-login';
-    pageTitle = 'Administrator Login | CFVD Official';
   } else if (path === '/admin') {
     pageId = 'page-admin-dashboard';
     pageTitle = 'Administration & Team Approvals Console | CFVD Official';
-  } else if (path === '/scorer-login') {
-    pageId = 'page-scorer-login';
-    pageTitle = 'Official Scorer Login | CFVD Official';
   } else if (path === '/scorer') {
     pageId = 'page-scorer-dashboard';
     pageTitle = 'Match Day Live Scoring Console | CFVD Official';
@@ -15399,10 +15817,10 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
 
   document.title = pageTitle;
 
-  // Hide header and footer if we are on scorer routes for a clean, isolated app look
+  // Hide header and footer if we are on scorer dashboard route for a clean, isolated app look
   const footer = document.querySelector('.main-footer');
   const header = document.querySelector('.main-header');
-  const isScorerRoute = path === '/scorer-login' || path === '/scorer';
+  const isScorerRoute = path === '/scorer';
   
   if (footer) {
     footer.style.display = isScorerRoute ? 'none' : 'block';
@@ -15412,7 +15830,16 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   }
 
   // Route-specific screen actions
-  if (path === '/team-registration') {
+  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login' || path === '/scorer-login') {
+    let role = params.get('role');
+    if (!role) {
+      if (path === '/team-login') role = 'team';
+      else if (path === '/admin-login') role = 'admin';
+      else if (path === '/scorer-login') role = 'scorer';
+      else role = 'player';
+    }
+    switchLoginRole(role);
+  } else if (path === '/team-registration') {
     const subTab = params.get('tab') === 'status' ? 'status' : 'form';
     showTeamRegSubView(subTab);
     renderSquadMembersTable();
@@ -15475,19 +15902,19 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
  */
 function updateNavbarActiveRoute(path) {
   const homeLink = document.getElementById('navLinkHome');
-  const regDropdown = document.getElementById('navDropdownReg');
-  const loginDropdown = document.getElementById('navDropdownLogin');
+  const loginBtn = document.getElementById('headerLoginBtn');
+  const scorerBtn = document.getElementById('headerScorerBtn');
 
   if (homeLink) homeLink.classList.remove('active');
-  if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.remove('active-route');
-  if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.remove('active-route');
+  if (loginBtn) loginBtn.classList.remove('active-route');
+  if (scorerBtn) scorerBtn.classList.remove('active-route');
 
   if (path === '/' || path === '/home') {
     if (homeLink) homeLink.classList.add('active');
-  } else if (path.includes('registration')) {
-    if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.add('active-route');
-  } else if (path.includes('login') || path === '/player' || path === '/team' || path === '/admin' || path === '/scorer') {
-    if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.add('active-route');
+  } else if (path === '/login' || (path.includes('login') && !path.includes('scorer')) || path === '/player' || path === '/team' || path === '/admin') {
+    if (loginBtn) loginBtn.classList.add('active-route');
+  } else if (path === '/scorer-login' || path === '/scorer') {
+    if (scorerBtn) scorerBtn.classList.add('active-route');
   }
 }
 
@@ -15527,6 +15954,552 @@ function initMultiPageRouting() {
   // Initial load
   const initialRoute = getCurrentRouteFromUrl();
   renderCurrentRoute(initialRoute, false);
+}
+
+/* ==========================================================================
+   MODULE: UNIFIED COMMON LOGIN CONTROLLER
+   Unified Login portal adhering to the Scorer Login visual reference,
+   role tabs (Player, Team, Admin), OTP verification flow, and standard
+   "Don't have an account? Register" link.
+   ========================================================================== */
+
+let commonActiveRole = 'player';
+let commonOtpCountdownInterval = null;
+
+function switchLoginRole(role) {
+  commonActiveRole = role || 'player';
+
+  const tabPlayer = document.getElementById('tabBtnPlayer');
+  const tabTeam = document.getElementById('tabBtnTeam');
+  const tabScorer = document.getElementById('tabBtnScorer');
+  const tabAdmin = document.getElementById('tabBtnAdmin');
+
+  const panelPlayer = document.getElementById('panelLoginPlayer');
+  const panelTeam = document.getElementById('panelLoginTeam');
+  const panelScorer = document.getElementById('panelLoginScorer');
+  const panelAdmin = document.getElementById('panelLoginAdmin');
+
+  const regLink = document.getElementById('commonRegisterLink');
+  const alertBox = document.getElementById('commonLoginAlert');
+
+  if (alertBox) {
+    alertBox.style.display = 'none';
+    alertBox.innerHTML = '';
+  }
+
+  // Toggle active tab buttons
+  if (tabPlayer) {
+    tabPlayer.classList.toggle('active', commonActiveRole === 'player');
+    tabPlayer.setAttribute('aria-selected', commonActiveRole === 'player');
+  }
+  if (tabTeam) {
+    tabTeam.classList.toggle('active', commonActiveRole === 'team');
+    tabTeam.setAttribute('aria-selected', commonActiveRole === 'team');
+  }
+  if (tabScorer) {
+    tabScorer.classList.toggle('active', commonActiveRole === 'scorer');
+    tabScorer.setAttribute('aria-selected', commonActiveRole === 'scorer');
+  }
+  if (tabAdmin) {
+    tabAdmin.classList.toggle('active', commonActiveRole === 'admin');
+    tabAdmin.setAttribute('aria-selected', commonActiveRole === 'admin');
+  }
+
+  // Toggle panels
+  if (panelPlayer) panelPlayer.style.display = commonActiveRole === 'player' ? 'block' : 'none';
+  if (panelTeam) panelTeam.style.display = commonActiveRole === 'team' ? 'block' : 'none';
+  if (panelScorer) panelScorer.style.display = commonActiveRole === 'scorer' ? 'block' : 'none';
+  if (panelAdmin) panelAdmin.style.display = commonActiveRole === 'admin' ? 'block' : 'none';
+
+  // Update dynamic registration link target
+  if (regLink) {
+    if (commonActiveRole === 'team') {
+      regLink.setAttribute('href', '/team-registration');
+      regLink.setAttribute('data-target', '/team-registration');
+    } else {
+      regLink.setAttribute('href', '/player-registration');
+      regLink.setAttribute('data-target', '/player-registration');
+    }
+  }
+}
+
+function switchCommonScorerMethod(method) {
+  const pillOtp = document.getElementById('commonScorerPillOtp');
+  const pillPin = document.getElementById('commonScorerPillPin');
+  const viewOtp = document.getElementById('commonScorerViewOtp');
+  const viewPin = document.getElementById('commonScorerViewPin');
+
+  if (pillOtp) pillOtp.classList.toggle('active', method === 'otp');
+  if (pillPin) pillPin.classList.toggle('active', method === 'pin');
+  if (viewOtp) viewOtp.style.display = method === 'otp' ? 'block' : 'none';
+  if (viewPin) viewPin.style.display = method === 'pin' ? 'block' : 'none';
+}
+
+function handleCommonScorerSendOTP(e) {
+  if (e) e.preventDefault();
+  const emailInput = document.getElementById('commonScorerLoginEmail');
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const alertBox = document.getElementById('commonLoginAlert');
+  if (!email) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <div>Please enter your official Scorer email address.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  const step1 = document.getElementById('commonScorerStep1');
+  const step2 = document.getElementById('commonScorerStep2');
+  const targetLabel = document.getElementById('commonScorerOtpTarget');
+  if (targetLabel) targetLabel.textContent = email;
+  if (step1) step1.style.display = 'none';
+  if (step2) step2.style.display = 'block';
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>OTP verification code sent to <strong>${email}</strong>. (Development demo OTP: 1234)</div>`;
+    alertBox.style.display = 'flex';
+  }
+}
+
+function handleCommonScorerVerifyOTP() {
+  const alertBox = document.getElementById('commonLoginAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Scorer authorized successfully! Redirecting to Match Scoring Console...</div>';
+    alertBox.style.display = 'flex';
+  }
+  saveActiveScorerSession({ name: 'S. Ramesh', email: 'ramesh@example.com', role: 'Official Scorer' });
+  setTimeout(() => {
+    navigateToRoute('/scorer');
+  }, 600);
+}
+
+function handleCommonScorerPinLogin(e) {
+  if (e) e.preventDefault();
+  const alertBox = document.getElementById('commonLoginAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Official PIN verified! Launching Scorer Portal...</div>';
+    alertBox.style.display = 'flex';
+  }
+  saveActiveScorerSession({ name: 'S. Ramesh', email: 'ramesh@example.com', role: 'Official Scorer' });
+  setTimeout(() => {
+    navigateToRoute('/scorer');
+  }, 600);
+}
+
+function handleCommonRegisterNavigate(e) {
+  if (e) e.preventDefault();
+  const regLink = document.getElementById('commonRegisterLink');
+  const target = (regLink && (regLink.getAttribute('data-target') || regLink.getAttribute('href'))) || '/player-registration';
+  navigateToRoute(target);
+}
+
+function prefillCommonPlayer(name, email) {
+  const nameInput = document.getElementById('commonPlayerLoginName');
+  const emailInput = document.getElementById('commonPlayerLoginEmail');
+  if (nameInput) nameInput.value = name;
+  if (emailInput) emailInput.value = email;
+
+  const alertBox = document.getElementById('commonLoginAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.innerHTML = `<i class="fa-solid fa-circle-check text-gold"></i> <div>Credentials filled for <strong>${name}</strong>. Click 'Send OTP' to proceed.</div>`;
+    alertBox.style.display = 'flex';
+  }
+}
+
+function handleCommonPlayerSendOTP(e) {
+  if (e) e.preventDefault();
+  const nameInput = document.getElementById('commonPlayerLoginName');
+  const emailInput = document.getElementById('commonPlayerLoginEmail');
+  const alertBox = document.getElementById('commonLoginAlert');
+
+  const name = nameInput ? nameInput.value.trim() : '';
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+  if (!name || !email) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Player Name and Player Email ID.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  // Check stored teams
+  const teams = getStoredTeams();
+  let matchedPlayer = null;
+  let matchedTeam = null;
+  let memberIndex = -1;
+
+  for (const team of teams) {
+    if (!Array.isArray(team.members)) continue;
+    for (let i = 0; i < team.members.length; i++) {
+      const m = team.members[i];
+      const mName = (m.playerName || '').trim().toLowerCase();
+      const mEmail = (m.playerEmail || '').trim().toLowerCase();
+
+      const emailMatches = mEmail === email;
+      const nameMatches = mName === name.toLowerCase() ||
+        mName.startsWith(name.toLowerCase() + ' ') ||
+        mName.includes(name.toLowerCase()) ||
+        name.toLowerCase().includes(mName);
+
+      if (emailMatches && nameMatches) {
+        matchedPlayer = m;
+        matchedTeam = team;
+        memberIndex = i;
+        break;
+      }
+    }
+    if (matchedPlayer) break;
+  }
+
+  // Dynamic fallback mock player so any credential can test smoothly
+  if (!matchedPlayer || !matchedTeam) {
+    matchedTeam = teams.find(t => (t.status || t.adminApprovalStatus) === 'Approved') || teams[0];
+    if (!matchedTeam) {
+      matchedTeam = {
+        teamId: 'CFVD-TM-9999',
+        teamName: 'Virudhunagar Strikers',
+        status: 'Approved',
+        coach: { name: 'S. Rajesh', email: 'coach@strikerscc.org' },
+        members: []
+      };
+      teams.push(matchedTeam);
+    }
+    matchedPlayer = {
+      playerId: `CFVD-PLY-${Math.floor(1000 + Math.random() * 9000)}`,
+      playerName: name,
+      playerEmail: email,
+      role: 'All Rounder',
+      battingStyle: 'Right Hand Bat',
+      bowlingStyle: 'Right Arm Fast Medium',
+      jerseyNumber: '18'
+    };
+    if (!Array.isArray(matchedTeam.members)) matchedTeam.members = [];
+    matchedTeam.members.push(matchedPlayer);
+    memberIndex = matchedTeam.members.length - 1;
+    saveStoredTeams(teams);
+  }
+
+  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
+
+  if (teamStatus === 'Pending') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-warning';
+      alertBox.innerHTML = `
+        <i class="fa-solid fa-clock-rotate-left" style="font-size:1.2rem; flex-shrink:0;"></i>
+        <div>
+          <strong>Pending Approval:</strong> Your team registration is still pending admin approval.
+        </div>
+      `;
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (teamStatus === 'Rejected') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `
+        <i class="fa-solid fa-ban" style="font-size:1.2rem; flex-shrink:0;"></i>
+        <div>
+          <strong>Registration Rejected:</strong> Your team registration has been rejected.
+        </div>
+      `;
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  // Approved! Store data and switch to Step 2 OTP
+  pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
+  if (alertBox) alertBox.style.display = 'none';
+
+  const targetEl = document.getElementById('commonPlayerOtpTarget');
+  if (targetEl) targetEl.textContent = `${name} (${email})`;
+
+  const step1 = document.getElementById('commonPlayerStep1');
+  const step2 = document.getElementById('commonPlayerStep2');
+  if (step1) step1.style.display = 'none';
+  if (step2) step2.style.display = 'block';
+
+  // Clear OTP inputs
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`cOtp${i}`);
+    if (box) box.value = '';
+  }
+  const firstBox = document.getElementById('cOtp0');
+  if (firstBox) firstBox.focus();
+
+  startCommonOTPCountdown();
+}
+
+function startCommonOTPCountdown() {
+  let seconds = 30;
+  const timerSpan = document.getElementById('commonOtpResendTimer');
+  const countdownEl = document.getElementById('commonOtpCountdown');
+  const resendBtn = document.getElementById('btnCommonResendOTP');
+
+  if (timerSpan) timerSpan.style.display = 'inline-block';
+  if (resendBtn) resendBtn.style.display = 'none';
+  if (countdownEl) countdownEl.textContent = seconds;
+
+  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
+  commonOtpCountdownInterval = setInterval(() => {
+    seconds--;
+    if (countdownEl) countdownEl.textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(commonOtpCountdownInterval);
+      if (timerSpan) timerSpan.style.display = 'none';
+      if (resendBtn) resendBtn.style.display = 'inline-block';
+    }
+  }, 1000);
+}
+
+function handleCommonResendOTP() {
+  startCommonOTPCountdown();
+  const alertBox = document.getElementById('commonPlayerOtpAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.innerHTML = '<i class="fa-solid fa-paper-plane text-gold"></i> <div>New OTP has been sent! Use <strong>1234</strong> or <strong>123456</strong> for testing.</div>';
+    alertBox.style.display = 'flex';
+  }
+}
+
+function backToCommonPlayerStep1() {
+  const step1 = document.getElementById('commonPlayerStep1');
+  const step2 = document.getElementById('commonPlayerStep2');
+  if (step1) step1.style.display = 'block';
+  if (step2) step2.style.display = 'none';
+  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
+}
+
+function commonOtpInput(el, index) {
+  if (el.value.length >= 1) {
+    el.value = el.value.slice(-1);
+    const nextBox = document.getElementById(`cOtp${index + 1}`);
+    if (nextBox) {
+      nextBox.focus();
+    } else {
+      handleCommonVerifyOTP();
+    }
+  }
+}
+
+function commonOtpKeydown(e, index) {
+  if (e.key === 'Backspace' && !e.target.value) {
+    const prevBox = document.getElementById(`cOtp${index - 1}`);
+    if (prevBox) prevBox.focus();
+  }
+}
+
+function commonOtpPaste(e) {
+  e.preventDefault();
+  const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
+  if (pasteData) {
+    for (let i = 0; i < 6; i++) {
+      const box = document.getElementById(`cOtp${i}`);
+      if (box) box.value = pasteData[i] || '';
+    }
+    const lastIdx = Math.min(pasteData.length, 6) - 1;
+    const targetBox = document.getElementById(`cOtp${lastIdx}`);
+    if (targetBox) targetBox.focus();
+    if (pasteData.length >= 4) {
+      handleCommonVerifyOTP();
+    }
+  }
+}
+
+function handleCommonVerifyOTP() {
+  let otpValue = '';
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById(`cOtp${i}`);
+    if (box) otpValue += box.value;
+  }
+
+  const alertBox = document.getElementById('commonPlayerOtpAlert');
+
+  if (!otpValue || otpValue.length < 4) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the OTP code (1234 or 123456).</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (otpValue.startsWith('1234') || otpValue === '123456' || otpValue.length >= 4) {
+    if (!pendingPlayerLoginData) {
+      const nameInput = document.getElementById('commonPlayerLoginName');
+      const emailInput = document.getElementById('commonPlayerLoginEmail');
+      const name = nameInput ? nameInput.value.trim() : 'R. Saravanan';
+      const email = emailInput ? emailInput.value.trim().toLowerCase() : 'saravanan.r@strikerscc.org';
+
+      const teams = getStoredTeams();
+      let matchedPlayer = null;
+      let matchedTeam = null;
+      let memberIndex = -1;
+      for (const team of teams) {
+        if (!Array.isArray(team.members)) continue;
+        for (let i = 0; i < team.members.length; i++) {
+          const m = team.members[i];
+          if ((m.playerEmail || '').trim().toLowerCase() === email) {
+            matchedPlayer = m;
+            matchedTeam = team;
+            memberIndex = i;
+            break;
+          }
+        }
+        if (matchedPlayer) break;
+      }
+      if (matchedPlayer && matchedTeam) {
+        pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
+      }
+    }
+
+    if (pendingPlayerLoginData) {
+      const { matchedPlayer, matchedTeam, memberIndex } = pendingPlayerLoginData;
+
+      if (!matchedPlayer.playerId) {
+        matchedPlayer.playerId = `CFVD-PLY-${matchedTeam.teamId.slice(-4)}-${(memberIndex + 1).toString().padStart(2, '0')}`;
+      }
+      if (!matchedPlayer.role) matchedPlayer.role = 'Batsman';
+      if (!matchedPlayer.battingStyle) matchedPlayer.battingStyle = 'Right Hand Bat';
+      if (!matchedPlayer.bowlingStyle) matchedPlayer.bowlingStyle = 'Right Arm Medium';
+      if (!matchedPlayer.jerseyNumber) matchedPlayer.jerseyNumber = (memberIndex + 1).toString();
+
+      const teams = getStoredTeams();
+      saveStoredTeams(teams);
+
+      const session = {
+        playerId: matchedPlayer.playerId,
+        playerName: matchedPlayer.playerName,
+        playerEmail: matchedPlayer.playerEmail,
+        teamId: matchedTeam.teamId,
+        teamName: matchedTeam.teamName,
+        loginTime: new Date().toISOString()
+      };
+      saveActivePlayerSession(session);
+
+      updatePlayerHeaderUI();
+      updateAuthHeaderUI();
+      renderPlayerDashboard(matchedPlayer, matchedTeam);
+
+      navigateToRoute('/player');
+      switchPlayerDashTab('overview');
+    }
+  } else {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid verification code. Enter <code>1234</code> or <code>123456</code>.</div>';
+      alertBox.style.display = 'flex';
+    }
+  }
+}
+
+function handleCommonTeamLoginSubmit(e) {
+  if (e) e.preventDefault();
+
+  const idInput = document.getElementById('commonTeamLoginId');
+  const alertBox = document.getElementById('commonLoginAlert');
+  const query = idInput ? idInput.value.trim().toLowerCase() : '';
+
+  if (!query) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  const teams = getStoredTeams();
+  const matchedTeam = teams.find(t =>
+    (t.teamId || '').toLowerCase() === query ||
+    (t.coach?.email || '').toLowerCase() === query ||
+    (t.teamName || '').toLowerCase().includes(query)
+  );
+
+  if (!matchedTeam) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
+
+  if (teamStatus === 'Pending') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-warning';
+      alertBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> <div><strong>Pending Approval:</strong> Your team registration is still pending admin approval.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (teamStatus === 'Rejected') {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-ban"></i> <div><strong>Registration Rejected:</strong> Your team registration has been rejected.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (alertBox) alertBox.style.display = 'none';
+
+  const session = {
+    teamId: matchedTeam.teamId,
+    teamName: matchedTeam.teamName,
+    coachName: matchedTeam.coach ? matchedTeam.coach.name : '',
+    loginTime: new Date().toISOString()
+  };
+  saveActiveTeamSession(session);
+  updateAuthHeaderUI();
+  navigateToRoute('/team');
+}
+
+function handleCommonAdminLoginSubmit(e) {
+  if (e) e.preventDefault();
+
+  const emailInput = document.getElementById('commonAdminEmail');
+  const passInput = document.getElementById('commonAdminPassword');
+  const alertBox = document.getElementById('commonLoginAlert');
+
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const pass = passInput ? passInput.value.trim() : '';
+
+  if ((email === 'admin@cfvd.org' || email === 'admin') && pass === 'CFVD@Admin2026') {
+    if (alertBox) alertBox.style.display = 'none';
+
+    const session = {
+      email: 'admin@cfvd.org',
+      role: 'admin',
+      loginTime: new Date().toISOString()
+    };
+
+    sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(session));
+    localStorage.setItem('cfvd_admin_user', JSON.stringify(session));
+
+    updateAuthHeaderUI();
+    showAdminNotification('✓ Administrator Authenticated! Welcome to the Admin Dashboard.');
+    navigateToRoute('/admin');
+  } else {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Access Denied:</strong> Invalid administrator credentials. (Default: <code>admin@cfvd.org</code> / <code>CFVD@Admin2026</code>)</div>';
+      alertBox.style.display = 'flex';
+    }
+  }
 }
 
 /* --------------------------------------------------------------------------
