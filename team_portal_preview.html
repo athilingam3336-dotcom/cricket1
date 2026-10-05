@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CFVD Cricket - Team Portal Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #020812;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      padding: 30px 20px 60px;
+    }
+    .page-title { color: #D4AF37; font-size: 14px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 6px; }
+    .page-sub { color: #4a5f78; font-size: 12px; margin-bottom: 28px; letter-spacing: 1px; }
+    .phone {
+      width: 375px;
+      height: 780px;
+      background: #070e1c;
+      border-radius: 40px;
+      border: 2px solid #1e3050;
+      box-shadow: 0 0 80px rgba(212,175,55,0.15), 0 40px 80px rgba(0,0,0,0.8);
+      overflow: hidden;
+      position: relative;
+    }
+    .screen {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100%;
+      height: 100%;
+      background: #070e1c;
+      padding: 36px 22px 32px;
+      opacity: 0;
+      transform: translateX(100%);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+      pointer-events: none;
+      overflow-y: auto;
+    }
+    .screen.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .screen.exit-left { opacity: 0; transform: translateX(-100%); }
+    .header { text-align: center; margin-bottom: 22px; }
+    .ball-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #0f1c30; border: 2px solid #D4AF37;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; margin: 0 auto 12px;
+      box-shadow: 0 0 24px rgba(212,175,55,0.35);
+      animation: pulse 2.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 24px rgba(212,175,55,0.35); }
+      50% { box-shadow: 0 0 40px rgba(212,175,55,0.6); }
+    }
+    .app-title { color: #fff; font-size: 22px; font-weight: 900; letter-spacing: 1px; }
+    .app-sub { color: #D4AF37; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+    .tabs { display: flex; background: #0f1c30; border-radius: 12px; padding: 4px; margin-bottom: 20px; border: 1px solid #1e3050; }
+    .tab { flex: 1; padding: 9px 0; border-radius: 9px; text-align: center; font-size: 12px; font-weight: 700; color: #4a5f78; }
+    .tab.active { background: #D4AF37; color: #07100e; }
+    .label { color: #4a5f78; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px; margin-top: 13px; }
+    .inp {
+      background: #0f1c30; border: 1px solid #1e3050; border-radius: 10px;
+      color: #fff; font-size: 13px; padding: 12px 14px; width: 100%;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn {
+      background: #D4AF37; color: #07100e; font-weight: 800; font-size: 14px;
+      border: none; border-radius: 12px; padding: 14px; width: 100%; margin-top: 20px;
+      cursor: pointer; box-shadow: 0 6px 28px rgba(212,175,55,0.4);
+      transition: transform 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+    .chip { padding: 6px 13px; border-radius: 20px; border: 1px solid #1e3050; background: #0f1c30; color: #4a5f78; font-size: 11px; font-weight: 700; }
+    .chip.active { background: #D4AF37; border-color: #D4AF37; color: #07100e; }
+    .alert-ok { background: #0a2d12; border: 1px solid #27ae60; border-radius: 10px; padding: 11px 13px; color: #2ecc71; font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+    .alert-info { background: #0a1d30; border: 1px solid #3498db; border-radius: 10px; padding: 11px 13px; color: #74b9ff; font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+    .card { background: #0f1c30; border: 1px solid #1e3050; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+    .card-title { color: #D4AF37; font-size: 14px; font-weight: 800; margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #1e3050; }
+    .row:last-child { border-bottom: none; }
+    .rl { color: #4a5f78; font-size: 12px; font-weight: 600; }
+    .rv { color: #fff; font-size: 12px; font-weight: 700; }
+    .badge { background: rgba(39,174,96,0.15); border: 1px solid #27ae60; border-radius: 20px; padding: 3px 12px; color: #27ae60; font-size: 11px; font-weight: 800; }
+    .dash-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .greet { color: #4a5f78; font-size: 12px; }
+    .tname { color: #fff; font-size: 20px; font-weight: 900; }
+    .logout { background: #1a2a4a; border: 1px solid rgba(231,76,60,0.3); border-radius: 8px; padding: 7px 13px; color: #e74c3c; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .sec-title { color: #fff; font-size: 15px; font-weight: 800; margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .act { background: #0f1c30; border: 1px solid #1e3050; border-radius: 14px; padding: 18px 12px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+    .act:hover { border-color: #D4AF37; }
+    .ai { font-size: 24px; display: block; margin-bottom: 6px; }
+    .al { color: #fff; font-size: 12px; font-weight: 700; }
+    .footer { color: #1e3050; font-size: 10px; text-align: center; margin-top: 20px; }
+    .progress-wrap { width: 375px; background: #0f1c30; border-radius: 6px; height: 4px; margin-top: 18px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #D4AF37, #f5c842); border-radius: 6px; width: 0%; }
+    .dots { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #1e3050; transition: all 0.3s; }
+    .dot.active { background: #D4AF37; transform: scale(1.3); }
+    .dot.done { background: #D4AF37; opacity: 0.4; }
+    .lbls { display: flex; gap: 18px; margin-top: 10px; justify-content: center; }
+    .lbl { font-size: 11px; color: #4a5f78; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+    .lbl.active { color: #D4AF37; }
+    .ctrls { display: flex; gap: 12px; margin-top: 18px; }
+    .cbtn { padding: 10px 22px; border-radius: 20px; border: 1px solid #1e3050; background: #0f1c30; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .cbtn:hover { border-color: #D4AF37; color: #D4AF37; }
+    .cbtn.play { background: #D4AF37; border-color: #D4AF37; color: #07100e; padding: 10px 32px; }
+  </style>
+</head>
+<body>
+  <p class="page-title">🏏 CFVD Cricket · Team Portal</p>
+  <p class="page-sub">Auto-playing preview · 4 screens · Click Login button to interact</p>
+
+  <div class="phone">
+    <!-- LOGIN -->
+    <div class="screen active" id="s0">
+      <div class="header">
+        <div class="ball-icon">🏏</div>
+        <div class="app-title">CFVD Cricket</div>
+        <div class="app-sub">Team Portal</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">Login</div>
+        <div class="tab">Register</div>
+        <div class="tab">Verify</div>
+      </div>
+      <div class="label">Email Address</div>
+      <input class="inp" id="te" placeholder="team@example.com" readonly />
+      <div class="label">Password</div>
+      <input class="inp" type="password" id="tp" placeholder="••••••••" readonly />
+      <button class="btn" id="lbtn">Login to Team Portal</button>
+      <div class="footer">Cricket Federation Virudhunagar District · Secure Team Portal</div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="screen" id="s1">
+      <div class="header">
+        <div class="ball-icon">🏏</div>
+        <div class="app-title">CFVD Cricket</div>
+        <div class="app-sub">Team Portal</div>
+      </div>
+      <div class="tabs">
+        <div class="tab">Login</div>
+        <div class="tab active">Register</div>
+        <div class="tab">Verify</div>
+      </div>
+      <div class="label">Team Name</div>
+      <input class="inp" value="Eagles XI" readonly />
+      <div class="label">Captain Name</div>
+      <input class="inp" value="Arjun Selvaraj" readonly />
+      <div class="label">Phone Number</div>
+      <input class="inp" value="9876543210" readonly />
+      <div class="label">District</div>
+      <div class="chips">
+        <div class="chip active">Virudhunagar</div>
+        <div class="chip">Madurai</div>
+        <div class="chip">Dindigul</div>
+        <div class="chip">Sivakasi</div>
+        <div class="chip">Rajapalayam</div>
+      </div>
+      <div class="label">Email Address</div>
+      <input class="inp" value="eagles.xi@gmail.com" readonly />
+      <div class="label">Password</div>
+      <input class="inp" type="password" value="securepass123" readonly />
+      <button class="btn">Register Team</button>
+    </div>
+
+    <!-- VERIFY -->
+    <div class="screen" id="s2">
+      <div class="header">
+        <div class="ball-icon">🏏</div>
+        <div class="app-title">CFVD Cricket</div>
+        <div class="app-sub">Team Portal</div>
+      </div>
+      <div class="tabs">
+        <div class="tab">Login</div>
+        <div class="tab">Register</div>
+        <div class="tab active">Verify</div>
+      </div>
+      <div class="alert-ok">✅ Registration successful! Check your email for the verification token.</div>
+      <div class="alert-info">Enter the verification token sent to your registered email address.</div>
+      <div class="label">Verification Token</div>
+      <textarea class="inp" rows="3" readonly style="resize:none;font-size:10px;color:#4a5f78;line-height:1.6;">d0Rn82H29Q33fb36237331W0FcNGBR3a9f2b4c7e1d8a5f3b2c6e9d1f4a7b8c2d3e...</textarea>
+      <button class="btn">Verify Email</button>
+      <div class="footer" style="margin-top:14px;">Your account will be activated after admin approval.</div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="screen" id="s3">
+      <div class="dash-hdr">
+        <div>
+          <div class="greet">Welcome back,</div>
+          <div class="tname">Eagles XI</div>
+        </div>
+        <button class="logout">Logout</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🏏 Team Profile</div>
+        <div class="row"><span class="rl">Team Name</span><span class="rv">Eagles XI</span></div>
+        <div class="row"><span class="rl">Captain</span><span class="rv">Arjun Selvaraj</span></div>
+        <div class="row"><span class="rl">Phone</span><span class="rv">9876543210</span></div>
+        <div class="row"><span class="rl">District</span><span class="rv">Virudhunagar</span></div>
+        <div class="row"><span class="rl">Email</span><span class="rv" style="font-size:11px;">eagles.xi@gmail.com</span></div>
+        <div class="row" style="border:none;"><span class="rl">Status</span><span class="badge">✓ APPROVED</span></div>
+      </div>
+      <div class="sec-title">Quick Actions</div>
+      <div class="grid">
+        <div class="act"><span class="ai">📋</span><span class="al">View Fixtures</span></div>
+        <div class="act"><span class="ai">🏆</span><span class="al">Tournaments</span></div>
+        <div class="act"><span class="ai">👥</span><span class="al">Squad</span></div>
+        <div class="act"><span class="ai">📊</span><span class="al">Stats</span></div>
+      </div>
+      <div class="footer">Cricket Federation Virudhunagar District</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-fill" id="prog"></div></div>
+  <div class="dots">
+    <div class="dot active" id="d0"></div>
+    <div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+  </div>
+  <div class="lbls">
+    <span class="lbl active" id="l0">Login</span>
+    <span class="lbl" id="l1">Register</span>
+    <span class="lbl" id="l2">Verify</span>
+    <span class="lbl" id="l3">Dashboard</span>
+  </div>
+  <div class="ctrls">
+    <button class="cbtn" onclick="go(-1)">&#9664; Prev</button>
+    <button class="cbtn play" id="pbtn" onclick="togglePlay()">&#9646;&#9646; Pause</button>
+    <button class="cbtn" onclick="go(1)">Next &#9654;</button>
+  </div>
+
+<script>
+  var cur = 0, playing = true, raf = null, tmr = null, t0 = null;
+  var dur = [3800, 3800, 3200, 4200];
+
+  function show(idx) {
+    var prev = cur;
+    cur = ((idx % 4) + 4) % 4;
+    var old = document.getElementById('s' + prev);
+    old.classList.remove('active');
+    old.classList.add('exit-left');
+    setTimeout(function(){ old.classList.remove('exit-left'); }, 700);
+    var nw = document.getElementById('s' + cur);
+    nw.style.transform = 'translateX(100%)';
+    nw.style.opacity = '0';
+    nw.classList.add('active');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        nw.style.transform = '';
+        nw.style.opacity = '';
+      });
+    });
+    for (var i = 0; i < 4; i++) {
+      document.getElementById('d' + i).className = 'dot' + (i < cur ? ' done' : '') + (i === cur ? ' active' : '');
+      document.getElementById('l' + i).className = 'lbl' + (i === cur ? ' active' : '');
+    }
+    t0 = performance.now();
+    if (playing) animate();
+    if (cur === 0) typeIt();
+  }
+
+  function animate() {
+    cancelAnimationFrame(raf);
+    clearTimeout(tmr);
+    if (!playing) return;
+    var d = dur[cur];
+    function frame(now) {
+      var pct = Math.min(((now - t0) / d) * 100, 100);
+      document.getElementById('prog').style.width = pct + '%';
+      if (pct < 100) { raf = requestAnimationFrame(frame); }
+      else { tmr = setTimeout(function(){ if (playing) show(cur + 1); }, 120); }
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function go(dir) {
+    cancelAnimationFrame(raf); clearTimeout(tmr);
+    show(cur + dir);
+    if (playing) animate();
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    document.getElementById('pbtn').innerHTML = playing ? '&#9646;&#9646; Pause' : '&#9654; Play';
+    if (playing) { t0 = performance.now(); animate(); }
+    else { cancelAnimationFrame(raf); clearTimeout(tmr); }
+  }
+
+  function typeIt() {
+    var ee = document.getElementById('te'), pe = document.getElementById('tp');
+    ee.value = ''; pe.value = '';
+    var es = 'eagles.xi@gmail.com', ps = '**********', i = 0;
+    function te2() {
+      if (i < es.length) { ee.value += es[i++]; setTimeout(te2, 60); }
+      else { var j = 0; setTimeout(function tp2(){ if(j<ps.length){pe.value+='•';j++;setTimeout(tp2,75);} }, 350); }
+    }
+    setTimeout(te2, 700);
+  }
+
+  document.getElementById('lbtn').addEventListener('click', function() {
+    cancelAnimationFrame(raf); clearTimeout(tmr);
+    var b = this;
+    b.textContent = 'Authenticating...'; b.style.opacity = '0.75';
+    setTimeout(function(){
+      b.textContent = '✓ Login Successful!'; b.style.background = '#27ae60'; b.style.opacity = '1';
+      setTimeout(function(){
+        b.textContent = 'Login to Team Portal'; b.style.background = '#D4AF37';
+        show(3); if (playing) animate();
+      }, 900);
+    }, 1200);
+  });
+
+  typeIt();
+  t0 = performance.now();
+  animate();
+</script>
+</body>
+</html>
