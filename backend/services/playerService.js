@@ -1,529 +1,189 @@
-/**
- * services/playerService.js
- * 
- * Complete Player Module Business Logic:
- * - Profile Management (Safe editable fields only)
- * - Team & Squad Roster Relationship
- * - Match Fixtures & Read-Only Scorecards
- * - Real Match-Derived Statistics (Batting, Bowling, Fielding)
- * - Player Notifications
- * Fully powered by MongoDB.
- */
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const { pool, getUseMemoryFallback } = require('../config/db');
+const { sendOtpNotification } = require('./emailService');
 
-const db = require('../config/db');
-const scorerService = require('./scorerService');
-const teamRegistrationModel = require('../models/teamRegistrationModel');
+const JWT_SECRET = process.env.JWT_SECRET || 'cricket_team_jwt_secret_2025';
 
-class PlayerService {
-  /**
-   * Find player document and associated user record
-   */
-  async _resolvePlayer(userId, userEmail) {
-    await db.initDb();
-    const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : null;
-
-    // 1. Check in db.models.Player
-    let playerDoc = null;
-    if (cleanEmail) {
-      playerDoc = await db.models.Player.findOne({ email: cleanEmail }).lean();
-    }
-    if (!playerDoc && userId) {
-      playerDoc = await db.models.Player.findOne({
-        $or: [{ id: userId }, { email: userId.toLowerCase() }]
-      }).lean();
-    }
-
-    // 2. Check in db.models.User
-    let userDoc = null;
-    if (cleanEmail) {
-      userDoc = await db.models.User.findOne({ email: cleanEmail }).lean();
-    }
-    if (!userDoc && userId) {
-      userDoc = await db.models.User.findOne({
-        $or: [{ id: userId }, { email: userId.toLowerCase() }]
-      }).lean();
-    }
-
-    // 3. Check in team registration squads
-    let squadEntry = null;
-    if (cleanEmail || userDoc?.name) {
-      squadEntry = await teamRegistrationModel.findPlayerByEmailOrName(cleanEmail || userDoc?.name);
-    }
-
-    return { playerDoc, userDoc, squadEntry };
-  }
-
-  /**
-   * 1. Get Player Profile
-   */
-  async getProfile(userId, userEmail) {
-    const { playerDoc, userDoc, squadEntry } = await this._resolvePlayer(userId, userEmail);
-
-    if (!playerDoc && !userDoc && !squadEntry) {
-      throw { status: 404, message: 'Player profile not found in database.' };
-    }
-
-    // Determine team details
-    let teamId = playerDoc?.team_id || squadEntry?.team_registration_id || null;
-    let teamName = squadEntry?.team_name || 'Virudhunagar District Association Squad';
-    let coachName = squadEntry?.coach_name || 'Team Coach';
-    let coachEmail = squadEntry?.coach_email || '';
-
-    if (teamId && !squadEntry?.team_name) {
-      const teamDoc = await db.models.Team.findOne({ id: teamId }).lean();
-      if (teamDoc) {
-        teamName = teamDoc.name;
-        coachName = teamDoc.coach_name;
-        coachEmail = teamDoc.coach_email;
-      }
-    }
-
-    const name = playerDoc?.name || userDoc?.name || squadEntry?.name || 'Player';
-    const email = (playerDoc?.email || userDoc?.email || squadEntry?.email || userEmail || '').toLowerCase();
-    const role = playerDoc?.role || squadEntry?.role || userDoc?.role || 'BATTER';
-    const jerseyNumber = playerDoc?.jersey_number ?? squadEntry?.jersey_number ?? 0;
-    const battingStyle = playerDoc?.batting_style || 'Right Hand Bat';
-    const bowlingStyle = playerDoc?.bowling_style || 'Right Arm Medium';
-    const mobile = userDoc?.mobile || '';
-    const status = userDoc?.status === 'ACTIVE' ? 'APPROVED' : (userDoc?.status || playerDoc?.status || squadEntry?.status || 'APPROVED');
-
-    return {
-      id: playerDoc?.id || userDoc?.id || `PLY-${email.replace(/[^a-z0-9]/g, '')}`,
-      name,
-      email,
-      mobile,
-      role,
-      jerseyNumber: Number(jerseyNumber),
-      battingStyle,
-      bowlingStyle,
-      teamId,
-      teamName,
-      coachName,
-      coachEmail,
-      status: status.toUpperCase(),
-      taluk: 'Virudhunagar',
-      createdAt: userDoc?.created_at || playerDoc?.createdAt || new Date().toISOString()
-    };
-  }
-
-  /**
-   * 2. Update Permitted Profile Fields
-   * Strictly forbids modifying: role, status, approvalStatus, teamId, email, id, credentials.
-   */
-  async updateProfile(userId, userEmail, updates) {
-    await db.initDb();
-    const { playerDoc, userDoc } = await this._resolvePlayer(userId, userEmail);
-
-    const cleanEmail = (userEmail || userDoc?.email || playerDoc?.email || '').toLowerCase();
-    if (!cleanEmail) {
-      throw { status: 400, message: 'Valid user email is required to update profile.' };
-    }
-
-    // Sanitize updates: only allow safe player fields
-    const safePlayerUpdates = {};
-    if (updates.battingStyle || updates.batting_style) {
-      safePlayerUpdates.batting_style = String(updates.battingStyle || updates.batting_style).trim();
-    }
-    if (updates.bowlingStyle || updates.bowling_style) {
-      safePlayerUpdates.bowling_style = String(updates.bowlingStyle || updates.bowling_style).trim();
-    }
-    if (updates.jerseyNumber !== undefined || updates.jersey_number !== undefined) {
-      const num = parseInt(updates.jerseyNumber ?? updates.jersey_number, 10);
-      if (!isNaN(num) && num >= 0 && num <= 999) {
-        safePlayerUpdates.jersey_number = num;
-      }
-    }
-
-    // Update in Player collection if exists
-    if (playerDoc) {
-      await db.models.Player.updateOne(
-        { _id: playerDoc._id },
-        { $set: safePlayerUpdates }
-      );
-    } else {
-      // Create Player record if not yet existing
-      await db.models.Player.create({
-        id: `PLY-${Date.now()}`,
-        team_id: 'TM-01',
-        name: userDoc?.name || 'Player',
-        email: cleanEmail,
-        role: 'BATTER',
-        jersey_number: safePlayerUpdates.jersey_number || 10,
-        batting_style: safePlayerUpdates.batting_style || 'Right Hand Bat',
-        bowling_style: safePlayerUpdates.bowling_style || 'Right Arm Medium',
-        status: 'ACTIVE'
-      });
-    }
-
-    // Update mobile in User collection if provided
-    if (updates.mobile !== undefined) {
-      const cleanMobile = String(updates.mobile).trim();
-      await db.models.User.updateOne(
-        { email: cleanEmail },
-        { $set: { mobile: cleanMobile } }
-      );
-    }
-
-    return this.getProfile(userId, cleanEmail);
-  }
-
-  /**
-   * 3. Get Registered Team & 15-Player Squad
-   */
-  async getTeam(userId, userEmail) {
-    await db.initDb();
-    const profile = await this.getProfile(userId, userEmail);
-    const teamId = profile.teamId;
-
-    let teamDoc = null;
-    let squadList = [];
-
-    if (teamId) {
-      teamDoc = await db.models.Team.findOne({
-        $or: [{ id: teamId }, { name: profile.teamName }]
-      }).lean();
-
-      if (!teamDoc) {
-        const teamReg = await db.models.TeamRegistration.findOne({
-          $or: [{ id: teamId }, { team_name: profile.teamName }]
-        }).lean();
-        if (teamReg) {
-          teamDoc = {
-            id: teamReg.id,
-            name: teamReg.team_name,
-            short_name: teamReg.team_name.slice(0, 3).toUpperCase(),
-            city: teamReg.city || 'Virudhunagar',
-            taluk: teamReg.taluk || 'Virudhunagar',
-            coach_name: teamReg.coach_name,
-            coach_email: teamReg.coach_email,
-            status: teamReg.status,
-            stats: { matches: 0, won: 0, lost: 0, tied: 0, points: 0, nrr: 0.0 }
-          };
-          squadList = (teamReg.players || []).map((p, idx) => ({
-            id: `PLY-${teamReg.id}-${idx + 1}`,
-            name: p.name,
-            email: p.email,
-            role: p.role || 'BATTER',
-            jerseyNumber: p.jersey_number || (idx + 1),
-            battingStyle: 'Right Hand Bat',
-            bowlingStyle: 'Right Arm Medium',
-            status: p.status === 'APPROVED' ? 'Verified' : p.status
-          }));
-        }
-      }
-    }
-
-    // If teamDoc exists in db.models.Team, query official squad from db.models.Player
-    if (teamDoc && squadList.length === 0) {
-      const players = await db.models.Player.find({ team_id: teamDoc.id }).lean();
-      squadList = (players || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        role: p.role,
-        jerseyNumber: p.jersey_number,
-        battingStyle: p.batting_style || 'Right Hand Bat',
-        bowlingStyle: p.bowling_style || 'Right Arm Medium',
-        status: p.status === 'ACTIVE' ? 'Verified' : p.status
-      }));
-    }
-
-    // Default fallback if player is not yet assigned to a specific club
-    if (!teamDoc) {
-      teamDoc = {
-        id: 'TM-01',
-        name: 'Virudhunagar District CC',
-        short_name: 'VND',
-        city: 'Virudhunagar',
-        taluk: 'Virudhunagar',
-        coach_name: 'District Coaching Staff',
-        coach_email: 'coach@cfvd.org',
-        captain: 'Suresh Kumar',
-        vice_captain: 'Vijay Anand',
-        status: 'ACTIVE',
-        stats: { matches: 5, won: 4, lost: 1, tied: 0, points: 8, nrr: 1.25 }
-      };
-
-      const defaultPlayers = await db.models.Player.find({ team_id: 'TM-01' }).lean();
-      squadList = (defaultPlayers || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        role: p.role,
-        jerseyNumber: p.jersey_number,
-        battingStyle: p.batting_style,
-        bowlingStyle: p.bowling_style,
-        status: 'Verified'
-      }));
-    }
-
-    return {
-      team: {
-        id: teamDoc.id,
-        name: teamDoc.name,
-        shortName: teamDoc.short_name || teamDoc.name.slice(0, 3).toUpperCase(),
-        city: teamDoc.city || 'Virudhunagar',
-        taluk: teamDoc.taluk || 'Virudhunagar',
-        coachName: teamDoc.coach_name || 'Coach',
-        coachEmail: teamDoc.coach_email || '',
-        captain: teamDoc.captain || (squadList[0] ? squadList[0].name : 'Captain'),
-        viceCaptain: teamDoc.vice_captain || (squadList[1] ? squadList[1].name : 'Vice Captain'),
-        status: teamDoc.status || 'ACTIVE',
-        stats: teamDoc.stats || { matches: 0, won: 0, lost: 0, points: 0, nrr: 0.0 }
-      },
-      squad: squadList
-    };
-  }
-
-  /**
-   * 4. Get Matches Related to Player's Registered Team
-   */
-  async getMatches(userId, userEmail) {
-    await db.initDb();
-    const profile = await this.getProfile(userId, userEmail);
-    const teamId = profile.teamId || 'TM-01';
-
-    // Find all teams for lookup
-    const allTeams = await db.models.Team.find({}).lean();
-    const teamMap = {};
-    (allTeams || []).forEach(t => { teamMap[t.id] = t; });
-
-    // Query matches involving the player's team (or all district matches if none specific)
-    let matches = await db.models.Match.find({
-      $or: [{ team_a_id: teamId }, { team_b_id: teamId }]
-    }).sort({ match_date: -1 }).lean();
-
-    if (!matches || matches.length === 0) {
-      matches = await db.models.Match.find({}).sort({ match_date: -1 }).lean();
-    }
-
-    const formattedMatches = await Promise.all(matches.map(async (m) => {
-      const teamA = teamMap[m.team_a_id] || { id: m.team_a_id, name: 'Team A', short_name: 'TMA' };
-      const teamB = teamMap[m.team_b_id] || { id: m.team_b_id, name: 'Team B', short_name: 'TMB' };
-      const statusUpper = (m.status || 'SCHEDULED').toUpperCase();
-
-      // Retrieve innings scores
-      let scoreA = null;
-      let scoreB = null;
-      const inns = await db.models.Innings.find({ match_id: m.id }).sort({ innings_number: 1 }).lean();
-      if (inns && inns.length > 0) {
-        inns.forEach(inn => {
-          const str = `${inn.total_runs}/${inn.wickets} (${inn.overs}.${inn.balls} ov)`;
-          if (inn.batting_team_id === m.team_a_id) scoreA = str;
-          else scoreB = str;
-        });
-      }
-
-      return {
-        id: m.id,
-        tournament: m.tournament_name || 'Virudhunagar Premier League 2026',
-        teamA: { id: teamA.id, name: teamA.name, shortName: teamA.short_name },
-        teamB: { id: teamB.id, name: teamB.name, shortName: teamB.short_name },
-        venue: m.venue || 'Kamarajar District Stadium',
-        date: m.match_date || '2026-10-06',
-        time: m.match_time || '09:30 AM',
-        format: m.match_type || 'T20',
-        overs: m.overs_per_side || 20,
-        status: statusUpper === 'LIVE' ? 'LIVE' : (statusUpper === 'COMPLETED' ? 'COMPLETED' : 'SCHEDULED'),
-        scoreA,
-        scoreB,
-        result: m.result_summary || (statusUpper === 'LIVE' ? 'Match in Progress' : 'Scheduled Match'),
-        isMyTeamMatch: m.team_a_id === teamId || m.team_b_id === teamId
-      };
-    }));
-
-    return formattedMatches;
-  }
-
-  /**
-   * 5. Get Match Details by ID
-   */
-  async getMatchById(matchId) {
-    await db.initDb();
-    const match = await db.models.Match.findOne({ id: matchId }).lean();
-    if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
-
-    const teams = await db.models.Team.find({}).lean();
-    const teamMap = {};
-    (teams || []).forEach(t => { teamMap[t.id] = t; });
-
-    return {
-      id: match.id,
-      tournament: match.tournament_name || 'Virudhunagar Premier League 2026',
-      teamA: (teamMap[match.team_a_id] && teamMap[match.team_a_id].name) || 'Team A',
-      teamB: (teamMap[match.team_b_id] && teamMap[match.team_b_id].name) || 'Team B',
-      venue: match.venue || 'Kamarajar Stadium, Virudhunagar',
-      date: match.match_date || '2026-10-06',
-      time: match.match_time || '09:30 AM',
-      format: match.match_type || 'T20',
-      overs: match.overs_per_side || 20,
-      status: match.status,
-      result: match.result_summary
-    };
-  }
-
-  /**
-   * 6. Read-Only Scorecard for Player
-   */
-  async getScorecard(matchId) {
-    // Reuses the exact same match scorecard data generated by Scorer module
-    return scorerService.getFullScorecard(matchId);
-  }
-
-  /**
-   * 7. Real Player Statistics from MongoDB Match Records
-   */
-  async getStatistics(userId, userEmail) {
-    await db.initDb();
-    const profile = await this.getProfile(userId, userEmail);
-    const { playerDoc } = await this._resolvePlayer(userId, userEmail);
-
-    const playerId = playerDoc?.id || profile.id;
-    const cleanEmail = profile.email.toLowerCase();
-
-    // 1. Batting statistics aggregated from InningsBatter
-    const batterRecords = await db.models.InningsBatter.find({
-      $or: [{ player_id: playerId }, { player_id: profile.name }]
-    }).lean();
-
-    let bInnings = batterRecords.length;
-    let bRuns = 0;
-    let bBalls = 0;
-    let bFours = 0;
-    let bSixes = 0;
-    let bHighestScore = 0;
-    let bDismissals = 0;
-
-    batterRecords.forEach(b => {
-      bRuns += (b.runs || 0);
-      bBalls += (b.balls || 0);
-      bFours += (b.fours || 0);
-      bSixes += (b.sixes || 0);
-      if ((b.runs || 0) > bHighestScore) bHighestScore = b.runs;
-      if (b.is_out) bDismissals++;
-    });
-
-    // 2. Bowling statistics aggregated from InningsBowler
-    const bowlerRecords = await db.models.InningsBowler.find({
-      $or: [{ player_id: playerId }, { player_id: profile.name }]
-    }).lean();
-
-    let bwOvers = 0;
-    let bwBalls = 0;
-    let bwMaidens = 0;
-    let bwRunsConceded = 0;
-    let bwWickets = 0;
-    let bestWickets = 0;
-    let bestRuns = 999;
-
-    bowlerRecords.forEach(bw => {
-      bwOvers += (bw.overs || 0);
-      bwBalls += (bw.balls || 0);
-      bwMaidens += (bw.maidens || 0);
-      bwRunsConceded += (bw.runs_conceded || 0);
-      bwWickets += (bw.wickets || 0);
-
-      if ((bw.wickets || 0) > bestWickets) {
-        bestWickets = bw.wickets;
-        bestRuns = bw.runs_conceded || 0;
-      } else if ((bw.wickets || 0) === bestWickets && (bw.runs_conceded || 0) < bestRuns) {
-        bestRuns = bw.runs_conceded;
-      }
-    });
-
-    // Normalize overs with extra balls
-    const extraOverBalls = bwBalls % 6;
-    const fullExtraOvers = Math.floor(bwBalls / 6);
-    const totalBowlingOvers = bwOvers + fullExtraOvers + (extraOverBalls / 10);
-
-    // 3. Fielding statistics aggregated from Deliveries & InningsBatter
-    const catchesCount = await db.models.InningsBatter.countDocuments({
-      $or: [{ fielder_id: playerId }, { fielder_id: profile.name }],
-      dismissal_type: { $in: ['CAUGHT', 'CAUGHT_AND_BOWLED'] }
-    });
-
-    const stumpingsCount = await db.models.InningsBatter.countDocuments({
-      $or: [{ fielder_id: playerId }, { fielder_id: profile.name }],
-      dismissal_type: 'STUMPED'
-    });
-
-    const runOutsCount = await db.models.InningsBatter.countDocuments({
-      $or: [{ fielder_id: playerId }, { fielder_id: profile.name }],
-      dismissal_type: 'RUN_OUT'
-    });
-
-    // 4. Combine with Player.stats baseline if present
-    const baseStats = playerDoc?.stats || {};
-    const totalRuns = bRuns + (baseStats.runs || 0);
-    const totalBalls = bBalls + (baseStats.balls || 0);
-    const totalFours = bFours + (baseStats.fours || 0);
-    const totalSixes = bSixes + (baseStats.sixes || 0);
-    const highestScore = Math.max(bHighestScore, baseStats.highest_score || 0);
-    const totalDismissals = Math.max(bDismissals, 1);
-
-    const totalWickets = bwWickets + (baseStats.wickets || 0);
-    const totalOvers = totalBowlingOvers + (baseStats.overs || 0);
-    const totalRunsConceded = bwRunsConceded + (baseStats.runs_conceded || 0);
-
-    const totalCatches = catchesCount + (baseStats.catches || 0);
-    const totalStumpings = stumpingsCount + (baseStats.stumpings || 0);
-    const totalRunOuts = runOutsCount;
-
-    // Derived statistics
-    const battingAvg = totalDismissals > 0 ? (totalRuns / totalDismissals).toFixed(2) : totalRuns.toFixed(2);
-    const strikeRate = totalBalls > 0 ? ((totalRuns / totalBalls) * 100).toFixed(2) : '0.00';
-    const bowlingEconomy = totalOvers > 0 ? (totalRunsConceded / totalOvers).toFixed(2) : '0.00';
-    const bestBowlingFigures = bestWickets > 0 ? `${bestWickets}/${bestRuns}` : (totalWickets > 0 ? `${totalWickets}/${totalRunsConceded}` : '-');
-
-    const totalMatches = Math.max(bInnings, bowlerRecords.length, 5);
-
-    return {
-      playerId,
-      playerName: profile.name,
-      batting: {
-        matches: totalMatches,
-        innings: Math.max(bInnings, 4),
-        runs: totalRuns,
-        highestScore: highestScore,
-        average: parseFloat(battingAvg),
-        strikeRate: parseFloat(strikeRate),
-        fours: totalFours,
-        sixes: totalSixes
-      },
-      bowling: {
-        matches: totalMatches,
-        overs: totalOvers,
-        runsConceded: totalRunsConceded,
-        wickets: totalWickets,
-        economy: parseFloat(bowlingEconomy),
-        bestFigures: bestBowlingFigures
-      },
-      fielding: {
-        catches: totalCatches,
-        runOuts: totalRunOuts,
-        stumpings: totalStumpings
-      }
-    };
-  }
-
-  /**
-   * 8. Get Notifications for Player
-   */
-  async getNotifications(userId, userEmail) {
-    await db.initDb();
-    const profile = await this.getProfile(userId, userEmail);
-
-    const notifications = await db.models.Notification.find({}).sort({ created_at: -1 }).limit(20).lean();
-
-    return notifications.map(n => ({
-      id: n.id,
-      type: n.type,
-      title: n.title,
-      message: n.message,
-      status: n.status,
-      createdAt: n.created_at || new Date().toISOString()
-    }));
-  }
+// Helper: Generate 6 digit numeric OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-module.exports = new PlayerService();
+async function sendOtp({ playerName, playerEmail }) {
+  if (getUseMemoryFallback()) {
+    throw new Error('Memory fallback not supported for player OTP');
+  }
+
+  if (!playerName || !playerEmail) {
+    throw new Error('Player Name and Email are required.');
+  }
+
+  const [players] = await pool.query(
+    `SELECT tp.id, tp.player_name, tp.player_email, tp.status, t.team_name, t.status as team_status 
+     FROM team_players tp
+     JOIN teams t ON tp.team_id = t.team_id
+     WHERE tp.player_name = ? AND tp.player_email = ?`,
+    [playerName.trim(), playerEmail.toLowerCase().trim()]
+  );
+
+  if (players.length === 0) {
+    throw new Error('Player not found. Please make sure you are using the name and email registered by your team.');
+  }
+
+  const player = players[0];
+
+  if (player.status !== 'ACTIVE') {
+    throw new Error('Player account is not active.');
+  }
+
+  const otpCode = generateOTP();
+  const otpHash = crypto.createHash('sha256').update(otpCode).digest('hex');
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+  // Invalidate previous OTPs
+  await pool.query('UPDATE player_otps SET used = true WHERE player_id = ? AND used = false', [player.id]);
+
+  await pool.query(
+    'INSERT INTO player_otps (player_id, otp_hash, expires_at) VALUES (?, ?, ?)',
+    [player.id, otpHash, expiresAt]
+  );
+
+  // Send OTP
+  if (process.env.SMTP_HOST) {
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.MAIL_FROM || 'noreply@cfvd.org',
+      to: playerEmail.toLowerCase().trim(),
+      subject: 'CFVD Player Portal - OTP Verification',
+      text: `Cricket Federation of Virudhunagar District\n\nYour Player Portal verification OTP is:\n\n${otpCode}\n\nThis OTP expires in 5 minutes.\n\nDo not share this OTP with anyone.`
+    });
+  } else {
+    // Console log for local dev if no SMTP
+    console.log(`[DEV ONLY] OTP for ${playerEmail}: ${otpCode}`);
+    await sendOtpNotification({ toEmail: playerEmail, recipientRole: 'PLAYER', otpCode, requestId: player.id });
+  }
+
+  return { message: 'OTP sent successfully.' };
+}
+
+async function verifyOtp({ playerEmail, otp }) {
+  if (getUseMemoryFallback()) {
+    throw new Error('Memory fallback not supported for player OTP');
+  }
+
+  if (!playerEmail || !otp) {
+    throw new Error('Email and OTP are required.');
+  }
+
+  const [players] = await pool.query(
+    'SELECT id, player_name FROM team_players WHERE player_email = ? AND status = "ACTIVE"',
+    [playerEmail.toLowerCase().trim()]
+  );
+
+  if (players.length === 0) {
+    throw new Error('Player not found or inactive.');
+  }
+
+  const playerId = players[0].id;
+
+  const [otps] = await pool.query(
+    'SELECT id, otp_hash, expires_at, attempts, used FROM player_otps WHERE player_id = ? ORDER BY created_at DESC LIMIT 1',
+    [playerId]
+  );
+
+  if (otps.length === 0) {
+    throw new Error('No OTP requested. Please request a new OTP.');
+  }
+
+  const latestOtp = otps[0];
+
+  if (latestOtp.used) {
+    throw new Error('OTP has already been used. Please request a new OTP.');
+  }
+
+  if (new Date() > new Date(latestOtp.expires_at)) {
+    throw new Error('OTP expired. Please request a new OTP.');
+  }
+
+  if (latestOtp.attempts >= 3) {
+    throw new Error('Maximum attempts reached. Please request a new OTP.');
+  }
+
+  const inputHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+  if (inputHash !== latestOtp.otp_hash) {
+    await pool.query('UPDATE player_otps SET attempts = attempts + 1 WHERE id = ?', [latestOtp.id]);
+    throw new Error('Invalid OTP.');
+  }
+
+  // Mark used
+  await pool.query('UPDATE player_otps SET used = true WHERE id = ?', [latestOtp.id]);
+
+  const payload = {
+    playerId: playerId,
+    email: playerEmail.toLowerCase().trim(),
+    role: 'PLAYER',
+    playerName: players[0].player_name
+  };
+
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+
+  return {
+    message: 'Login successful.',
+    token,
+    player: {
+      playerId,
+      playerName: players[0].player_name,
+      email: playerEmail.toLowerCase().trim()
+    }
+  };
+}
+
+async function getPlayerProfile(playerId) {
+  if (getUseMemoryFallback()) throw new Error('Not supported');
+
+  const [rows] = await pool.query(
+    `SELECT tp.id, tp.player_name, tp.player_email, tp.player_role, tp.status, tp.created_at,
+            t.team_id, t.team_name, t.captain_name as coach_name, ta.email as coach_email
+     FROM team_players tp
+     JOIN teams t ON tp.team_id = t.team_id
+     LEFT JOIN team_accounts ta ON t.team_id = ta.team_id
+     WHERE tp.id = ?`,
+    [playerId]
+  );
+
+  if (rows.length === 0) throw new Error('Player not found.');
+
+  const r = rows[0];
+  return {
+    id: r.id,
+    name: r.player_name,
+    email: r.player_email,
+    role: r.player_role,
+    status: r.status,
+    registrationDate: r.created_at,
+    team: {
+      teamId: `TEAM-${r.team_id}`,
+      teamName: r.team_name,
+      coachName: r.coach_name,
+      coachEmail: r.coach_email
+    }
+  };
+}
+
+module.exports = {
+  sendOtp,
+  verifyOtp,
+  getPlayerProfile
+};

@@ -1,235 +1,124 @@
 /**
- * routes/teamRoutes.js
- * 
- * Complete Team & Coach Module REST API Endpoints:
- * - Registration with 15 Squad Players -> Status = PENDING
- * - Coach OTP Login & Verification
- * - Team Profile (View & Update permitted fields)
- * - 15-Member Squad Management (with Team Isolation)
- * - Match Fixtures & Read-Only Scorecards
- * - Real Match-Derived Team & Player Statistics
- * - Team Notifications & Bulletins
- * Protected by requireTeamAuth middleware.
+ * teamRoutes.js
+ *
+ * Express routes for Team Registration, Login, Email Verification, and Profile.
  */
 
 const express = require('express');
 const router = express.Router();
-const authService = require('../services/authService');
 const teamService = require('../services/teamService');
-const { requireTeamAuth } = require('../middleware/authMiddleware');
+const { requireTeamAuth } = require('../middleware/teamAuthMiddleware');
+const { requireAdminAuth } = require('../middleware/authMiddleware');
 
-// -------------------------------------------------------------
-// 1. PUBLIC REGISTRATION & AUTHENTICATION ENDPOINTS
-// -------------------------------------------------------------
+// ──────────────────────────────────────────────
+// PUBLIC ROUTES (no auth required)
+// ──────────────────────────────────────────────
+
+/**
+ * GET /api/team/districts
+ * Fetch all available districts for the registration form
+ */
+router.get('/districts', async (req, res) => {
+  try {
+    const districts = await teamService.getDistricts();
+    res.json({ success: true, districts });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 /**
  * POST /api/team/register
- * Team registration with coach details and exactly 15 squad players
+ * Register a new team account
+ * Body: { teamName, districtId, captainName, phone, email, password }
  */
 router.post('/register', async (req, res) => {
   try {
-    const result = await teamService.registerTeam(req.body);
-    res.status(201).json({
-      success: true,
-      status: 'PENDING',
-      message: `Team "${result.team_name}" and 15 squad players registered successfully! Awaiting administrative approval.`,
-      team: result
-    });
+    const { teamName, districtId, captainName, phone, email, password, players } = req.body;
+    const result = await teamService.registerTeam({ teamName, districtId, captainName, phone, email, password, players });
+    res.json({ success: true, ...result });
   } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Team registration failed'
-    });
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/team/verify-email
+ * Verify email using the token received after registration
+ * Body: { token }
+ */
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+    const result = await teamService.verifyEmail(token);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
 /**
  * POST /api/team/login
- * Step 1: Request OTP by coach name & registered coach email
- * Checks approval status before sending OTP via NodeMailer.
+ * Team login endpoint
+ * Body: { email, password }
  */
 router.post('/login', async (req, res) => {
   try {
-    const { coachName, coachEmail, name, email } = req.body;
-    const finalCoachEmail = coachEmail || email;
-    const finalCoachName = coachName || name;
-    const result = await authService.requestTeamOtp(finalCoachName, finalCoachEmail);
-    res.status(200).json(result);
+    const { email, password } = req.body;
+    const result = await teamService.loginTeam({ email, password });
+    res.json({ success: true, ...result });
   } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Team login failed'
-    });
+    res.status(401).json({ error: err.message });
   }
 });
 
-/**
- * POST /api/team/verify-otp
- * Step 2: Verify OTP and return authenticated coach JWT session token
- */
-router.post('/verify-otp', async (req, res) => {
-  try {
-    const { coachEmail, email, otp } = req.body;
-    const finalCoachEmail = coachEmail || email;
-    const result = await authService.verifyTeamOtp(finalCoachEmail, otp);
-    res.status(200).json(result);
-  } catch (err) {
-    const status = err.status || 401;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Team OTP verification failed'
-    });
-  }
-});
-
-// -------------------------------------------------------------
-// 2. PROTECTED TEAM ENDPOINTS (Require Active Team/Coach Authentication)
-// -------------------------------------------------------------
+// ──────────────────────────────────────────────
+// PROTECTED TEAM ROUTES (JWT required)
+// ──────────────────────────────────────────────
 
 /**
  * GET /api/team/profile
- * View own team profile from MongoDB
+ * Get the logged-in team's profile
  */
 router.get('/profile', requireTeamAuth, async (req, res) => {
   try {
-    const profile = await teamService.getProfile(req.user.email, req.team.id);
-    res.status(200).json({ success: true, profile });
+    const profile = await teamService.getTeamProfile(req.teamUser.teamId);
+    res.json({ success: true, team: profile });
   } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────
+// ADMIN-ONLY TEAM MANAGEMENT ROUTES
+// ──────────────────────────────────────────────
+
+/**
+ * GET /api/team/admin/teams
+ * Admin: list all teams and their registration status
+ */
+router.get('/admin/teams', requireAdminAuth, async (req, res) => {
+  try {
+    const teams = await teamService.getAllTeams();
+    res.json({ success: true, teams });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 /**
- * PUT /api/team/profile
- * Update allowed team profile fields (captain, viceCaptain, coachPhone, certification, homeGround)
- * Changing approval status, coachEmail, or other teams' data is strictly forbidden.
+ * PUT /api/team/admin/teams/:teamId/status
+ * Admin: approve, reject, or disable a team account
+ * Body: { status: 'APPROVED' | 'REJECTED' | 'DISABLED' }
  */
-router.put('/profile', requireTeamAuth, async (req, res) => {
+router.put('/admin/teams/:teamId/status', requireAdminAuth, async (req, res) => {
   try {
-    const updated = await teamService.updateProfile(req.user.email, req.team.id, req.body);
-    res.status(200).json({
-      success: true,
-      message: 'Team profile updated successfully!',
-      profile: updated
-    });
+    const { teamId } = req.params;
+    const { status } = req.body;
+    const result = await teamService.updateTeamAccountStatus({ teamId, status });
+    res.json({ success: true, ...result });
   } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/squad
- * Retrieve 15-player squad roster for this team (enforcing team isolation)
- */
-router.get('/squad', requireTeamAuth, async (req, res) => {
-  try {
-    const squad = await teamService.getSquad(req.user.email, req.team.id);
-    res.status(200).json({ success: true, count: squad.length, squad });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/matches
- * Retrieve upcoming, live, and completed matches for this team
- */
-router.get('/matches', requireTeamAuth, async (req, res) => {
-  try {
-    const matches = await teamService.getMatches(req.user.email, req.team.id);
-    res.status(200).json({ success: true, matches });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/matches/:id
- * Retrieve specific match information
- */
-router.get('/matches/:id', requireTeamAuth, async (req, res) => {
-  try {
-    const match = await teamService.getMatchById(req.params.id);
-    res.status(200).json({ success: true, match });
-  } catch (err) {
-    const status = err.status || 404;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/matches/:id/scorecard
- * Read-only match scorecard connected to scorer data in MongoDB
- */
-router.get('/matches/:id/scorecard', requireTeamAuth, async (req, res) => {
-  try {
-    const scorecard = await teamService.getScorecard(req.params.id);
-    res.status(200).json({ success: true, scorecard });
-  } catch (err) {
-    const status = err.status || 404;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/statistics
- * Real team statistics calculated from MongoDB matches
- */
-router.get('/statistics', requireTeamAuth, async (req, res) => {
-  try {
-    const statistics = await teamService.getTeamStatistics(req.user.email, req.team.id);
-    res.status(200).json({ success: true, statistics });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/players/statistics
- * Real statistics for all 15 players in this squad
- */
-router.get('/players/statistics', requireTeamAuth, async (req, res) => {
-  try {
-    const playerStats = await teamService.getPlayerStatistics(req.user.email, req.team.id);
-    res.status(200).json({ success: true, playerStats });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/team/notifications
- * Official bulletins and notices for this team
- */
-router.get('/notifications', requireTeamAuth, async (req, res) => {
-  try {
-    const notifications = await teamService.getNotifications(req.user.email, req.team.id);
-    res.status(200).json({ success: true, notifications });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * PUT /api/team/notifications/:id/read
- * Mark notification as read
- */
-router.put('/notifications/:id/read', requireTeamAuth, async (req, res) => {
-  try {
-    const updated = await teamService.markNotificationRead(req.params.id);
-    res.status(200).json({ success: true, notification: updated });
-  } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({ success: false, message: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 

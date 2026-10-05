@@ -1,202 +1,78 @@
-/**
- * routes/playerRoutes.js
- * 
- * Complete Player Module REST API Endpoints:
- * - Registration & Admin Approval
- * - OTP Login & Verification
- * - Profile Management (Read & Update permitted fields)
- * - Team & Squad Roster
- * - Matches & Read-Only Scorecard
- * - Performance Statistics (Batting, Bowling, Fielding)
- * - Notifications
- * Strictly protected with requirePlayerAuth authorization middleware.
- */
-
 const express = require('express');
 const router = express.Router();
-const authService = require('../services/authService');
 const playerService = require('../services/playerService');
-const { requirePlayerAuth } = require('../middleware/authMiddleware');
+const jwt = require('jsonwebtoken');
 
-// -------------------------------------------------------------
-// 1. PUBLIC AUTHENTICATION & REGISTRATION ENDPOINTS
-// -------------------------------------------------------------
+const JWT_SECRET = process.env.JWT_SECRET || 'cricket_team_jwt_secret_2025';
 
-/**
- * POST /api/player/register
- * Individual player registration -> Status = PENDING -> Awaiting Admin Approval
- */
-router.post('/register', async (req, res) => {
+// Middleware to protect player routes
+function authPlayerMiddleware(req, res, next) {
+  const token = req.cookies?.playerAuthToken || req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'Unauthorized: No token provided.' });
+  }
+
   try {
-    const result = await authService.registerPlayer(req.body);
-    res.status(201).json(result);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'PLAYER') {
+      return res.status(403).json({ success: false, error: 'Forbidden: Access restricted to players.' });
+    }
+    req.player = decoded;
+    next();
   } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Player registration failed'
-    });
+    return res.status(401).json({ success: false, error: 'Unauthorized: Invalid token.' });
+  }
+}
+
+// POST /api/players/send-otp
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { playerName, playerEmail } = req.body;
+    const result = await playerService.sendOtp({ playerName, playerEmail });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
-/**
- * POST /api/player/login
- * Step 1: Request OTP for registered player name / email
- * Strictly verifies player exists & admin approval status before generating & dispatching OTP
- */
-router.post('/login', async (req, res) => {
-  try {
-    const { name, email, playerName, nameOrEmail, emailOrPhone, input } = req.body;
-    const identifier = playerName || nameOrEmail || emailOrPhone || input || email || name;
-    const result = await authService.requestPlayerOtp(identifier);
-    res.status(200).json(result);
-  } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Player login failed'
-    });
-  }
-});
-
-/**
- * POST /api/player/verify-otp
- * Step 2: Verify OTP and return authenticated session token
- */
+// POST /api/players/verify-otp
 router.post('/verify-otp', async (req, res) => {
   try {
-    const { name, email, playerName, nameOrEmail, emailOrPhone, input, otp } = req.body;
-    const identifier = playerName || nameOrEmail || emailOrPhone || input || email || name;
-    const result = await authService.verifyPlayerOtp(identifier, otp);
-    res.status(200).json(result);
-  } catch (err) {
-    const status = err.status || 401;
-    res.status(status).json({
-      success: false,
-      message: err.message || 'Player OTP verification failed'
+    const { playerEmail, otp } = req.body;
+    const result = await playerService.verifyOtp({ playerEmail, otp });
+    
+    // Set HttpOnly cookie for production session management
+    res.cookie('playerAuthToken', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
+
+    res.json({ success: true, message: result.message, player: result.player });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
-// -------------------------------------------------------------
-// 2. PROTECTED PLAYER ENDPOINTS (Require Active Player Authentication)
-// -------------------------------------------------------------
-
-/**
- * GET /api/player/profile
- * View own player profile from MongoDB
- */
-router.get('/profile', requirePlayerAuth, async (req, res) => {
+// GET /api/players/me
+router.get('/me', authPlayerMiddleware, async (req, res) => {
   try {
-    const profile = await playerService.getProfile(req.user.id, req.user.email);
-    res.status(200).json({ success: true, profile });
+    const profile = await playerService.getPlayerProfile(req.player.playerId);
+    res.json({ success: true, profile });
   } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-/**
- * PUT /api/player/profile
- * Update allowed profile fields (batting style, bowling style, jersey number, mobile, taluk)
- * Modifying role, status, or credentials is strictly blocked.
- */
-router.put('/profile', requirePlayerAuth, async (req, res) => {
-  try {
-    const updated = await playerService.updateProfile(req.user.id, req.user.email, req.body);
-    res.status(200).json({
-      success: true,
-      message: 'Profile updated successfully!',
-      profile: updated
-    });
-  } catch (err) {
-    const status = err.status || 400;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/team
- * Retrieve player's registered team details and full 15-player squad roster
- */
-router.get('/team', requirePlayerAuth, async (req, res) => {
-  try {
-    const teamData = await playerService.getTeam(req.user.id, req.user.email);
-    res.status(200).json({ success: true, ...teamData });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/matches
- * Retrieve upcoming, live, and recent matches for the player's team
- */
-router.get('/matches', requirePlayerAuth, async (req, res) => {
-  try {
-    const matches = await playerService.getMatches(req.user.id, req.user.email);
-    res.status(200).json({ success: true, matches });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/matches/:id
- * Retrieve specific match information
- */
-router.get('/matches/:id', requirePlayerAuth, async (req, res) => {
-  try {
-    const match = await playerService.getMatchById(req.params.id);
-    res.status(200).json({ success: true, match });
-  } catch (err) {
-    const status = err.status || 404;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/matches/:id/scorecard
- * Read-only scorecard connected to scorer match records in MongoDB
- */
-router.get('/matches/:id/scorecard', requirePlayerAuth, async (req, res) => {
-  try {
-    const scorecard = await playerService.getScorecard(req.params.id);
-    res.status(200).json({ success: true, scorecard });
-  } catch (err) {
-    const status = err.status || 404;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/statistics
- * Real batting, bowling, and fielding statistics computed from MongoDB matches
- */
-router.get('/statistics', requirePlayerAuth, async (req, res) => {
-  try {
-    const statistics = await playerService.getStatistics(req.user.id, req.user.email);
-    res.status(200).json({ success: true, statistics });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/player/notifications
- * Official association and match notifications for the player
- */
-router.get('/notifications', requirePlayerAuth, async (req, res) => {
-  try {
-    const notifications = await playerService.getNotifications(req.user.id, req.user.email);
-    res.status(200).json({ success: true, notifications });
-  } catch (err) {
-    const status = err.status || 500;
-    res.status(status).json({ success: false, message: err.message });
-  }
+// POST /api/players/logout
+router.post('/logout', (req, res) => {
+  res.clearCookie('playerAuthToken');
+  res.json({ success: true, message: 'Logged out successfully.' });
 });
 
 module.exports = router;
