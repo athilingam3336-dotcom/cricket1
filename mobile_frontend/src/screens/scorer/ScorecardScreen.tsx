@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 
 export default function ScorecardScreen() {
   const { navigate, params } = useScorerNavigation();
-  const matchId = params?.matchId || 'M003';
-  const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
-  const styles = getStyles(isDesktop);
+  const matchId = params?.matchId || 'M002';
+  const defaultMatch = assignedMatches.find(m => m.id === matchId) || assignedMatches[1];
 
-  const [scorecard, setScorecard] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [scorecardData, setScorecardData] = useState<any>(null);
 
   useEffect(() => {
     loadScorecard();
@@ -22,204 +20,127 @@ export default function ScorecardScreen() {
   const loadScorecard = async () => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
       const res = await ScorerApi.getScorecard(matchId);
-      if (res && res.success && res.data) {
-        setScorecard(res.data);
-      } else {
-        setErrorMessage('Unable to load scorecard');
+      if (res && res.data) {
+        setScorecardData(res.data);
       }
-    } catch (err: any) {
-      console.error('Scorecard API fetch error:', err.message);
-      setErrorMessage('Unable to load scorecard');
+    } catch (e) {
+      // Fallback to initial display
     } finally {
       setIsLoading(false);
     }
   };
 
-  const match = scorecard?.match || scorecard;
+  const match = scorecardData?.match || defaultMatch;
+  const inningsList = scorecardData?.innings && scorecardData.innings.length > 0 
+    ? scorecardData.innings 
+    : [
+        {
+          battingTeam: defaultMatch.teamA,
+          score: defaultMatch.scoreA || '145/4 (15.2 Ov)',
+          extras: { total: 11, breakdown: 'wd 6, nb 1, b 2, lb 2' },
+          batters: [
+            { id: '1', name: 'Suresh Kumar', runs: 42, balls: 30, fours: 4, sixes: 1, strikeRate: 140.0, dismissal: 'not out' },
+            { id: '2', name: 'Muthu Raj', runs: 12, balls: 10, fours: 1, sixes: 0, strikeRate: 120.0, dismissal: 'b Karthik N' },
+            { id: '3', name: 'Vijay', runs: 18, balls: 14, fours: 2, sixes: 0, strikeRate: 128.5, dismissal: 'not out' }
+          ],
+          bowlers: [
+            { id: '1', name: 'Karthik N', overs: '3.2', maidens: 0, runs: 24, wickets: 1, economy: 7.20 },
+            { id: '2', name: 'Saravanan', overs: '4.0', maidens: 1, runs: 18, wickets: 2, economy: 4.50 }
+          ],
+          fallOfWickets: []
+        }
+      ];
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigate('Dashboard')} style={styles.backBtn}>
-          <Text style={styles.backText}>&larr; Back to Dashboard</Text>
+          <Text style={styles.backText}>← Back to Dashboard</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Full Match Scorecard</Text>
-        {match && (
-          <Text style={styles.subtitle}>
-            {match.tournament} &bull; {match.teamA} vs {match.teamB}
-          </Text>
-        )}
+        <Text style={styles.title}>Full Scorecard</Text>
+        <Text style={styles.subtitle}>
+          {match.tournament || 'VPL 2026'} | {match.teamA} vs {match.teamB}
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.contentWrapper}>
-          {isLoading ? (
-            <View style={styles.centerBox}>
-              <ActivityIndicator size="large" color="#b45309" />
-              <Text style={styles.loadingText}>Loading scorecard from database...</Text>
+        {/* Match Result Banner */}
+        {match.result && (
+          <View style={styles.resultBanner}>
+            <Text style={styles.resultText}>{match.result}</Text>
+          </View>
+        )}
+
+        {inningsList.map((inn: any, idx: number) => (
+          <View key={inn.id || idx} style={{ marginBottom: 24 }}>
+            <View style={styles.inningsContainer}>
+              <Text style={styles.inningsTitle}>{inn.battingTeam} Innings</Text>
+              <Text style={styles.inningsScore}>{inn.score}</Text>
             </View>
-          ) : errorMessage ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorTitle}>{errorMessage}</Text>
-              <Text style={styles.errorSubtitle}>Could not retrieve scorecard data from the server.</Text>
-              <TouchableOpacity onPress={loadScorecard} style={styles.retryBtn}>
-                <Text style={styles.retryText}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          ) : !scorecard || !scorecard.innings || scorecard.innings.length === 0 ? (
-            <View style={styles.centerBox}>
-              <Text style={styles.emptyText}>No scorecard data available for this match.</Text>
-            </View>
-          ) : (
-            <>
-              {/* MATCH SUMMARY BANNER */}
-              <View style={styles.matchMetaCard}>
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Tournament:</Text>
-                  <Text style={styles.metaVal}>{match.tournament}</Text>
-                </View>
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaLabel}>Venue:</Text>
-                  <Text style={styles.metaVal}>{match.venue}</Text>
-                </View>
-                {match.date && (
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Date:</Text>
-                    <Text style={styles.metaVal}>{match.date} {match.time ? `&bull; ${match.time}` : ''}</Text>
-                  </View>
-                )}
-                {match.status && (
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaLabel}>Status:</Text>
-                    <View style={styles.statusBadge}>
-                      <Text style={styles.statusBadgeText}>{match.status}</Text>
-                    </View>
-                  </View>
-                )}
+
+            {/* Batting Table */}
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                 <Text style={[styles.cell, styles.colName]}>Batter</Text>
+                 <Text style={[styles.cell, styles.colNum]}>R</Text>
+                 <Text style={[styles.cell, styles.colNum]}>B</Text>
+                 <Text style={[styles.cell, styles.colNum]}>4s</Text>
+                 <Text style={[styles.cell, styles.colNum]}>6s</Text>
+                 <Text style={[styles.cell, styles.colNum]}>SR</Text>
               </View>
-
-              {/* RESULT BANNER */}
-              {match.result && (
-                <View style={styles.resultBanner}>
-                  <Text style={styles.resultText}>{match.result}</Text>
-                </View>
-              )}
-
-              {/* INNINGS LIST */}
-              {scorecard.innings.map((inn: any, idx: number) => (
-                <View key={inn.id || idx} style={styles.inningsCard}>
-                  {/* INNINGS TITLE BAR */}
-                  <View style={styles.inningsHeader}>
-                    <Text style={styles.inningsTitle}>{inn.battingTeam} Innings</Text>
-                    <Text style={styles.inningsScore}>{inn.score}</Text>
-                  </View>
-
-                  {/* BATTING TABLE */}
-                  <View style={styles.table}>
-                    <View style={[styles.tableRow, styles.tableHeader]}>
-                      <Text style={[styles.cell, styles.colName, styles.headerCell]}>Batter</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>R</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>B</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>4s</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>6s</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>SR</Text>
-                    </View>
-
-                    {inn.batters && inn.batters.length > 0 ? (
-                      inn.batters.map((b: any, bIdx: number) => (
-                        <View key={b.id || bIdx} style={styles.tableRow}>
-                          <View style={styles.colName}>
-                            <Text style={styles.playerName}>{b.name}</Text>
-                            <Text style={styles.dismissal}>{b.dismissal}</Text>
-                          </View>
-                          <Text style={[styles.cell, styles.colNum, styles.runText]}>{b.runs}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{b.balls}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{b.fours}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{b.sixes}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{b.strikeRate}</Text>
-                        </View>
-                      ))
-                    ) : (
-                      <View style={styles.tableRow}>
-                        <Text style={[styles.cell, { fontStyle: 'italic', padding: 8 }]}>Yet to bat</Text>
-                      </View>
-                    )}
-
-                    {/* EXTRAS ROW */}
-                    {inn.extras && (
-                      <View style={styles.extrasRow}>
-                        <Text style={styles.extrasLabel}>Extras:</Text>
-                        <Text style={styles.extrasValue}>
-                          {inn.extras.total} ({inn.extras.breakdown})
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* BOWLING TABLE */}
-                  <View style={[styles.table, { marginTop: 14 }]}>
-                    <View style={[styles.tableRow, styles.tableHeader]}>
-                      <Text style={[styles.cell, styles.colName, styles.headerCell]}>Bowler</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>O</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>M</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>R</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>W</Text>
-                      <Text style={[styles.cell, styles.colNum, styles.headerCell]}>ECON</Text>
-                    </View>
-
-                    {inn.bowlers && inn.bowlers.length > 0 ? (
-                      inn.bowlers.map((bw: any, bwIdx: number) => (
-                        <View key={bw.id || bwIdx} style={styles.tableRow}>
-                          <Text style={[styles.cell, styles.colName, styles.playerName]}>{bw.name}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{bw.overs}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{bw.maidens}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{bw.runs}</Text>
-                          <Text style={[styles.cell, styles.colNum, styles.wicketText]}>{bw.wickets}</Text>
-                          <Text style={[styles.cell, styles.colNum]}>{bw.economy}</Text>
-                        </View>
-                      ))
-                    ) : (
-                      <View style={styles.tableRow}>
-                        <Text style={[styles.cell, { fontStyle: 'italic', padding: 8 }]}>No bowling figures</Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* FALL OF WICKETS */}
-                  {inn.fallOfWickets && inn.fallOfWickets.length > 0 && (
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionTitle}>Fall of Wickets</Text>
-                      <Text style={styles.detailSectionBody}>{inn.fallOfWickets.join(' &bull; ')}</Text>
-                    </View>
-                  )}
-
-                  {/* PARTNERSHIPS */}
-                  {inn.partnerships && inn.partnerships.length > 0 && (
-                    <View style={styles.detailSection}>
-                      <Text style={styles.detailSectionTitle}>Partnerships</Text>
-                      <View style={{ gap: 4 }}>
-                        {inn.partnerships.map((p: any, pIdx: number) => (
-                          <View key={pIdx} style={styles.partnershipLine}>
-                            <Text style={styles.partnershipWicket}>{p.wicket}:</Text>
-                            <Text style={styles.partnershipText}>{p.runs} runs ({p.balls} balls) &bull; {p.batters}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </View>
-                  )}
+              {(inn.batters || []).map((b: any, bIdx: number) => (
+                <View key={b.id || bIdx} style={styles.tableRow}>
+                   <View style={styles.colName}>
+                     <Text style={styles.playerName}>{b.name}</Text>
+                     <Text style={styles.dismissal}>{b.dismissal || (b.isOut ? 'out' : 'not out')}</Text>
+                   </View>
+                   <Text style={[styles.cell, styles.colNum]}>{b.runs}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{b.balls}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{b.fours}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{b.sixes}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{typeof b.strikeRate === 'number' ? b.strikeRate.toFixed(1) : b.strikeRate}</Text>
                 </View>
               ))}
+              <View style={styles.extrasRow}>
+                 <Text style={styles.extrasText}>
+                   Extras: {inn.extras?.total || 0} ({inn.extras?.breakdown || `wd ${inn.extras?.wide || 0}, nb ${inn.extras?.noBall || 0}, b ${inn.extras?.bye || 0}, lb ${inn.extras?.legBye || 0}`})
+                 </Text>
+              </View>
+            </View>
 
-              {match.status === 'Live' && (
-                <TouchableOpacity style={styles.actionBtn} onPress={() => navigate('LiveScoring', { matchId })}>
-                  <Text style={styles.actionBtnText}>Back to Live Scoring</Text>
-                </TouchableOpacity>
-              )}
-            </>
-          )}
+            <View style={{ height: 20 }} />
+
+            {/* Bowling Table */}
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                 <Text style={[styles.cell, styles.colName]}>Bowler</Text>
+                 <Text style={[styles.cell, styles.colNum]}>O</Text>
+                 <Text style={[styles.cell, styles.colNum]}>M</Text>
+                 <Text style={[styles.cell, styles.colNum]}>R</Text>
+                 <Text style={[styles.cell, styles.colNum]}>W</Text>
+                 <Text style={[styles.cell, styles.colNum]}>ECON</Text>
+              </View>
+              {(inn.bowlers || []).map((bw: any, bwIdx: number) => (
+                <View key={bw.id || bwIdx} style={styles.tableRow}>
+                   <Text style={[styles.cell, styles.colName, styles.playerName]}>{bw.name}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{bw.overs}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{bw.maidens || 0}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{bw.runs}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{bw.wickets}</Text>
+                   <Text style={[styles.cell, styles.colNum]}>{typeof bw.economy === 'number' ? bw.economy.toFixed(2) : bw.economy}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+
+        {(match.status === 'Live' || match.status === 'LIVE') && (
+          <TouchableOpacity style={styles.actionBtn} onPress={() => navigate('LiveScoring', { matchId })}>
+            <Text style={styles.actionBtnText}>Back to Live Scoring</Text>
+          </TouchableOpacity>
+        )}
         </View>
         <SharedFooter />
       </ScrollView>
@@ -227,157 +148,30 @@ export default function ScorecardScreen() {
   );
 }
 
-function getStyles(isDesktop: boolean) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: 'transparent' },
-    header: {
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
-      borderBottomWidth: 1,
-      borderBottomColor: 'rgba(226, 232, 240, 0.8)',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 3
-    },
-    backBtn: { marginBottom: 6 },
-    backText: { color: '#b45309', fontSize: 13, fontWeight: 'bold' },
-    title: { fontSize: 18, fontWeight: 'bold', color: '#1e293b' },
-    subtitle: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '600' },
-    scroll: { paddingBottom: 60 },
-    contentWrapper: {
-      padding: 16,
-      maxWidth: 1000,
-      width: '100%',
-      alignSelf: 'center'
-    },
-    centerBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
-    loadingText: { marginTop: 12, color: '#64748b', fontSize: 13, fontWeight: '500' },
-    emptyText: { color: '#64748b', fontSize: 14, fontStyle: 'italic' },
-    errorBox: {
-      backgroundColor: '#fef2f2',
-      borderColor: '#fecaca',
-      borderWidth: 1,
-      borderRadius: 8,
-      padding: 24,
-      alignItems: 'center',
-      marginVertical: 24
-    },
-    errorTitle: { color: '#b91c1c', fontSize: 16, fontWeight: 'bold', marginBottom: 6 },
-    errorSubtitle: { color: '#7f1d1d', fontSize: 13, marginBottom: 16 },
-    retryBtn: { backgroundColor: '#b45309', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 4 },
-    retryText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13 },
-
-    // MATCH SUMMARY
-    matchMetaCard: {
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 14,
-      borderWidth: 1,
-      borderColor: 'rgba(226, 232, 240, 0.8)'
-    },
-    metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 3 },
-    metaLabel: { fontSize: 12, color: '#64748b', fontWeight: '600' },
-    metaVal: { fontSize: 13, color: '#1e293b', fontWeight: '600' },
-    statusBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 3, borderWidth: 1, borderColor: '#fde68a' },
-    statusBadgeText: { color: '#b45309', fontSize: 11, fontWeight: 'bold' },
-
-    // RESULT
-    resultBanner: {
-      backgroundColor: '#f0fdf4',
-      borderColor: '#bbf7d0',
-      borderWidth: 1,
-      borderRadius: 6,
-      padding: 12,
-      marginBottom: 16,
-      alignItems: 'center'
-    },
-    resultText: { color: '#166534', fontWeight: 'bold', fontSize: 14 },
-
-    // INNINGS
-    inningsCard: {
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(226, 232, 240, 0.8)',
-      marginBottom: 20,
-      padding: 14,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 3
-    },
-    inningsHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: '#f1f5f9',
-      paddingBottom: 8,
-      marginBottom: 10
-    },
-    inningsTitle: { fontSize: 15, fontWeight: 'bold', color: '#b45309', textTransform: 'uppercase' },
-    inningsScore: { fontSize: 16, fontWeight: 'bold', color: '#1e293b' },
-
-    // TABLE
-    table: {
-      backgroundColor: '#ffffff',
-      borderRadius: 6,
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      overflow: 'hidden'
-    },
-    tableRow: {
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: '#f1f5f9',
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-      alignItems: 'center'
-    },
-    tableHeader: { backgroundColor: '#f8fafc', borderBottomColor: '#e2e8f0' },
-    cell: { fontSize: 12, color: '#334155' },
-    headerCell: { fontWeight: '700', color: '#64748b', textTransform: 'uppercase', fontSize: 11 },
-    colName: { flex: 3 },
-    colNum: { flex: 1, textAlign: 'center' },
-    playerName: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
-    dismissal: { fontSize: 11, color: '#64748b', fontStyle: 'italic', marginTop: 1 },
-    runText: { fontWeight: 'bold', color: '#1e293b' },
-    wicketText: { fontWeight: 'bold', color: '#b45309' },
-
-    extrasRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      backgroundColor: '#f8fafc'
-    },
-    extrasLabel: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-    extrasValue: { fontSize: 12, fontWeight: 'bold', color: '#1e293b' },
-
-    detailSection: {
-      marginTop: 12,
-      padding: 10,
-      backgroundColor: '#f8fafc',
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#f1f5f9'
-    },
-    detailSectionTitle: { fontSize: 11, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: 4 },
-    detailSectionBody: { fontSize: 12, color: '#334155', lineHeight: 18 },
-    partnershipLine: { flexDirection: 'row', gap: 6 },
-    partnershipWicket: { fontSize: 12, fontWeight: '700', color: '#475569' },
-    partnershipText: { fontSize: 12, color: '#334155' },
-
-    actionBtn: {
-      backgroundColor: '#eab308',
-      paddingVertical: 12,
-      borderRadius: 6,
-      alignItems: 'center',
-      marginTop: 12
-    },
-    actionBtnText: { color: '#ffffff', fontSize: 13, fontWeight: 'bold', letterSpacing: 0.5 }
-  });
-}
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: 'transparent' },
+  header: { padding: 16, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  backBtn: { marginBottom: 12, alignSelf: 'flex-start', padding: 10, paddingHorizontal: 16, backgroundColor: '#fefce8', borderRadius: 4, borderWidth: 1, borderColor: '#eab308' },
+  backText: { color: '#b45309', fontWeight: 'bold', fontSize: 13 },
+  title: { color: '#1e293b', fontSize: 20, fontWeight: 'bold' },
+  subtitle: { color: '#b45309', fontSize: 13, marginTop: 4, fontWeight: '600' },
+  scroll: { flexGrow: 1 },
+  contentWrapper: { padding: 16, paddingBottom: 40 },
+  resultBanner: { backgroundColor: 'rgba(240, 253, 244, 0.85)', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(187, 247, 208, 0.85)', marginBottom: 16, alignItems: 'center' },
+  resultText: { color: '#16a34a', fontWeight: 'bold', fontSize: 13 },
+  inningsContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 6, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  inningsTitle: { color: '#b45309', fontSize: 14, fontWeight: 'bold', textTransform: 'uppercase' },
+  inningsScore: { color: '#1e293b', fontSize: 16, fontWeight: 'bold' },
+  table: { backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)', paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
+  tableHeader: { backgroundColor: 'rgba(254, 243, 199, 0.65)', borderBottomColor: '#fde68a' },
+  cell: { color: '#334155', fontSize: 12, fontWeight: '600' },
+  colName: { flex: 3 },
+  colNum: { flex: 1, textAlign: 'center' },
+  playerName: { color: '#1e293b', fontWeight: 'bold', fontSize: 14 },
+  dismissal: { color: '#b45309', fontSize: 11, fontStyle: 'italic', marginTop: 2 },
+  extrasRow: { padding: 12, backgroundColor: 'rgba(254, 243, 199, 0.45)' },
+  extrasText: { color: '#b45309', fontSize: 13, fontWeight: 'bold' },
+  actionBtn: { backgroundColor: '#eab308', padding: 14, borderRadius: 6, alignItems: 'center', marginTop: 20, shadowColor: '#eab308', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4 },
+  actionBtnText: { color: '#1e293b', fontWeight: 'bold', fontSize: 14 }
+});

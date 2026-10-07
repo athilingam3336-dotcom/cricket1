@@ -1,89 +1,93 @@
-﻿/**
+/**
  * services/matchService.js
  * Match Setup, Squads, Toss & Lifecycle
+ * Pure MongoDB Implementation using Mongoose Models
  */
 
 const db = require('../config/db');
 
 class MatchService {
   async getMatchSetup(matchId) {
-    const [matches] = await db.query('SELECT * FROM matches WHERE id = ?', [matchId]);
-    const match = matches && matches[0];
-    if (!match) throw { status: 404, message: 'Match not found' };
+    await db.initDb();
 
-    const [teams] = await db.query('SELECT * FROM teams');
+    const match = await db.models.Match.findOne({ id: matchId }).lean();
+    if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
+
+    const teams = await db.models.Team.find({}).lean();
     const teamMap = {};
     (teams || []).forEach(t => { teamMap[t.id] = t; });
 
-    const [players] = await db.query('SELECT * FROM players');
+    const players = await db.models.Player.find({}).lean();
     const teamAPlayers = (players || []).filter(p => p.team_id === match.team_a_id);
     const teamBPlayers = (players || []).filter(p => p.team_id === match.team_b_id);
 
     return {
       matchId: match.id,
-      tournament: 'VPL 2026',
-      venue: match.venue_name,
-      overs: match.overs,
+      tournament: match.tournament_name || 'VPL 2026',
+      venue: match.venue || 'Kamarajar Stadium, Virudhunagar',
+      overs: match.overs_per_side || 20,
       teamA: teamMap[match.team_a_id] || { id: match.team_a_id, name: 'Team A' },
       teamB: teamMap[match.team_b_id] || { id: match.team_b_id, name: 'Team B' },
       teamAPlayers,
       teamBPlayers,
-      tossWinner: match.toss_winner,
+      tossWinner: match.toss_winner_id,
       tossDecision: match.toss_decision,
       status: match.status
     };
   }
 
   async startMatch(matchId, { tossWinner, tossDecision, teamAPlayingXI, teamBPlayingXI }) {
-    const conn = await db.getConnection();
-    await conn.beginTransaction();
+    await db.initDb();
 
-    try {
-      const [matches] = await conn.query('SELECT * FROM matches WHERE id = ?', [matchId]);
-      const match = matches && matches[0];
-      if (!match) throw { status: 404, message: 'Match not found' };
+    const match = await db.models.Match.findOne({ id: matchId });
+    if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
 
-      const winnerTeamId = tossWinner || match.team_a_id;
-      const decision = tossDecision || 'BAT';
+    const winnerTeamId = tossWinner || match.team_a_id;
+    const decision = tossDecision || 'BAT';
 
-      // Determine batting & bowling teams for 1st innings
-      const battingTeamId = decision === 'BAT' ? winnerTeamId : (winnerTeamId === match.team_a_id ? match.team_b_id : match.team_a_id);
-      const bowlingTeamId = battingTeamId === match.team_a_id ? match.team_b_id : match.team_a_id;
+    // Batting & Bowling team logic
+    const battingTeamId = decision === 'BAT' ? winnerTeamId : (winnerTeamId === match.team_a_id ? match.team_b_id : match.team_a_id);
+    const bowlingTeamId = battingTeamId === match.team_a_id ? match.team_b_id : match.team_a_id;
 
-      // Update match to LIVE
-      await conn.query(
-        'UPDATE matches SET status = ?, toss_winner = ?, toss_decision = ?, current_innings = 1, current_over = 0, current_ball = 0 WHERE id = ?',
-        ['LIVE', winnerTeamId, decision, matchId]
-      );
+    // Update match state
+    match.status = 'LIVE';
+    match.toss_winner_id = winnerTeamId;
+    match.toss_decision = decision;
+    match.current_innings_number = 1;
+    await match.save();
 
-      // Create Innings 1
-      const innId = `INN-${matchId}-1`;
-      await conn.query(
-        'INSERT INTO innings (id, match_id, innings_number, batting_team_id, bowling_team_id, total_runs, wickets, overs, balls, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [innId, matchId, 1, battingTeamId, bowlingTeamId, 0, 0, 0, 0, 'LIVE']
-      );
-
-      // Update Scorer Assignment to ACTIVE
-      await conn.query(
-        'UPDATE scorer_assignments SET status = ? WHERE match_id = ?',
-        ['ACTIVE', matchId]
-      );
-
-      await conn.commit();
-      return {
-        success: true,
-        message: 'Match successfully started.',
-        matchId,
-        inningsId: innId,
-        battingTeamId,
-        bowlingTeamId
-      };
-    } catch (err) {
-      await conn.rollback();
-      throw err;
-    } finally {
-      conn.release();
+    // Create or reset Innings 1
+    const innId = `INN-${matchId}-1`;
+    let inn1 = await db.models.Innings.findOne({ id: innId });
+    if (!inn1) {
+      inn1 = await db.models.Innings.create({
+        id: innId,
+        match_id: matchId,
+        innings_number: 1,
+        batting_team_id: battingTeamId,
+        bowling_team_id: bowlingTeamId,
+        total_runs: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+        is_completed: false,
+        extras: { wides: 0, no_balls: 0, byes: 0, leg_byes: 0, total: 0 }
+      });
+    } else {
+      inn1.batting_team_id = battingTeamId;
+      inn1.bowling_team_id = bowlingTeamId;
+      inn1.is_completed = false;
+      await inn1.save();
     }
+
+    return {
+      success: true,
+      message: 'Match successfully started. Live scoring initiated.',
+      matchId,
+      inningsId: innId,
+      battingTeamId,
+      bowlingTeamId
+    };
   }
 }
 

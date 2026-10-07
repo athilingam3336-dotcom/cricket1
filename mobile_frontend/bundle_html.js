@@ -87,16 +87,23 @@ html = html.replace(
   `<script>${performanceJs}</script>`
 );
 
+const dynamicPortalJs = fs.readFileSync(path.join(ASSETS_DIR, 'dynamicPortalService.js'), 'utf8');
+
 // 5. Replace the external script.js with inline <script>
 html = html.replace(
   /<script\s+src="script\.js[^"]*"\s*><\/script>/i,
-  `<script>${mainJs}</script>`
+  `<script>${mainJs}</script>\n<script>${dynamicPortalJs}</script>`
 );
 
 // Write bundled.html
 const bundledPath = path.join(ASSETS_DIR, 'bundled.html');
 fs.writeFileSync(bundledPath, html, 'utf8');
 console.log(`✅ Written: ${bundledPath} (${(Buffer.byteLength(html) / 1024).toFixed(1)} KB)`);
+
+// Also copy to public/bundled.html for Web and mobile
+const publicBundledPath = path.join(__dirname, 'public', 'bundled.html');
+fs.writeFileSync(publicBundledPath, html, 'utf8');
+console.log(`✅ Written: ${publicBundledPath}`);
 
 // 4. Generate inlineHtml.ts
 //    Escape special characters for a JS/TS string literal

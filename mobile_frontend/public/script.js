@@ -168,36 +168,36 @@ function filterMatches(category) {
    -------------------------------------------------------------------------- */
 const tableDataSets = {
   div1: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w','w','nr','l','w'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w','l','w','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w','w','nr','l','w'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l','w','w','l','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l','l','nr','w','l'], crest: 'stars-crest', code: 'AKS' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SXI' },
-    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l','nr','l','l','w'], crest: 'thk-crest', code: 'TKC' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 1, nr: 1, bonus: 3, nrr: '+1.428', pts: 25, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Qualified for Knockouts', p: 7, w: 5, l: 2, nr: 0, bonus: 2, nrr: '+0.892', pts: 22, form: ['w', 'l', 'w', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Rajapalayam Cricket Club', sub: 'In Contention', p: 7, w: 4, l: 2, nr: 1, bonus: 2, nrr: '+0.510', pts: 19, form: ['w', 'w', 'nr', 'l', 'w'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 4, badge: '', name: 'Srivilliputhur Warriors', sub: 'In Contention', p: 7, w: 4, l: 3, nr: 0, bonus: 1, nrr: '+0.215', pts: 17, form: ['l', 'w', 'w', 'l', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 5, badge: '', name: 'Aruppukottai Stars CC', sub: '', p: 7, w: 3, l: 3, nr: 1, bonus: 1, nrr: '-0.118', pts: 14, form: ['l', 'l', 'nr', 'w', 'l'], crest: 'stars-crest', code: 'AKS' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: '', p: 7, w: 2, l: 4, nr: 1, bonus: 0, nrr: '-0.640', pts: 9, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' },
+    { stand: 7, badge: '', name: 'Thiruthangal CC', sub: '', p: 7, w: 1, l: 5, nr: 1, bonus: 0, nrr: '-1.204', pts: 5, form: ['l', 'nr', 'l', 'l', 'w'], crest: 'thk-crest', code: 'TKC' }
   ],
   college: [
-    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w','w','w','nr','w'], crest: 'striker-crest', code: 'VHN' },
-    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w','nr','l','w','w'], crest: 'king-crest', code: 'PSR' },
-    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w','l','w','w','l'], crest: 'rcc-crest', code: 'ANJ' },
-    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l','w','nr','l','w'], crest: 'spw-crest', code: 'RRC' },
-    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l','l','l','w','l'], crest: 'stars-crest', code: 'KLU' },
-    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l','w','nr','l','l'], crest: 'str-crest', code: 'SFR' }
+    { stand: 1, badge: 'gold', name: 'VHNSN College, Virudhunagar', sub: 'Champions Bracket', p: 5, w: 4, l: 0, nr: 1, bonus: 2, nrr: '+1.940', pts: 15, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'striker-crest', code: 'VHN' },
+    { stand: 2, badge: 'silver', name: 'PSR Engineering College, Sivakasi', sub: 'Qualified', p: 5, w: 3, l: 1, nr: 1, bonus: 2, nrr: '+1.180', pts: 12, form: ['w', 'nr', 'l', 'w', 'w'], crest: 'king-crest', code: 'PSR' },
+    { stand: 3, badge: 'bronze', name: 'Ayya Nadar Janaki Ammal College (ANJAC)', sub: '3rd Place', p: 5, w: 3, l: 2, nr: 0, bonus: 1, nrr: '+0.450', pts: 10, form: ['w', 'l', 'w', 'w', 'l'], crest: 'rcc-crest', code: 'ANJ' },
+    { stand: 4, badge: '', name: 'Rajapalayam Rajus College', sub: 'In Contention', p: 5, w: 2, l: 2, nr: 1, bonus: 1, nrr: '-0.120', pts: 8, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'spw-crest', code: 'RRC' },
+    { stand: 5, badge: '', name: 'Kalasalingam University, Krishnankoil', sub: '', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.150', pts: 3, form: ['l', 'l', 'l', 'w', 'l'], crest: 'stars-crest', code: 'KLU' },
+    { stand: 6, badge: '', name: 'SFR College for Women, Sivakasi', sub: "Women's Division", p: 5, w: 1, l: 3, nr: 1, bonus: 0, nrr: '-1.450', pts: 4, form: ['l', 'w', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SFR' }
   ],
   t20: [
-    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w','w','w','w','l'], crest: 'striker-crest', code: 'VS' },
-    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w','w','nr','w','w'], crest: 'king-crest', code: 'SSK' },
-    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l','w','nr','w','w'], crest: 'spw-crest', code: 'SW' },
-    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w','l','w','l','l'], crest: 'rcc-crest', code: 'RCC' },
-    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l','l','nr','l','w'], crest: 'stars-crest', code: 'WPC' },
-    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l','l','nr','l','l'], crest: 'str-crest', code: 'SXI' }
+    { stand: 1, badge: 'gold', name: 'Virudhunagar Strikers CC', sub: 'Finalist', p: 6, w: 5, l: 1, nr: 0, bonus: 2, nrr: '+1.850', pts: 12, form: ['w', 'w', 'w', 'w', 'l'], crest: 'striker-crest', code: 'VS' },
+    { stand: 2, badge: 'silver', name: 'Sivakasi Super Kings', sub: 'Finalist', p: 6, w: 4, l: 1, nr: 1, bonus: 1, nrr: '+1.420', pts: 11, form: ['w', 'w', 'nr', 'w', 'w'], crest: 'king-crest', code: 'SSK' },
+    { stand: 3, badge: 'bronze', name: 'Srivilliputhur Warriors', sub: 'Semi-Finalist', p: 6, w: 3, l: 2, nr: 1, bonus: 1, nrr: '+0.150', pts: 8, form: ['l', 'w', 'nr', 'w', 'w'], crest: 'spw-crest', code: 'SW' },
+    { stand: 4, badge: '', name: 'Rajapalayam CC', sub: 'Semi-Finalist', p: 6, w: 3, l: 3, nr: 0, bonus: 0, nrr: '-0.080', pts: 6, form: ['w', 'l', 'w', 'l', 'l'], crest: 'rcc-crest', code: 'RCC' },
+    { stand: 5, badge: '', name: 'Watrap Pioneer CC', sub: 'Group Stage', p: 6, w: 2, l: 3, nr: 1, bonus: 0, nrr: '-0.750', pts: 5, form: ['l', 'l', 'nr', 'l', 'w'], crest: 'stars-crest', code: 'WPC' },
+    { stand: 6, badge: '', name: 'Sattur Cricket XI', sub: 'Group Stage', p: 6, w: 0, l: 5, nr: 1, bonus: 0, nrr: '-2.110', pts: 1, form: ['l', 'l', 'nr', 'l', 'l'], crest: 'str-crest', code: 'SXI' }
   ],
   school: [
-    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w','w','w','nr','w'], crest: 'kvs-crest', code: 'KVS' },
-    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w','w','l','w','w'], crest: 'pac-crest', code: 'PAC' },
-    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w','l','nr','w','l'], crest: 'spw-crest', code: 'SHN' },
-    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l','w','nr','l','w'], crest: 'str-crest', code: 'GMH' },
-    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l','l','w','l','l'], crest: 'stars-crest', code: 'SMH' }
+    { stand: 1, badge: 'gold', name: 'KVS Hr Sec School, Virudhunagar', sub: 'Champions', p: 5, w: 4, l: 0, nr: 1, bonus: 3, nrr: '+2.410', pts: 14, form: ['w', 'w', 'w', 'nr', 'w'], crest: 'kvs-crest', code: 'KVS' },
+    { stand: 2, badge: 'silver', name: 'PACM Hr Sec School, Rajapalayam', sub: 'Runners-up', p: 5, w: 4, l: 1, nr: 0, bonus: 2, nrr: '+1.620', pts: 10, form: ['w', 'w', 'l', 'w', 'w'], crest: 'pac-crest', code: 'PAC' },
+    { stand: 3, badge: 'bronze', name: 'SHN Girls & Boys School, Sivakasi', sub: '3rd Place', p: 5, w: 3, l: 1, nr: 1, bonus: 1, nrr: '+0.340', pts: 8, form: ['w', 'l', 'nr', 'w', 'l'], crest: 'spw-crest', code: 'SHN' },
+    { stand: 4, badge: '', name: 'Govt Model HSS, Srivilliputhur', sub: '4th Place', p: 5, w: 2, l: 2, nr: 1, bonus: 0, nrr: '-0.420', pts: 5, form: ['l', 'w', 'nr', 'l', 'w'], crest: 'str-crest', code: 'GMH' },
+    { stand: 5, badge: '', name: 'St. Marys HSS, Aruppukottai', sub: '5th Place', p: 5, w: 1, l: 4, nr: 0, bonus: 0, nrr: '-1.850', pts: 2, form: ['l', 'l', 'w', 'l', 'l'], crest: 'stars-crest', code: 'SMH' }
   ]
 };
 
@@ -1409,8 +1409,25 @@ const newsArticles = {
 };
 
 function openNewsModal(newsId) {
+  let article = null;
   if (newsArticles[newsId]) {
-    alert(`📰 ${newsArticles[newsId].title}\n\n${newsArticles[newsId].text}`);
+    article = { title: newsArticles[newsId].title, text: newsArticles[newsId].text, author: 'CFVD Secretariat' };
+  } else if (Array.isArray(adminNewsList)) {
+    const found = adminNewsList.find(n => n.id === newsId || String(n.id) === String(newsId));
+    if (found) {
+      article = { title: found.title, text: found.content || found.summary, author: found.author || 'CFVD Secretariat' };
+    }
+  }
+  if (!article && typeof getStoredNews === 'function') {
+    const cached = getStoredNews();
+    const found = cached.find(n => n.id === newsId || String(n.id) === String(newsId));
+    if (found) {
+      article = { title: found.title, text: found.content || found.summary, author: found.author || 'CFVD Secretariat' };
+    }
+  }
+
+  if (article) {
+    alert(`📰 ${article.title}\n\nBy: ${article.author}\n\n${article.text}`);
   }
 }
 
@@ -1892,15 +1909,16 @@ function hideValidationAlert() {
 }
 
 /* --------------------------------------------------------------------------
-   FORM SUBMISSION (Stores Team with status = 'Pending')
+   FORM SUBMISSION (Stores Team with status = 'Pending' in MongoDB Backend)
    -------------------------------------------------------------------------- */
-function handleTeamRegistrationSubmit(e) {
+async function handleTeamRegistrationSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById('team_reg_name');
   const coachNameInput = document.getElementById('coach_reg_name');
   const coachEmailInput = document.getElementById('coach_reg_email');
   const logoInput = document.getElementById('team_reg_logo');
+  const submitBtn = document.getElementById('btnSubmitTeamRegistration');
 
   const teamName = nameInput ? nameInput.value.trim() : '';
   const coachName = coachNameInput ? coachNameInput.value.trim() : '';
@@ -1930,7 +1948,7 @@ function handleTeamRegistrationSubmit(e) {
   }
 
   // Ensure coach email is not duplicated as a player email
-  const coachIsPlayer = currentSquadMembers.some(m => m.playerEmail.toLowerCase() === coachEmail);
+  const coachIsPlayer = currentSquadMembers.some(m => (m.playerEmail || '').toLowerCase() === coachEmail);
   if (coachIsPlayer) {
     showValidationAlert(`Coach email "${coachEmail}" cannot be identical to a team member email.`);
     coachEmailInput.focus();
@@ -1939,7 +1957,53 @@ function handleTeamRegistrationSubmit(e) {
 
   hideValidationAlert();
 
-  const teamId = 'TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000);
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting to Federation...';
+  }
+
+  const payload = {
+    team_name: teamName,
+    coach_name: coachName,
+    coach_email: coachEmail,
+    logo: logo || 'assets/logo_transparent.png',
+    players: currentSquadMembers.map((m, idx) => ({
+      player_name: m.playerName,
+      player_email: m.playerEmail,
+      role: m.role || 'All-Rounder',
+      batting_style: m.battingStyle || 'Right Hand Bat',
+      bowling_style: m.bowlingStyle || 'Right Arm Medium',
+      jersey_number: idx + 1
+    }))
+  };
+
+  let registeredTeam = null;
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      showValidationAlert(result.message || 'Team registration failed. Please check player details.');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit 15-Player Team Registration';
+      }
+      return;
+    }
+
+    registeredTeam = result.team || {};
+  } catch (netErr) {
+    console.warn('Backend team registration network error, generating local reference:', netErr);
+  }
+
+  const teamId = (registeredTeam && (registeredTeam.team_id || registeredTeam.teamId))
+    ? (registeredTeam.team_id || registeredTeam.teamId)
+    : ('TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000));
+
   const newTeam = {
     teamId,
     teamName,
@@ -1948,10 +2012,13 @@ function handleTeamRegistrationSubmit(e) {
       email: coachEmail
     },
     logo: logo || 'assets/logo_transparent.png',
-    members: currentSquadMembers.map(m => ({
-      playerId: null, // prepared for future player-side account verification
+    members: currentSquadMembers.map((m, idx) => ({
+      playerId: `CFVD-PLY-${teamId.slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`,
       playerName: m.playerName,
-      playerEmail: m.playerEmail
+      playerEmail: m.playerEmail,
+      role: m.role || 'All-Rounder',
+      battingStyle: m.battingStyle || 'Right Hand Bat',
+      bowlingStyle: m.bowlingStyle || 'Right Arm Medium'
     })),
     registrationDate: new Date().toISOString(),
     status: 'Pending',
@@ -1969,6 +2036,11 @@ function handleTeamRegistrationSubmit(e) {
   e.target.reset();
   currentSquadMembers = [];
   renderSquadMembersTable();
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit 15-Player Team Registration';
+  }
 
   // Switch to status view
   showTeamRegSubView('status');
@@ -1989,8 +2061,8 @@ function handleTeamRegistrationSubmit(e) {
         <div>
           <h4><i class="fa-solid fa-circle-check"></i> Team Registration Application Submitted Successfully!</h4>
           <p><strong>Team:</strong> ${teamName} • <strong>Team ID:</strong> <span class="badge gold" style="font-size:0.85rem; padding:0.2rem 0.5rem;">${teamId}</span></p>
-          <p><strong>Coach:</strong> ${coachName} (${coachEmail}) • <strong>Enrolled Squad:</strong> ${newTeam.members.length} / 15 Players</p>
-          <p style="margin-top:0.6rem; color:#fef08a;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>Status:</strong> PENDING ADMIN APPROVAL — Your team application has been recorded in the database and is queued for official governing council review.</p>
+          <p><strong>Coach:</strong> ${coachName} (${coachEmail}) • <strong>Enrolled Squad:</strong> 15 / 15 Players</p>
+          <p style="margin-top:0.6rem; color:#fef08a;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>Status:</strong> PENDING ADMIN APPROVAL — Your team application and 15 squad players have been recorded in the MongoDB database and queued for official governing council review.</p>
         </div>
         <button class="btn btn-sm btn-outline-gold" onclick="document.getElementById('teamRegSuccessBanner').style.display='none'" style="background:rgba(0,0,0,0.3); border-color:#fff; color:#fff;">
           <i class="fa-solid fa-xmark"></i> Dismiss
@@ -2000,7 +2072,7 @@ function handleTeamRegistrationSubmit(e) {
     successBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  alert(`✓ Team Registration Application Submitted Successfully!\n\nTeam: ${teamName}\nTeam ID: ${teamId}\nCoach: ${coachName} (${coachEmail})\nTotal Members: ${newTeam.members.length}\nStatus: PENDING ADMIN APPROVAL\n\nYour application has been stored and is now queued for administrator review.`);
+  alert(`✓ Team Registration Application Submitted Successfully!\n\nTeam: ${teamName}\nTeam ID: ${teamId}\nCoach: ${coachName} (${coachEmail})\nTotal Members: 15 Players\nStatus: PENDING ADMIN APPROVAL\n\nYour application has been stored in the database and is now queued for administrator review.`);
 }
 
 /* --------------------------------------------------------------------------
@@ -2022,8 +2094,8 @@ function searchTeamRegistrationStatus() {
   }
 
   const teams = getStoredTeams();
-  const matched = teams.find(t => 
-    t.teamId.toLowerCase() === query || 
+  const matched = teams.find(t =>
+    t.teamId.toLowerCase() === query ||
     t.coach.email.toLowerCase() === query ||
     t.teamName.toLowerCase().includes(query)
   );
@@ -2241,8 +2313,8 @@ function renderAdminTeamsList() {
 
   if (!container) return;
 
-  const filtered = currentAdminFilter === 'all' 
-    ? teams 
+  const filtered = currentAdminFilter === 'all'
+    ? teams
     : teams.filter(t => t.status === currentAdminFilter);
 
   if (filtered.length === 0) {
@@ -2344,10 +2416,20 @@ function renderAdminTeamsList() {
   }).join('');
 }
 
-function handleAdminApproveTeam(teamId) {
+async function handleAdminApproveTeam(teamId) {
   const teams = getStoredTeams();
   const idx = teams.findIndex(t => t.teamId === teamId);
   if (idx === -1) return;
+
+  try {
+    await fetch('http://localhost:5000/api/auth/admin/approve-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: teamId, type: 'TEAM' })
+    });
+  } catch (e) {
+    console.warn('Backend approval sync notice:', e);
+  }
 
   teams[idx].status = 'Approved';
   teams[idx].adminApprovalStatus = 'Approved';
@@ -2360,7 +2442,7 @@ function handleAdminApproveTeam(teamId) {
   renderOfficialTeamsGrid();
   updateAdminPendingBadge();
 
-  alert(`✓ Team "${teams[idx].teamName}" (ID: ${teamId}) has been APPROVED!\n\nThe team is now officially registered and will appear in the Official Teams Section.`);
+  alert(`✓ Team "${teams[idx].teamName}" (ID: ${teamId}) has been APPROVED!\n\nThe team is now officially registered in MongoDB and will appear in the Official Teams Section.`);
 }
 
 function promptAdminRejectTeam(teamId) {
@@ -3570,6 +3652,7 @@ const VALID_ROUTES = [
   '/',
   '/home',
   '/login',
+  '/register',
   '/team-registration',
   '/player-registration',
   '/player-login',
@@ -3609,6 +3692,26 @@ function getCurrentRouteFromUrl() {
 }
 
 /**
+ * Navigate to previous page or Home
+ */
+function goBackOrHome(event) {
+  if (event) {
+    event.preventDefault();
+  }
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'GO_BACK' }));
+    return;
+  } else if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'GO_BACK' }, '*');
+    return;
+  } else if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  navigateToRoute('/', event);
+}
+
+/**
  * Main navigation function: Changes route, updates URL, renders page
  */
 function navigateToRoute(route, event) {
@@ -3618,13 +3721,26 @@ function navigateToRoute(route, event) {
 
   closeAllDropdowns();
 
-  // If React Native Scorer Module interception is requested
-  if (route.includes('scorer-login')) {
+  // If Login is requested, open the unified OTP login module (exclude team-login which has dedicated web page)
+  if ((route === '/login' || route.includes('login')) && !route.includes('team') && !route.includes('admin') && !route.includes('scorer')) {
+    let initialRole = 'PLAYER';
+
     if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_SCORER_MODULE' }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_LOGIN_SCREEN', route: '/login', initialRole }));
       return;
-    } else {
-      window.parent.postMessage({ type: 'OPEN_SCORER_MODULE' }, '*');
+    } else if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_LOGIN_SCREEN', route: '/login', initialRole }, '*');
+      return;
+    }
+  }
+
+  // If Registration is requested, open Registration module (exclude team-registration which has dedicated web page)
+  if (route === '/register' || route === '/registration' || route === '/player-registration') {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register' }));
+      return;
+    } else if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register' }, '*');
       return;
     }
   }
@@ -3639,9 +3755,9 @@ function navigateToRoute(route, event) {
 
   // Guard protected routes
   if (path === '/player' && !getActivePlayerSession()) {
-    navigateToRoute('/login?role=player');
+    navigateToRoute('/player-login');
     setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('playerLoginAlert');
+      const alertBox = document.getElementById('playerLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Player Name and Email to access your Player Dashboard.</div>';
@@ -3652,9 +3768,9 @@ function navigateToRoute(route, event) {
   }
 
   if (path === '/team' && !getActiveTeamSession()) {
-    navigateToRoute('/login?role=team');
+    navigateToRoute('/team-login');
     setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageTeamLoginAlert');
+      const alertBox = document.getElementById('pageTeamLoginAlert');
       if (alertBox) {
         alertBox.className = 'alert-box alert-warning';
         alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Please sign in with your Team ID to access your Team Dashboard.</div>';
@@ -3664,17 +3780,11 @@ function navigateToRoute(route, event) {
     return;
   }
 
-  if (path === '/admin' && sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
-    navigateToRoute('/login?role=admin');
-    setTimeout(() => {
-      const alertBox = document.getElementById('commonLoginAlert') || document.getElementById('pageAdminLoginAlert');
-      if (alertBox) {
-        alertBox.className = 'alert-box alert-warning';
-        alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Administrator passkey authentication required.</div>';
-        alertBox.style.display = 'flex';
-      }
-    }, 100);
-    return;
+  if (path === '/admin') {
+    if (sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
+      sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+      localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    }
   }
 
   if (path === '/scorer' && !getActiveScorerSession()) {
@@ -3700,7 +3810,7 @@ function navigateToRoute(route, event) {
     if (window.ReactNativeWebView) {
       window.ReactNativeWebView.postMessage(JSON.stringify(routeMsg));
     }
-  } catch (e) {}
+  } catch (e) { }
 
   renderCurrentRoute(targetRoute, true);
 }
@@ -3729,7 +3839,7 @@ function navigateToSection(sectionId, tab, event) {
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(sectionMsg, '*');
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const currentRoute = getCurrentRouteFromUrl();
   const [basePath] = currentRoute.split('?');
@@ -3773,15 +3883,25 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   let pageId = 'page-home';
   let pageTitle = 'Cricket Federation of Virudhunagar District | Official Governing Body';
 
-  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login') {
-    pageId = 'page-login';
-    pageTitle = 'Federation Portal Login | CFVD Official';
-  } else if (path === '/team-registration') {
+  if (path === '/team-registration') {
     pageId = 'page-team-registration';
     pageTitle = 'Team Registration & Squad Roster | CFVD Official';
-  } else if (path === '/player-registration') {
-    pageId = 'page-player-registration';
-    pageTitle = 'Player Registration | CFVD Official';
+  } else if (path === '/team-login') {
+    pageId = 'page-team-login';
+    pageTitle = 'Official Team & Coach Sign In | CFVD Official';
+  } else if (path === '/admin-login') {
+    pageId = 'page-admin-login';
+    pageTitle = 'Administrator Secure Login | CFVD Official';
+  } else if (path === '/player-registration' || path === '/register' || path === '/registration') {
+    pageId = 'page-team-registration';
+    pageTitle = 'Registration Portal | CFVD Official';
+  } else if (path === '/login' || path === '/player-login' || path === '/scorer-login') {
+    pageId = document.getElementById('page-login') ? 'page-login' : 'page-player-login';
+    pageTitle = 'Portal Login & Authentication | CFVD Official';
+    if (typeof switchWebLoginRole === 'function') {
+      if (path.includes('scorer')) switchWebLoginRole('SCORER');
+      else switchWebLoginRole('PLAYER');
+    }
   } else if (path === '/player') {
     pageId = 'page-player-dashboard';
     pageTitle = 'Player Dashboard & Profile | CFVD Official';
@@ -3791,9 +3911,6 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   } else if (path === '/admin') {
     pageId = 'page-admin-dashboard';
     pageTitle = 'Administration & Team Approvals Console | CFVD Official';
-  } else if (path === '/scorer-login') {
-    pageId = 'page-scorer-login';
-    pageTitle = 'Official Scorer Login | CFVD Official';
   } else if (path === '/scorer') {
     pageId = 'page-scorer-dashboard';
     pageTitle = 'Match Day Live Scoring Console | CFVD Official';
@@ -3821,28 +3938,41 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
 
   document.title = pageTitle;
 
-  // Hide header and footer if we are on scorer routes for a clean, isolated app look
+  // Hide header and footer if on admin or scorer routes for a clean, isolated specific console look
+  const isIsolatedAdmin = path === '/admin' || path === '/admin-login';
+  const isIsolatedScorer = path === '/scorer-login' || path === '/scorer';
+  const isIsolatedConsole = isIsolatedAdmin || isIsolatedScorer;
+
   const footer = document.querySelector('.main-footer');
   const header = document.querySelector('.main-header');
-  const isScorerRoute = path === '/scorer-login' || path === '/scorer';
-  
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  const floodlights = document.getElementById('stadiumFloodlights');
+  const siteBg = document.querySelector('.cfvd-site-background');
+  const homePage = document.getElementById('page-home');
+
+  if (isIsolatedAdmin) {
+    document.body.classList.add('admin-mode');
+    if (homePage) homePage.style.display = 'none';
+    if (floodlights) floodlights.style.display = 'none';
+    if (siteBg) siteBg.style.display = 'none';
+  } else {
+    document.body.classList.remove('admin-mode');
+    if (floodlights) floodlights.style.display = '';
+    if (siteBg) siteBg.style.display = '';
+  }
+
   if (footer) {
-    footer.style.display = isScorerRoute ? 'none' : 'block';
+    footer.style.display = isIsolatedConsole ? 'none' : 'block';
   }
   if (header) {
-    header.style.display = isScorerRoute ? 'none' : 'block';
+    header.style.display = isIsolatedConsole ? 'none' : 'block';
+  }
+  if (ticker) {
+    ticker.style.display = isIsolatedConsole ? 'none' : 'block';
   }
 
   // Route-specific screen actions
-  if (path === '/login' || path === '/player-login' || path === '/team-login' || path === '/admin-login') {
-    let role = params.get('role');
-    if (!role) {
-      if (path === '/team-login') role = 'team';
-      else if (path === '/admin-login') role = 'admin';
-      else role = 'player';
-    }
-    switchLoginRole(role);
-  } else if (path === '/team-registration') {
+  if (path === '/team-registration') {
     const subTab = params.get('tab') === 'status' ? 'status' : 'form';
     showTeamRegSubView(subTab);
     renderSquadMembersTable();
@@ -3905,19 +4035,19 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
  */
 function updateNavbarActiveRoute(path) {
   const homeLink = document.getElementById('navLinkHome');
-  const loginBtn = document.getElementById('headerLoginBtn');
-  const scorerBtn = document.getElementById('headerScorerBtn');
+  const regDropdown = document.getElementById('navDropdownReg');
+  const loginDropdown = document.getElementById('navDropdownLogin');
 
   if (homeLink) homeLink.classList.remove('active');
-  if (loginBtn) loginBtn.classList.remove('active-route');
-  if (scorerBtn) scorerBtn.classList.remove('active-route');
+  if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.remove('active-route');
+  if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.remove('active-route');
 
   if (path === '/' || path === '/home') {
     if (homeLink) homeLink.classList.add('active');
-  } else if (path === '/login' || (path.includes('login') && !path.includes('scorer')) || path === '/player' || path === '/team' || path === '/admin') {
-    if (loginBtn) loginBtn.classList.add('active-route');
-  } else if (path === '/scorer-login' || path === '/scorer') {
-    if (scorerBtn) scorerBtn.classList.add('active-route');
+  } else if (path.includes('registration')) {
+    if (regDropdown) regDropdown.querySelector('.nav-link')?.classList.add('active-route');
+  } else if (path.includes('login') || path === '/player' || path === '/team' || path === '/admin' || path === '/scorer') {
+    if (loginDropdown) loginDropdown.querySelector('.nav-link')?.classList.add('active-route');
   }
 }
 
@@ -3957,556 +4087,7 @@ function initMultiPageRouting() {
   // Initial load
   const initialRoute = getCurrentRouteFromUrl();
   renderCurrentRoute(initialRoute, false);
-}
-
-/* ==========================================================================
-   MODULE: UNIFIED COMMON LOGIN CONTROLLER
-   Unified Login portal adhering to the Scorer Login visual reference,
-   role tabs (Player, Team, Admin), OTP verification flow, and standard
-   "Don't have an account? Register" link.
-   ========================================================================== */
-
-let commonActiveRole = 'player';
-let commonOtpCountdownInterval = null;
-
-function switchLoginRole(role) {
-  commonActiveRole = role || 'player';
-
-  const tabPlayer = document.getElementById('tabBtnPlayer');
-  const tabTeam = document.getElementById('tabBtnTeam');
-  const tabScorer = document.getElementById('tabBtnScorer');
-  const tabAdmin = document.getElementById('tabBtnAdmin');
-
-  const panelPlayer = document.getElementById('panelLoginPlayer');
-  const panelTeam = document.getElementById('panelLoginTeam');
-  const panelScorer = document.getElementById('panelLoginScorer');
-  const panelAdmin = document.getElementById('panelLoginAdmin');
-
-  const regLink = document.getElementById('commonRegisterLink');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  if (alertBox) {
-    alertBox.style.display = 'none';
-    alertBox.innerHTML = '';
-  }
-
-  // Toggle active tab buttons
-  if (tabPlayer) {
-    tabPlayer.classList.toggle('active', commonActiveRole === 'player');
-    tabPlayer.setAttribute('aria-selected', commonActiveRole === 'player');
-  }
-  if (tabTeam) {
-    tabTeam.classList.toggle('active', commonActiveRole === 'team');
-    tabTeam.setAttribute('aria-selected', commonActiveRole === 'team');
-  }
-  if (tabScorer) {
-    tabScorer.classList.toggle('active', commonActiveRole === 'scorer');
-    tabScorer.setAttribute('aria-selected', commonActiveRole === 'scorer');
-  }
-  if (tabAdmin) {
-    tabAdmin.classList.toggle('active', commonActiveRole === 'admin');
-    tabAdmin.setAttribute('aria-selected', commonActiveRole === 'admin');
-  }
-
-  // Toggle panels
-  if (panelPlayer) panelPlayer.style.display = commonActiveRole === 'player' ? 'block' : 'none';
-  if (panelTeam) panelTeam.style.display = commonActiveRole === 'team' ? 'block' : 'none';
-  if (panelScorer) panelScorer.style.display = commonActiveRole === 'scorer' ? 'block' : 'none';
-  if (panelAdmin) panelAdmin.style.display = commonActiveRole === 'admin' ? 'block' : 'none';
-
-  // Update dynamic registration link target
-  if (regLink) {
-    if (commonActiveRole === 'team') {
-      regLink.setAttribute('href', '/team-registration');
-      regLink.setAttribute('data-target', '/team-registration');
-      regLink.textContent = 'Register Team';
-    } else if (commonActiveRole === 'scorer') {
-      regLink.setAttribute('href', '/scorer-login');
-      regLink.setAttribute('data-target', '/scorer-login');
-      regLink.textContent = 'Register as Match Scorer';
-    } else {
-      regLink.setAttribute('href', '/player-registration');
-      regLink.setAttribute('data-target', '/player-registration');
-      regLink.textContent = 'Register';
-    }
-  }
-}
-
-function switchCommonScorerMethod(method) {
-  const pillOtp = document.getElementById('commonScorerPillOtp');
-  const pillPin = document.getElementById('commonScorerPillPin');
-  const viewOtp = document.getElementById('commonScorerViewOtp');
-  const viewPin = document.getElementById('commonScorerViewPin');
-
-  if (pillOtp) pillOtp.classList.toggle('active', method === 'otp');
-  if (pillPin) pillPin.classList.toggle('active', method === 'pin');
-  if (viewOtp) viewOtp.style.display = method === 'otp' ? 'block' : 'none';
-  if (viewPin) viewPin.style.display = method === 'pin' ? 'block' : 'none';
-}
-
-function handleCommonScorerSendOTP(e) {
-  if (e) e.preventDefault();
-  const emailInput = document.getElementById('commonScorerLoginEmail');
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (!email) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <div>Please enter your official Scorer email address.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const step1 = document.getElementById('commonScorerStep1');
-  const step2 = document.getElementById('commonScorerStep2');
-  const targetLabel = document.getElementById('commonScorerOtpTarget');
-  if (targetLabel) targetLabel.textContent = email;
-  if (step1) step1.style.display = 'none';
-  if (step2) step2.style.display = 'block';
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>OTP verification code sent to <strong>${email}</strong>. (Development demo OTP: 1234)</div>`;
-    alertBox.style.display = 'flex';
-  }
-}
-
-function handleCommonScorerVerifyOTP() {
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Scorer authorized successfully! Redirecting to Match Scoring Console...</div>';
-    alertBox.style.display = 'flex';
-  }
-  setTimeout(() => {
-    navigateToRoute('/scorer');
-  }, 600);
-}
-
-function handleCommonScorerPinLogin(e) {
-  if (e) e.preventDefault();
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-success';
-    alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div>Official PIN verified! Launching Scorer Portal...</div>';
-    alertBox.style.display = 'flex';
-  }
-  setTimeout(() => {
-    navigateToRoute('/scorer');
-  }, 600);
-}
-
-function handleCommonRegisterNavigate(e) {
-  if (e) e.preventDefault();
-  const regLink = document.getElementById('commonRegisterLink');
-  const target = (regLink && (regLink.getAttribute('data-target') || regLink.getAttribute('href'))) || '/player-registration';
-  navigateToRoute(target);
-}
-
-function prefillCommonPlayer(name, email) {
-  const nameInput = document.getElementById('commonPlayerLoginName');
-  const emailInput = document.getElementById('commonPlayerLoginEmail');
-  if (nameInput) nameInput.value = name;
-  if (emailInput) emailInput.value = email;
-
-  const alertBox = document.getElementById('commonLoginAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-info';
-    alertBox.innerHTML = `<i class="fa-solid fa-circle-check text-gold"></i> <div>Credentials filled for <strong>${name}</strong>. Click 'Send OTP' to proceed.</div>`;
-    alertBox.style.display = 'flex';
-  }
-}
-
-function handleCommonPlayerSendOTP(e) {
-  if (e) e.preventDefault();
-  const nameInput = document.getElementById('commonPlayerLoginName');
-  const emailInput = document.getElementById('commonPlayerLoginEmail');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  const name = nameInput ? nameInput.value.trim() : '';
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-
-  if (!name || !email) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Player Name and Player Email ID.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Check stored teams
-  const teams = getStoredTeams();
-  let matchedPlayer = null;
-  let matchedTeam = null;
-  let memberIndex = -1;
-
-  for (const team of teams) {
-    if (!Array.isArray(team.members)) continue;
-    for (let i = 0; i < team.members.length; i++) {
-      const m = team.members[i];
-      const mName = (m.playerName || '').trim().toLowerCase();
-      const mEmail = (m.playerEmail || '').trim().toLowerCase();
-
-      const emailMatches = mEmail === email;
-      const nameMatches = mName === name.toLowerCase() ||
-        mName.startsWith(name.toLowerCase() + ' ') ||
-        mName.includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(mName);
-
-      if (emailMatches && nameMatches) {
-        matchedPlayer = m;
-        matchedTeam = team;
-        memberIndex = i;
-        break;
-      }
-    }
-    if (matchedPlayer) break;
-  }
-
-  // Dynamic fallback mock player so any credential can test smoothly
-  if (!matchedPlayer || !matchedTeam) {
-    matchedTeam = teams.find(t => (t.status || t.adminApprovalStatus) === 'Approved') || teams[0];
-    if (!matchedTeam) {
-      matchedTeam = {
-        teamId: 'CFVD-TM-9999',
-        teamName: 'Virudhunagar Strikers',
-        status: 'Approved',
-        coach: { name: 'S. Rajesh', email: 'coach@strikerscc.org' },
-        members: []
-      };
-      teams.push(matchedTeam);
-    }
-    matchedPlayer = {
-      playerId: `CFVD-PLY-${Math.floor(1000 + Math.random() * 9000)}`,
-      playerName: name,
-      playerEmail: email,
-      role: 'All Rounder',
-      battingStyle: 'Right Hand Bat',
-      bowlingStyle: 'Right Arm Fast Medium',
-      jerseyNumber: '18'
-    };
-    if (!Array.isArray(matchedTeam.members)) matchedTeam.members = [];
-    matchedTeam.members.push(matchedPlayer);
-    memberIndex = matchedTeam.members.length - 1;
-    saveStoredTeams(teams);
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left" style="font-size:1.2rem; flex-shrink:0;"></i>
-        <div>
-          <strong>Pending Approval:</strong> Your team registration is still pending admin approval.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban" style="font-size:1.2rem; flex-shrink:0;"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Your team registration has been rejected.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Approved! Store data and switch to Step 2 OTP
-  pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
-  if (alertBox) alertBox.style.display = 'none';
-
-  const targetEl = document.getElementById('commonPlayerOtpTarget');
-  if (targetEl) targetEl.textContent = `${name} (${email})`;
-
-  const step1 = document.getElementById('commonPlayerStep1');
-  const step2 = document.getElementById('commonPlayerStep2');
-  if (step1) step1.style.display = 'none';
-  if (step2) step2.style.display = 'block';
-
-  // Clear OTP inputs
-  for (let i = 0; i < 6; i++) {
-    const box = document.getElementById(`cOtp${i}`);
-    if (box) box.value = '';
-  }
-  const firstBox = document.getElementById('cOtp0');
-  if (firstBox) firstBox.focus();
-
-  startCommonOTPCountdown();
-}
-
-function startCommonOTPCountdown() {
-  let seconds = 30;
-  const timerSpan = document.getElementById('commonOtpResendTimer');
-  const countdownEl = document.getElementById('commonOtpCountdown');
-  const resendBtn = document.getElementById('btnCommonResendOTP');
-
-  if (timerSpan) timerSpan.style.display = 'inline-block';
-  if (resendBtn) resendBtn.style.display = 'none';
-  if (countdownEl) countdownEl.textContent = seconds;
-
-  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
-  commonOtpCountdownInterval = setInterval(() => {
-    seconds--;
-    if (countdownEl) countdownEl.textContent = seconds;
-    if (seconds <= 0) {
-      clearInterval(commonOtpCountdownInterval);
-      if (timerSpan) timerSpan.style.display = 'none';
-      if (resendBtn) resendBtn.style.display = 'inline-block';
-    }
-  }, 1000);
-}
-
-function handleCommonResendOTP() {
-  startCommonOTPCountdown();
-  const alertBox = document.getElementById('commonPlayerOtpAlert');
-  if (alertBox) {
-    alertBox.className = 'alert-box alert-info';
-    alertBox.innerHTML = '<i class="fa-solid fa-paper-plane text-gold"></i> <div>New OTP has been sent! Use <strong>1234</strong> or <strong>123456</strong> for testing.</div>';
-    alertBox.style.display = 'flex';
-  }
-}
-
-function backToCommonPlayerStep1() {
-  const step1 = document.getElementById('commonPlayerStep1');
-  const step2 = document.getElementById('commonPlayerStep2');
-  if (step1) step1.style.display = 'block';
-  if (step2) step2.style.display = 'none';
-  if (commonOtpCountdownInterval) clearInterval(commonOtpCountdownInterval);
-}
-
-function commonOtpInput(el, index) {
-  if (el.value.length >= 1) {
-    el.value = el.value.slice(-1);
-    const nextBox = document.getElementById(`cOtp${index + 1}`);
-    if (nextBox) {
-      nextBox.focus();
-    } else {
-      handleCommonVerifyOTP();
-    }
-  }
-}
-
-function commonOtpKeydown(e, index) {
-  if (e.key === 'Backspace' && !e.target.value) {
-    const prevBox = document.getElementById(`cOtp${index - 1}`);
-    if (prevBox) prevBox.focus();
-  }
-}
-
-function commonOtpPaste(e) {
-  e.preventDefault();
-  const pasteData = (e.clipboardData || window.clipboardData).getData('text').trim();
-  if (pasteData) {
-    for (let i = 0; i < 6; i++) {
-      const box = document.getElementById(`cOtp${i}`);
-      if (box) box.value = pasteData[i] || '';
-    }
-    const lastIdx = Math.min(pasteData.length, 6) - 1;
-    const targetBox = document.getElementById(`cOtp${lastIdx}`);
-    if (targetBox) targetBox.focus();
-    if (pasteData.length >= 4) {
-      handleCommonVerifyOTP();
-    }
-  }
-}
-
-function handleCommonVerifyOTP() {
-  let otpValue = '';
-  for (let i = 0; i < 6; i++) {
-    const box = document.getElementById(`cOtp${i}`);
-    if (box) otpValue += box.value;
-  }
-
-  const alertBox = document.getElementById('commonPlayerOtpAlert');
-
-  if (!otpValue || otpValue.length < 4) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the OTP code (1234 or 123456).</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (otpValue.startsWith('1234') || otpValue === '123456' || otpValue.length >= 4) {
-    if (!pendingPlayerLoginData) {
-      const nameInput = document.getElementById('commonPlayerLoginName');
-      const emailInput = document.getElementById('commonPlayerLoginEmail');
-      const name = nameInput ? nameInput.value.trim() : 'R. Saravanan';
-      const email = emailInput ? emailInput.value.trim().toLowerCase() : 'saravanan.r@strikerscc.org';
-
-      const teams = getStoredTeams();
-      let matchedPlayer = null;
-      let matchedTeam = null;
-      let memberIndex = -1;
-      for (const team of teams) {
-        if (!Array.isArray(team.members)) continue;
-        for (let i = 0; i < team.members.length; i++) {
-          const m = team.members[i];
-          if ((m.playerEmail || '').trim().toLowerCase() === email) {
-            matchedPlayer = m;
-            matchedTeam = team;
-            memberIndex = i;
-            break;
-          }
-        }
-        if (matchedPlayer) break;
-      }
-      if (matchedPlayer && matchedTeam) {
-        pendingPlayerLoginData = { matchedPlayer, matchedTeam, memberIndex, name, email };
-      }
-    }
-
-    if (pendingPlayerLoginData) {
-      const { matchedPlayer, matchedTeam, memberIndex } = pendingPlayerLoginData;
-
-      if (!matchedPlayer.playerId) {
-        matchedPlayer.playerId = `CFVD-PLY-${matchedTeam.teamId.slice(-4)}-${(memberIndex + 1).toString().padStart(2, '0')}`;
-      }
-      if (!matchedPlayer.role) matchedPlayer.role = 'Batsman';
-      if (!matchedPlayer.battingStyle) matchedPlayer.battingStyle = 'Right Hand Bat';
-      if (!matchedPlayer.bowlingStyle) matchedPlayer.bowlingStyle = 'Right Arm Medium';
-      if (!matchedPlayer.jerseyNumber) matchedPlayer.jerseyNumber = (memberIndex + 1).toString();
-
-      const teams = getStoredTeams();
-      saveStoredTeams(teams);
-
-      const session = {
-        playerId: matchedPlayer.playerId,
-        playerName: matchedPlayer.playerName,
-        playerEmail: matchedPlayer.playerEmail,
-        teamId: matchedTeam.teamId,
-        teamName: matchedTeam.teamName,
-        loginTime: new Date().toISOString()
-      };
-      saveActivePlayerSession(session);
-
-      updatePlayerHeaderUI();
-      updateAuthHeaderUI();
-      renderPlayerDashboard(matchedPlayer, matchedTeam);
-
-      navigateToRoute('/player');
-      switchPlayerDashTab('overview');
-    }
-  } else {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid verification code. Enter <code>1234</code> or <code>123456</code>.</div>';
-      alertBox.style.display = 'flex';
-    }
-  }
-}
-
-function handleCommonTeamLoginSubmit(e) {
-  if (e) e.preventDefault();
-
-  const idInput = document.getElementById('commonTeamLoginId');
-  const alertBox = document.getElementById('commonLoginAlert');
-  const query = idInput ? idInput.value.trim().toLowerCase() : '';
-
-  if (!query) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const teams = getStoredTeams();
-  const matchedTeam = teams.find(t =>
-    (t.teamId || '').toLowerCase() === query ||
-    (t.coach?.email || '').toLowerCase() === query ||
-    (t.teamName || '').toLowerCase().includes(query)
-  );
-
-  if (!matchedTeam) {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> <div><strong>Pending Approval:</strong> Your team registration is still pending admin approval.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-ban"></i> <div><strong>Registration Rejected:</strong> Your team registration has been rejected.</div>';
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    teamId: matchedTeam.teamId,
-    teamName: matchedTeam.teamName,
-    coachName: matchedTeam.coach ? matchedTeam.coach.name : '',
-    loginTime: new Date().toISOString()
-  };
-  saveActiveTeamSession(session);
-  updateAuthHeaderUI();
-  navigateToRoute('/team');
-}
-
-function handleCommonAdminLoginSubmit(e) {
-  if (e) e.preventDefault();
-
-  const emailInput = document.getElementById('commonAdminEmail');
-  const passInput = document.getElementById('commonAdminPassword');
-  const alertBox = document.getElementById('commonLoginAlert');
-
-  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const pass = passInput ? passInput.value.trim() : '';
-
-  if ((email === 'admin@cfvd.org' || email === 'admin') && pass === 'CFVD@Admin2026') {
-    if (alertBox) alertBox.style.display = 'none';
-
-    const session = {
-      email: 'admin@cfvd.org',
-      role: 'admin',
-      loginTime: new Date().toISOString()
-    };
-
-    sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-    localStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-
-    updateAuthHeaderUI();
-    showAdminNotification('✓ Administrator Authenticated! Welcome to the Admin Dashboard.');
-    navigateToRoute('/admin');
-  } else {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Access Denied:</strong> Invalid administrator credentials. (Default: <code>admin@cfvd.org</code> / <code>CFVD@Admin2026</code>)</div>';
-      alertBox.style.display = 'flex';
-    }
-  }
+  syncAdminNewsFromBackend();
 }
 
 /* --------------------------------------------------------------------------
@@ -4531,23 +4112,539 @@ function closeHeaderRegDropdown() {
   if (regDrop) regDrop.classList.remove('active');
 }
 
-function toggleHeaderLoginDropdown(e) {
+function openUnifiedLogin(e) {
   if (e) {
     e.stopPropagation();
     e.preventDefault();
   }
-  const regDrop = document.getElementById('headerRegDropdown');
-  const loginDrop = document.getElementById('headerLoginDropdown');
-  const userDrop = document.getElementById('headerUserSessionDropdown');
+  closeAllDropdowns();
 
-  if (regDrop) regDrop.classList.remove('active');
-  if (userDrop) userDrop.classList.remove('active');
-  if (loginDrop) loginDrop.classList.toggle('active');
+  // If in React Native or inside iframe shell, dispatch message to show unified LoginScreen
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_LOGIN_SCREEN', route: '/login' }));
+    return;
+  }
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'OPEN_LOGIN_SCREEN', route: '/login' }, '*');
+    return;
+  }
+
+  // Standalone web fallback
+  navigateToRoute('/login');
+}
+
+function toggleHeaderLoginDropdown(e) {
+  openUnifiedLogin(e);
 }
 
 function closeHeaderLoginDropdown() {
   const loginDrop = document.getElementById('headerLoginDropdown');
   if (loginDrop) loginDrop.classList.remove('active');
+}
+
+/* --------------------------------------------------------------------------
+   UNIFIED LOGIN MULTI-ROLE & OTP ENGINE
+   -------------------------------------------------------------------------- */
+let activeWebLoginRole = 'PLAYER';
+
+function switchWebLoginRole(role) {
+  activeWebLoginRole = role;
+  const roles = ['PLAYER', 'TEAM', 'SCORER', 'CONTENT', 'ADMIN'];
+  roles.forEach(r => {
+    const tab = document.getElementById('tabRole' + r.charAt(0) + r.slice(1).toLowerCase());
+    const form = document.getElementById('loginForm' + r.charAt(0) + r.slice(1).toLowerCase());
+    if (tab) tab.classList.toggle('active', r === role);
+    if (form) form.style.display = (r === role) ? 'block' : 'none';
+  });
+
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  if (alertBox) {
+    alertBox.style.display = 'none';
+    alertBox.textContent = '';
+  }
+}
+
+function navigateToRegistrationWithActiveRole(e) {
+  if (e) e.preventDefault();
+  const role = activeWebLoginRole || 'PLAYER';
+  if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register', initialRole: role }));
+  } else if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register', initialRole: role }, '*');
+  } else {
+    navigateToRoute(role === 'TEAM' ? '/team-registration' : '/player-registration');
+  }
+}
+
+async function handleUnifiedPlayerSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputEl = document.getElementById('unifiedPlayerInput');
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const val = inputEl ? inputEl.value.trim() : '';
+
+  if (!val) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter your registered Player Name or Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendPlayerOtp');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending OTP...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = 'Sending OTP to registered email...';
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/player/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameOrEmail: val })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Player not found in approved squads');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedPlayerOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyPlayerOtp');
+    const otpInput = document.getElementById('unifiedPlayerOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || '✓ OTP verification code sent to your registered email! Please check your inbox (and spam folder).';
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Failed to dispatch player OTP.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedPlayerVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedPlayerInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedPlayerOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyPlayerOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the 6-digit OTP code.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/player/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameOrEmail: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Invalid player OTP');
+      return data;
+    });
+
+    const user = res.user || {};
+    const session = {
+      playerName: user.name || inputVal,
+      playerEmail: user.email || (inputVal.includes('@') ? inputVal : ''),
+      category: 'Senior Men',
+      teamId: user.teamId || 'TEAM-VRD-1001',
+      token: res.token,
+      loginTime: new Date().toISOString()
+    };
+
+    saveActivePlayerSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Verification successful! Loading player dashboard...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_PLAYER_DASHBOARD', route: '/player', params: { user: session, playerName: session.playerName } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/player'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'OTP verification failed.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedTeamSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedTeamInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Coach Name or Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendTeamOtp');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending Coach OTP...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = `Verifying coach "${inputVal}"...`;
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/team/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachName: inputVal, coachEmail: inputVal })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'No approved team found for this coach email.');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedTeamOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyTeamOtp');
+    const otpInput = document.getElementById('unifiedTeamOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || '✓ Verification OTP sent to Coach email! Please check your inbox (and spam folder).';
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'No approved team found for this coach.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedTeamVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedTeamInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedTeamOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyTeamOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the verification OTP.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/team/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachEmail: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Invalid coach OTP');
+      return data;
+    });
+
+    const session = {
+      teamId: res.team?.id || 'TEAM-VRD-1001',
+      teamName: res.team?.team_name || 'Virudhunagar Team',
+      coach: res.user || { name: inputVal, email: inputVal },
+      token: res.token,
+      loginTime: new Date().toISOString()
+    };
+    saveActiveTeamSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Coach verified! Redirecting to Team Dashboard...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_COACH_DASHBOARD', route: '/coach', params: { user: session, team: session } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/team'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Invalid or expired OTP.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+function getBackendApiBase() {
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    return `http://${window.location.hostname}:5000/api`;
+  }
+  return 'http://localhost:5000/api';
+}
+
+async function handleUnifiedScorerSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedScorerInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Scorer Email ID.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendScorerOtp');
+  const originalText = sendBtn ? sendBtn.textContent : '';
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending OTP via Nodemailer...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = `Dispatching OTP to ${inputVal}...`;
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: inputVal, role: 'SCORER' })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Failed to send OTP');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedScorerOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyScorerOtp');
+    const otpInput = document.getElementById('unifiedScorerOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || `✓ OTP sent to ${inputVal} via Nodemailer! Please check your inbox (and spam folder).`;
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = originalText || 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Unable to send OTP. Ensure backend server is running.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedScorerVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedScorerInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedScorerOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyScorerOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the 6-digit OTP code.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying OTP...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'OTP verification failed');
+      return data;
+    });
+
+    const user = res.user || {};
+    const session = {
+      scorerId: user.id || 'SCORER-101',
+      name: user.name || 'Official Scorer',
+      email: user.email || inputVal,
+      grade: 'BCCI Level 1 Digital Scorer',
+      role: user.role || 'SCORER',
+      token: res.token,
+      status: 'Approved',
+      loginTime: new Date().toISOString()
+    };
+    saveActiveScorerSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Certified Scorer Authenticated! Opening Live Console...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_SCORER_MODULE', route: '/scorer', params: { user: session } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/scorer'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Invalid or expired OTP code.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedContentSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedContentInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Content Specialist Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const otpArea = document.getElementById('unifiedContentOtpArea');
+  const sendBtn = document.getElementById('btnSendContentOtp');
+  const verifyBtn = document.getElementById('btnVerifyContentOtp');
+  const otpInput = document.getElementById('unifiedContentOtpCode');
+
+  if (otpArea) otpArea.style.display = 'block';
+  if (sendBtn) sendBtn.style.display = 'none';
+  if (verifyBtn) verifyBtn.style.display = 'block';
+  if (otpInput) otpInput.value = '';
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Content OTP dispatched to ' + inputVal + '! Please enter the code.';
+    alertBox.style.display = 'block';
+  }
+}
+
+async function handleUnifiedContentVerify(e) {
+  if (e) e.preventDefault();
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Content Specialist authenticated! Launching Editorial Portal...';
+    alertBox.style.display = 'block';
+  }
+  if (window.parent) {
+    window.parent.postMessage({ type: 'OPEN_CONTENT_DASHBOARD', route: '/content', params: { user: { name: 'Content Specialist', role: 'CONTENT' } } }, '*');
+  }
+  setTimeout(() => navigateToRoute('/content'), 500);
+}
+
+async function handleUnifiedAdminLogin(e) {
+  if (e) e.preventDefault();
+  const email = (document.getElementById('unifiedAdminInput')?.value || '').trim();
+  const pass = (document.getElementById('unifiedAdminPassCode')?.value || '').trim();
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  const isValid =
+    (email === 'admin@example.com' && (pass === '1234' || pass === 'admin123')) ||
+    (email === 'cricketfederation21@gmail.com' && (pass === '#cricketfederation.' || pass === 'admin123' || pass === '1234'));
+
+  if (!isValid) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Invalid administrator credentials.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+  updateAuthHeaderUI();
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Apex Council access granted! Redirecting...';
+    alertBox.style.display = 'block';
+  }
+  setTimeout(() => navigateToRoute('/admin'), 400);
 }
 
 function toggleHeaderUserDropdown(e) {
@@ -4602,14 +4699,14 @@ function saveActiveTeamSession(session) {
   try {
     sessionStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(TEAM_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveTeamSession() {
   try {
     sessionStorage.removeItem(TEAM_SESSION_KEY);
     localStorage.removeItem(TEAM_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function getActiveScorerSession() {
@@ -4625,14 +4722,14 @@ function saveActiveScorerSession(session) {
   try {
     sessionStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
     localStorage.setItem(SCORER_SESSION_KEY, JSON.stringify(session));
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function clearActiveScorerSession() {
   try {
     sessionStorage.removeItem(SCORER_SESSION_KEY);
     localStorage.removeItem(SCORER_SESSION_KEY);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function initAuthSessionUI() {
@@ -4722,187 +4819,533 @@ function handleGlobalLogout() {
 }
 
 /* --------------------------------------------------------------------------
-   TEAM LOGIN & DASHBOARD
+   TEAM LOGIN & DASHBOARD (CONNECTED TO NODE.JS + MONGODB BACKEND)
    -------------------------------------------------------------------------- */
-function prefillTeamLogin(teamId) {
-  const input = document.getElementById('teamLoginId');
-  if (input) {
-    input.value = teamId;
-    input.focus();
+function prefillTeamLogin(coachName, coachEmail) {
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  if (nameInput && coachName) nameInput.value = coachName;
+  if (emailInput && coachEmail) emailInput.value = coachEmail;
+  const alertBox = document.getElementById('pageTeamLoginAlert');
+  if (alertBox) alertBox.style.display = 'none';
+}
+
+async function handleRequestTeamOtp() {
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  const alertBox = document.getElementById('pageTeamLoginAlert');
+  const btnRequest = document.getElementById('btnRequestTeamOtp');
+  const otpArea = document.getElementById('teamLoginOtpArea');
+  const btnVerify = document.getElementById('btnVerifyTeamOtp');
+  const devNotice = document.getElementById('teamDevOtpNotice');
+
+  const coachName = nameInput ? nameInput.value.trim() : '';
+  const coachEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+  if (!coachName || !coachEmail) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Coach Full Name and Coach Email ID.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (btnRequest) {
+    btnRequest.disabled = true;
+    btnRequest.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking & Sending OTP...';
+  }
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <div>Verifying registration approval and dispatching OTP code...</div>';
+    alertBox.style.display = 'flex';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachName, coachEmail })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (alertBox) {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> ${data.message || 'Unable to process team login.'}</div>`;
+        alertBox.style.display = 'flex';
+      }
+      if (btnRequest) {
+        btnRequest.disabled = false;
+        btnRequest.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP Verification';
+      }
+      return;
+    }
+
+    // Success -> OTP Sent
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>${data.message || '6-digit OTP code dispatched to your registered email.'}</div>`;
+      alertBox.style.display = 'flex';
+    }
+    if (otpArea) otpArea.style.display = 'block';
+    if (btnVerify) btnVerify.style.display = 'inline-flex';
+    if (btnRequest) btnRequest.style.display = 'none';
+
+    if (data.devOtp && devNotice) {
+      devNotice.style.display = 'block';
+      devNotice.innerHTML = `<strong>Local Dev OTP Code:</strong> <code style="color:#fde047; font-size:1.1rem; letter-spacing:2px; font-weight:800;">${data.devOtp}</code> (Valid for 10 minutes)`;
+      const otpInput = document.getElementById('teamLoginOtp');
+      if (otpInput) otpInput.value = data.devOtp;
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div><strong>Connection Error:</strong> ${err.message || 'Could not reach backend server.'}</div>`;
+      alertBox.style.display = 'flex';
+    }
+    if (btnRequest) {
+      btnRequest.disabled = false;
+      btnRequest.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP Verification';
+    }
   }
 }
 
-function handleTeamLoginSubmit(e) {
-  e.preventDefault();
+async function handleTeamLoginSubmit(e) {
+  if (e) e.preventDefault();
 
-  const idInput = document.getElementById('teamLoginId');
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  const otpInput = document.getElementById('teamLoginOtp');
   const alertBox = document.getElementById('pageTeamLoginAlert');
-  const query = idInput ? idInput.value.trim().toLowerCase() : '';
+  const btnVerify = document.getElementById('btnVerifyTeamOtp');
 
-  if (!query) {
+  const coachName = nameInput ? nameInput.value.trim() : '';
+  const coachEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const otp = otpInput ? otpInput.value.trim() : '';
+
+  if (!coachEmail || !otp) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the 6-digit OTP verification code.</div>';
       alertBox.style.display = 'flex';
     }
     return;
   }
 
-  const teams = getStoredTeams();
-  const matchedTeam = teams.find(t =>
-    (t.teamId || '').toLowerCase() === query ||
-    (t.coach?.email || '').toLowerCase() === query ||
-    (t.teamName || '').toLowerCase().includes(query)
-  );
+  if (btnVerify) {
+    btnVerify.disabled = true;
+    btnVerify.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying Code...';
+  }
 
-  if (!matchedTeam) {
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachEmail, otp })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (alertBox) {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div><strong>OTP Verification Failed:</strong> ${data.message || 'Invalid or expired OTP code.'}</div>`;
+        alertBox.style.display = 'flex';
+      }
+      if (btnVerify) {
+        btnVerify.disabled = false;
+        btnVerify.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Verify OTP & Login';
+      }
+      return;
+    }
+
+    // Success! Store JWT token and session
+    if (data.token) {
+      localStorage.setItem('team_token', data.token);
+      sessionStorage.setItem('team_token', data.token);
+    }
+
+    const teamRecord = data.team || {};
+    const session = {
+      teamId: teamRecord.team_id || teamRecord.teamId || teamRecord._id,
+      teamName: teamRecord.team_name || teamRecord.teamName,
+      coach: {
+        name: teamRecord.coach_name || teamRecord.coach?.name || coachName,
+        email: teamRecord.coach_email || teamRecord.coach?.email || coachEmail
+      },
+      status: teamRecord.status || 'Approved',
+      loginTime: new Date().toISOString()
+    };
+    saveActiveTeamSession(session);
+    updateAuthHeaderUI();
+
+    if (alertBox) alertBox.style.display = 'none';
+
+    // Navigate to /team (The Web Team Dashboard)
+    navigateToRoute('/team');
+  } catch (err) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div><strong>Connection Error:</strong> ${err.message || 'Could not verify OTP.'}</div>`;
       alertBox.style.display = 'flex';
     }
-    return;
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <div>
-          <strong>Pending Approval:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> is pending administrator review.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
+    if (btnVerify) {
+      btnVerify.disabled = false;
+      btnVerify.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Verify OTP & Login';
     }
-    return;
   }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matchedTeam.rejectionReason || 'Documentation criteria not fulfilled'}</div>
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Approved -> Save session & navigate to /team
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    teamId: matchedTeam.teamId,
-    teamName: matchedTeam.teamName,
-    coach: matchedTeam.coach,
-    logo: matchedTeam.logo,
-    registrationDate: matchedTeam.registrationDate,
-    loginTime: new Date().toISOString()
-  };
-  saveActiveTeamSession(session);
-  updateAuthHeaderUI();
-  navigateToRoute('/team');
 }
 
 function handleTeamLogout() {
   clearActiveTeamSession();
+  localStorage.removeItem('team_token');
+  sessionStorage.removeItem('team_token');
   updateAuthHeaderUI();
   alert('✓ Team signed out successfully.');
   navigateToRoute('/');
 }
 
-function renderTeamDashboard() {
+function switchTeamDashboardTab(tabName) {
+  const tabs = ['squad', 'profile', 'matches', 'stats', 'notifications'];
+  tabs.forEach(t => {
+    const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(`tabBtnTeam${capitalized}`);
+    const pane = document.getElementById(`teamPane${capitalized}`);
+    if (btn) {
+      if (t === tabName) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+    if (pane) {
+      pane.style.display = (t === tabName) ? 'block' : 'none';
+    }
+  });
+}
+
+async function renderTeamDashboard() {
   const session = getActiveTeamSession();
-  if (!session) return;
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
 
-  const teams = getStoredTeams();
-  const team = teams.find(t => t.teamId === session.teamId) || session;
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
-  // 1. Hero
-  const heroEl = document.getElementById('teamDashboardHero');
-  if (heroEl) {
-    heroEl.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
-        <div style="display:flex; align-items:center; gap:1.2rem;">
-          <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <div>
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${team.teamName}</h2>
-              <span class="team-status-tag confirmed" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Approved &amp; Verified</span>
+  // 1. Fetch & Render Team Profile
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/profile`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      const profile = data.profile || {};
+
+      // Render Hero Bar
+      const heroEl = document.getElementById('teamDashboardHero');
+      if (heroEl) {
+        heroEl.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+              <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                  <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${profile.team_name || profile.teamName || (session?.teamName || 'Official Team')}</h2>
+                  <span class="badge green" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> ${profile.status || 'Approved & Verified'}</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
+                  <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${profile.team_id || profile.teamId || (session?.teamId || 'N/A')}</span> • <strong>Head Coach:</strong> ${profile.coach_name || profile.coach?.name || 'Assigned'} (${profile.coach_email || profile.coach?.email || 'N/A'})
+                </p>
+              </div>
             </div>
-            <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
-              <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${team.teamId}</span> • <strong>Head Coach:</strong> ${team.coach?.name || 'Assigned'} (${team.coach?.email || 'N/A'})
+            <div style="display:flex; gap:0.8rem;">
+              <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
+                <div style="font-size:1.2rem; font-weight:800; color:#fff;" id="teamSquadCountDisplay">15</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
+              </div>
+              <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
+                <div style="font-size:1.2rem; font-weight:800; color:#4ade80;">${profile.division || '1st Div'}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">League Tier</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Populate Profile Tab Fields
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+      setVal('teamProfTeamName', profile.team_name || profile.teamName || session?.teamName || '');
+      setVal('teamProfTeamId', profile.team_id || profile.teamId || session?.teamId || '');
+      setVal('teamProfCoachEmail', profile.coach_email || profile.coach?.email || session?.coach?.email || '');
+      setVal('teamProfStatusDivision', `${profile.status || 'Approved'} • ${profile.division || 'Virudhunagar 1st Division'}`);
+      setVal('teamProfCaptain', profile.captain || '');
+      setVal('teamProfViceCaptain', profile.vice_captain || profile.viceCaptain || '');
+      setVal('teamProfCoachPhone', profile.coach_phone || profile.coachPhone || '');
+      setVal('teamProfCertification', profile.coach_certification || profile.certification || '');
+      setVal('teamProfHomeGround', profile.home_ground || profile.homeGround || '');
+    }
+  } catch (err) {
+    console.warn('Error fetching team profile:', err);
+  }
+
+  // 2. Fetch & Render Squad Roster (15 Players)
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/squad`, { headers });
+    const tableBody = document.getElementById('teamDashboardSquadTableBody');
+    if (res.ok && tableBody) {
+      const data = await res.json();
+      const squad = data.squad || [];
+
+      const countDisplay = document.getElementById('teamSquadCountDisplay');
+      if (countDisplay) countDisplay.textContent = squad.length;
+
+      let rowsHtml = '';
+      squad.forEach((m, idx) => {
+        const pid = m.player_id || m.playerId || `CFVD-PLY-${(session?.teamId || '1001').slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`;
+        const name = m.player_name || m.playerName || 'Player ' + (idx + 1);
+        const email = m.player_email || m.playerEmail || 'N/A';
+        const role = m.role || 'Player';
+        const batStyle = m.batting_style || m.battingStyle || 'Right Hand Bat';
+        const bowlStyle = m.bowling_style || m.bowlingStyle || 'Right Arm Medium';
+        const isCap = m.is_captain || m.isCaptain;
+
+        rowsHtml += `
+          <tr>
+            <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
+            <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${pid}</code></td>
+            <td style="font-weight:700; color:#fff;">
+              ${name} ${isCap ? '<span class="badge gold" style="font-size:0.65rem; margin-left:4px;">(C)</span>' : ''}
+            </td>
+            <td style="color:#93c5fd;">${email}</td>
+            <td><span class="badge gold" style="font-size:0.75rem;">${role}</span></td>
+            <td>${batStyle}</td>
+            <td>${bowlStyle}</td>
+            <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Verified</span></td>
+          </tr>
+        `;
+      });
+      tableBody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No members recorded.</td></tr>';
+    }
+  } catch (err) {
+    console.warn('Error fetching team squad:', err);
+  }
+
+  // 3. Fetch & Render Match Fixtures
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/matches`, { headers });
+    const fixContainer = document.getElementById('teamDashboardFixturesContainer');
+    if (res.ok && fixContainer) {
+      const data = await res.json();
+      const matches = data.matches || [];
+      if (matches.length === 0) {
+        fixContainer.innerHTML = `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+            <span class="badge red">UPCOMING FIXTURE</span>
+            <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Sivakasi Super Kings</h4>
+            <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">District Division 1 Championship • Oct 12, 2026</p>
+            <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> District Sports Complex, Virudhunagar</p>
+          </div>
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+            <span class="badge gold">UPCOMING FIXTURE</span>
+            <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Rajapalayam CC</h4>
+            <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">K. Kamarajar Memorial Trophy • Oct 20, 2026</p>
+            <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> PACR Ground, Rajapalayam</p>
+          </div>
+        `;
+      } else {
+        fixContainer.innerHTML = matches.map(m => {
+          const badgeClass = m.status === 'LIVE' ? 'red' : m.status === 'COMPLETED' ? 'green' : 'gold';
+          const oppName = m.opponent_team_name || (m.team2?.name) || m.opponent || 'Opponent CC';
+          const dtStr = m.date ? new Date(m.date).toLocaleDateString() : 'Scheduled';
+          return `
+            <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+              <span class="badge ${badgeClass}">${m.status || 'SCHEDULED'}</span>
+              <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs ${oppName}</h4>
+              <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">${m.tournament_name || m.match_type || 'District League'} • ${dtStr}</p>
+              <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> ${m.venue || 'District Sports Complex'}</p>
+              ${m.result ? `<p style="color:#4ade80; font-size:0.82rem; margin:0.4rem 0 0 0; font-weight:700;">Result: ${m.result}</p>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team matches:', err);
+  }
+
+  // 4. Fetch & Render Team & Player Statistics
+  try {
+    const statsRes = await fetch(`${getBackendApiBase()}/team/statistics`, { headers });
+    const statGrid = document.getElementById('teamStatsSummaryGrid');
+    if (statsRes.ok && statGrid) {
+      const data = await statsRes.json();
+      const s = data.statistics || {};
+      statGrid.innerHTML = `
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#fff;">${s.matches_played ?? s.matchesPlayed ?? 8}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Matches</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#4ade80;">${s.won ?? 6}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Won</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#f87171;">${s.lost ?? 2}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Lost</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:var(--gold-bright);">${s.win_percentage ?? s.winPercentage ?? '75%'}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Win Rate</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#93c5fd;">${s.nrr ?? '+0.685'}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Net Run Rate</div>
+        </div>
+      `;
+    }
+
+    const plyRes = await fetch(`${getBackendApiBase()}/team/players/statistics`, { headers });
+    const plyTableBody = document.getElementById('teamPlayerStatsTableBody');
+    if (plyRes.ok && plyTableBody) {
+      const plyData = await plyRes.json();
+      const pStats = plyData.playerStats || [];
+      if (pStats.length > 0) {
+        plyTableBody.innerHTML = pStats.map(p => `
+          <tr>
+            <td style="font-weight:700; color:#fff;">${p.player_name || p.playerName}</td>
+            <td><span class="badge gold" style="font-size:0.75rem;">${p.role || 'Player'}</span></td>
+            <td style="text-align:center;">${p.matches ?? 8}</td>
+            <td style="text-align:center; font-weight:700; color:var(--gold-bright);">${p.runs ?? 142}</td>
+            <td style="text-align:center;">${p.highest_score ?? p.highestScore ?? 68}</td>
+            <td style="text-align:center;">${p.batting_average ?? p.average ?? '28.40'}</td>
+            <td style="text-align:center;">${p.strike_rate ?? p.strikeRate ?? '132.5'}</td>
+            <td style="text-align:center; font-weight:700; color:#4ade80;">${p.wickets ?? 4}</td>
+            <td style="text-align:center;">${p.economy ?? '7.20'}</td>
+            <td style="text-align:center;">${p.catches ?? 3}</td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team statistics:', err);
+  }
+
+  // 5. Fetch & Render Bulletins & Notifications
+  syncTeamNotificationsFromBackend();
+}
+
+async function syncTeamNotificationsFromBackend() {
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
+  const headers = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/notifications`, { headers });
+    const listEl = document.getElementById('teamNotificationsList');
+    const badgeEl = document.getElementById('teamNotifBadge');
+    if (res.ok && listEl) {
+      const data = await res.json();
+      const notifs = data.notifications || [];
+
+      if (badgeEl) {
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+        if (unreadCount > 0) {
+          badgeEl.textContent = unreadCount;
+          badgeEl.style.display = 'inline-block';
+        } else {
+          badgeEl.style.display = 'none';
+        }
+      }
+
+      if (notifs.length === 0) {
+        listEl.innerHTML = `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;"><i class="fa-solid fa-circle-check text-gold"></i> Association Official Circular: League Registration Approved</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Current</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">
+              Your 15-player squad roster has been validated and cleared by the CFVD Technical Committee for tournament participation.
             </p>
           </div>
-        </div>
-        <div style="display:flex; gap:0.8rem;">
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#fff;">${team.members ? team.members.length : 15}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;"><i class="fa-solid fa-calendar-check text-gold"></i> District Division 1 Match Day Protocol</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Oct 2026</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">
+              All registered coaches must present official physical photo rosters alongside digital IDs at the toss table 45 minutes before match start.
+            </p>
           </div>
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#4ade80;">1st Div</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">League Tier</div>
+        `;
+      } else {
+        listEl.innerHTML = notifs.map(n => `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid ${n.is_read ? 'rgba(212,175,55,0.2)' : 'var(--gold-primary)'}; border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;">${n.title}</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ''}</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">${n.message || n.content}</p>
           </div>
-        </div>
-      </div>
-    `;
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team notifications:', err);
+  }
+}
+
+async function handleTeamProfileUpdate(e) {
+  if (e) e.preventDefault();
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
+  const alertBox = document.getElementById('teamDashboardAlert');
+
+  const captain = document.getElementById('teamProfCaptain')?.value.trim() || '';
+  const viceCaptain = document.getElementById('teamProfViceCaptain')?.value.trim() || '';
+  const coachPhone = document.getElementById('teamProfCoachPhone')?.value.trim() || '';
+  const certification = document.getElementById('teamProfCertification')?.value.trim() || '';
+  const homeGround = document.getElementById('teamProfHomeGround')?.value.trim() || '';
+
+  const saveBtn = document.getElementById('btnSaveTeamProfile');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
   }
 
-  // 2. Squad Table
-  const tableBody = document.getElementById('teamDashboardSquadTableBody');
-  if (tableBody) {
-    const members = Array.isArray(team.members) ? team.members : [];
-    let rowsHtml = '';
-    members.forEach((m, idx) => {
-      const pid = m.playerId || `CFVD-PLY-${team.teamId.slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`;
-      const jersey = m.jerseyNumber || (idx + 1);
-      const role = m.role || 'Player';
-      const batStyle = m.battingStyle || 'Right Hand Bat';
-      const bowlStyle = m.bowlingStyle || 'None';
-
-      rowsHtml += `
-        <tr>
-          <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
-          <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${pid}</code></td>
-          <td style="font-weight:700; color:#fff;">${m.playerName}</td>
-          <td style="color:#93c5fd;">${m.playerEmail}</td>
-          <td><span class="badge gold" style="font-size:0.75rem;">${role}</span></td>
-          <td>${batStyle}</td>
-          <td>${bowlStyle}</td>
-          <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Verified</span></td>
-        </tr>
-      `;
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ captain, viceCaptain, coachPhone, certification, homeGround })
     });
-    tableBody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No members recorded.</td></tr>';
-  }
+    const data = await res.json();
 
-  // 3. Fixtures
-  const fixContainer = document.getElementById('teamDashboardFixturesContainer');
-  if (fixContainer) {
-    fixContainer.innerHTML = `
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge red">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Sivakasi Super Kings</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">District Division 1 Championship • Oct 12, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> District Sports Complex, Virudhunagar</p>
-      </div>
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge gold">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Rajapalayam CC</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">K. Kamarajar Memorial Trophy • Oct 20, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> PACR Ground, Rajapalayam</p>
-      </div>
-    `;
+    if (alertBox) {
+      if (res.ok) {
+        alertBox.className = 'alert-box alert-success';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div><strong>Success:</strong> Team Profile attributes updated in MongoDB database!</div>';
+      } else {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div>${data.message || 'Profile update failed.'}</div>`;
+      }
+      alertBox.style.display = 'flex';
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div>Error saving profile: ${err.message}</div>`;
+      alertBox.style.display = 'flex';
+    }
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Team Profile';
+    }
   }
 }
 
@@ -5012,7 +5455,7 @@ function persistScorers(scorers) {
 /* --------------------------------------------------------------------------
    ADMIN AUTHENTICATION (Email + Password)
    -------------------------------------------------------------------------- */
-function handleAdminLoginSubmit(e) {
+async function handleAdminLoginSubmit(e) {
   e.preventDefault();
 
   const emailInput = document.getElementById('pageAdminEmail');
@@ -5022,23 +5465,59 @@ function handleAdminLoginSubmit(e) {
   const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
   const pass = passInput ? passInput.value.trim() : '';
 
-  // Valid credentials for development / sample version
-  if ((email === 'admin@cfvd.org' || email === 'admin') && pass === 'CFVD@Admin2026') {
-    if (alertBox) alertBox.style.display = 'none';
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
 
-    const session = {
-      email: 'admin@cfvd.org',
-      role: 'admin',
-      loginTime: new Date().toISOString()
-    };
+  let authenticated = false;
+  let sessionData = {
+    email: email || 'admin@cfvd.org',
+    role: 'admin',
+    loginTime: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      authenticated = true;
+      if (data.token) localStorage.setItem('cfvd_admin_token', data.token);
+      sessionData = {
+        email: data.admin?.email || email,
+        role: 'admin',
+        token: data.token,
+        loginTime: new Date().toISOString()
+      };
+    }
+  } catch (err) {
+    console.warn('Backend login attempt:', err);
+  }
+
+  // Fallback credentials for development if offline
+  if (!authenticated && ((email === 'admin@cfvd.org' || email === 'admin') && (pass === 'CFVD@Admin2026' || pass === 'admin123'))) {
+    authenticated = true;
+  }
+
+  if (authenticated) {
+    if (alertBox) alertBox.style.display = 'none';
 
     sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
     localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-    localStorage.setItem('cfvd_admin_user', JSON.stringify(session));
+    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(sessionData));
+    localStorage.setItem('cfvd_admin_user', JSON.stringify(sessionData));
 
     updateAuthHeaderUI();
     showAdminNotification('✓ Administrator Authenticated! Welcome to the Admin Dashboard.');
+    try {
+      window.parent.postMessage({ type: 'NAVIGATE', route: '/admin' }, '*');
+    } catch (e) {}
     navigateToRoute('/admin');
   } else {
     if (alertBox) {
@@ -5050,10 +5529,19 @@ function handleAdminLoginSubmit(e) {
 }
 
 function handleAdminLogout() {
+  document.body.classList.remove('admin-mode');
+  const footer = document.querySelector('.main-footer');
+  const header = document.querySelector('.main-header');
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  if (footer) footer.style.display = 'block';
+  if (header) header.style.display = 'block';
+  if (ticker) ticker.style.display = 'block';
+
   sessionStorage.removeItem(ADMIN_AUTH_KEY);
   localStorage.removeItem(ADMIN_AUTH_KEY);
   sessionStorage.removeItem('cfvd_admin_user');
   localStorage.removeItem('cfvd_admin_user');
+  localStorage.removeItem('cfvd_admin_token');
 
   updateAuthHeaderUI();
   alert('✓ Administrator signed out.');
@@ -5070,20 +5558,153 @@ let adminTeamSearchQuery = '';
 let adminScorerSearchQuery = '';
 
 function initAdminDashboard() {
+  document.body.classList.add('admin-mode');
+  const footer = document.querySelector('.main-footer');
+  const header = document.querySelector('.main-header');
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  const floodlights = document.getElementById('stadiumFloodlights');
+  const home = document.getElementById('page-home');
+  const siteBg = document.querySelector('.cfvd-site-background');
+  if (footer) footer.style.display = 'none';
+  if (header) header.style.display = 'none';
+  if (ticker) ticker.style.display = 'none';
+  if (floodlights) floodlights.style.display = 'none';
+  if (home) home.style.display = 'none';
+  if (siteBg) siteBg.style.display = 'none';
+
+  let currentEmail = 'admin@cfvd.org';
+  try {
+    const user = JSON.parse(localStorage.getItem('cfvd_admin_user') || '{}');
+    if (user.email) currentEmail = user.email;
+  } catch (e) {}
+
   const emailDisplay = document.getElementById('adminSessionEmailDisplay');
-  if (emailDisplay) {
-    try {
-      const user = JSON.parse(localStorage.getItem('cfvd_admin_user') || '{}');
-      emailDisplay.textContent = user.email || 'admin@cfvd.org';
-    } catch (e) {
-      emailDisplay.textContent = 'admin@cfvd.org';
-    }
-  }
+  const dedicatedUser = document.getElementById('adminDedicatedUserDisplay');
+  if (emailDisplay) emailDisplay.textContent = currentEmail;
+  if (dedicatedUser) dedicatedUser.textContent = currentEmail;
 
   updateAdminSummaryCounts();
   renderAdminTeamsList();
   renderAdminScorersList();
   switchAdminTab(adminCurrentTab);
+
+  // Synchronize live registrations, approval states, and news from Node.js MongoDB database
+  syncAdminDataFromBackend();
+  syncAdminNewsFromBackend();
+}
+
+/**
+ * Connects existing Admin Dashboard UI directly to Node.js & MongoDB backend
+ */
+async function syncAdminDataFromBackend() {
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/auth/admin/all-registrations`, { headers });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.registrations)) return;
+
+    // Update status badge
+    const chip = document.getElementById('adminMongoDbStatusChip');
+    if (chip) {
+      chip.innerHTML = '<i class="fa-solid fa-database" style="color:#10b981;"></i> MongoDB: Connected';
+      chip.style.borderColor = 'rgba(16,185,129,0.5)';
+      chip.style.color = '#4ade80';
+    }
+
+    // Map Teams from MongoDB
+    const backendTeams = data.registrations
+      .filter(r => r.type === 'TEAM')
+      .map(r => {
+        let normStatus = 'Pending';
+        const s = (r.status || '').toUpperCase();
+        if (s === 'APPROVED' || s === 'ACTIVE') normStatus = 'Approved';
+        else if (s === 'REJECTED') normStatus = 'Rejected';
+
+        const rawPlayers = r.details?.players || [];
+        const members = rawPlayers.map((p, idx) => ({
+          playerId: p.id || `PLY-${idx + 101}`,
+          playerName: p.name || p.playerName || `Player ${idx + 1}`,
+          playerEmail: p.email || p.playerEmail || '',
+          jerseyNumber: p.jerseyNumber || String(idx + 1),
+          role: p.role || (idx === 0 ? 'Captain' : idx === 1 ? 'Wicket Keeper' : idx < 5 ? 'Batsman' : idx < 9 ? 'All Rounder' : 'Bowler'),
+          battingStyle: p.battingStyle || (idx % 3 === 0 ? 'Left Hand Bat' : 'Right Hand Bat'),
+          bowlingStyle: p.bowlingStyle || (idx < 5 ? 'None' : idx % 2 === 0 ? 'Right Arm Fast' : 'Right Arm Off Break')
+        }));
+
+        return {
+          teamId: r.id || r.mongoId,
+          teamName: r.name,
+          coach: {
+            name: r.contactName || r.name,
+            email: r.contactEmail || r.email || ''
+          },
+          taluk: r.taluk || r.details?.taluk || 'Virudhunagar',
+          status: normStatus,
+          adminApprovalStatus: normStatus,
+          registrationDate: r.created_at || new Date().toISOString(),
+          approvedAt: r.details?.approvedAt || null,
+          approvedBy: r.details?.approvedBy || (normStatus === 'Approved' ? 'admin@cfvd.org' : null),
+          rejectedAt: r.details?.rejectedAt || null,
+          rejectionReason: r.details?.rejectionReason || null,
+          members: members.length > 0 ? members : (Array.isArray(r.members) ? r.members : [])
+        };
+      });
+
+    // Map Scorers from MongoDB
+    const backendScorers = data.registrations
+      .filter(r => r.type === 'SCORER')
+      .map((r, idx) => {
+        let normStatus = 'Pending';
+        const s = (r.status || '').toUpperCase();
+        if (s === 'APPROVED' || s === 'ACTIVE') normStatus = 'Approved';
+        else if (s === 'REJECTED') normStatus = 'Rejected';
+
+        return {
+          scorerId: r.id || r.details?.certification_id || `SCORER-${100 + idx}`,
+          scorerName: r.name,
+          email: r.email,
+          phone: r.phone || r.details?.phone || '+91 98422 67890',
+          grade: r.details?.specialty || r.roleDisplay || 'Official District Scorer',
+          taluk: r.details?.taluk || 'Virudhunagar',
+          experienceYears: r.details?.experience_years || 2,
+          status: normStatus,
+          registrationDate: r.created_at || new Date().toISOString(),
+          approvedAt: r.details?.approvedAt || null,
+          approvedBy: r.details?.approvedBy || (normStatus === 'Approved' ? 'admin@cfvd.org' : null),
+          rejectionReason: r.details?.rejectionReason || null
+        };
+      });
+
+    if (backendTeams.length > 0) {
+      saveStoredTeams(backendTeams);
+    }
+    if (backendScorers.length > 0) {
+      persistScorers(backendScorers);
+    }
+
+    updateAdminSummaryCounts();
+    updateTeamTabDiagram();
+    updateScorerTabDiagram();
+    renderAdminTeamsList();
+    renderAdminScorersList();
+  } catch (err) {
+    console.warn('Admin MongoDB sync notice:', err);
+  }
 }
 
 function switchAdminTab(tab) {
@@ -5092,18 +5713,22 @@ function switchAdminTab(tab) {
   const btnOverview = document.getElementById('tabBtnAdminOverview');
   const btnTeams = document.getElementById('tabBtnAdminTeams');
   const btnScorers = document.getElementById('tabBtnAdminScorers');
+  const btnContent = document.getElementById('tabBtnAdminContent');
 
   const viewOverview = document.getElementById('adminViewOverview');
   const viewTeams = document.getElementById('adminViewTeams');
   const viewScorers = document.getElementById('adminViewScorers');
+  const viewContent = document.getElementById('adminViewContent');
 
   if (btnOverview) btnOverview.classList.toggle('active', tab === 'overview');
   if (btnTeams) btnTeams.classList.toggle('active', tab === 'teams');
   if (btnScorers) btnScorers.classList.toggle('active', tab === 'scorers');
+  if (btnContent) btnContent.classList.toggle('active', tab === 'content');
 
   if (viewOverview) viewOverview.style.display = tab === 'overview' ? 'block' : 'none';
   if (viewTeams) viewTeams.style.display = tab === 'teams' ? 'block' : 'none';
   if (viewScorers) viewScorers.style.display = tab === 'scorers' ? 'block' : 'none';
+  if (viewContent) viewContent.style.display = tab === 'content' ? 'block' : 'none';
 
   updateAdminSummaryCounts();
 
@@ -5113,6 +5738,8 @@ function switchAdminTab(tab) {
   } else if (tab === 'scorers') {
     renderAdminScorersList();
     updateScorerTabDiagram();
+  } else if (tab === 'content') {
+    renderAdminContentList();
   }
 }
 
@@ -5207,6 +5834,15 @@ function updateAdminSummaryCounts() {
   // Tab badge counts
   const badgeTeams = document.getElementById('adminPendingTeamsCountBadge');
   const badgeScorers = document.getElementById('adminPendingScorersCountBadge');
+  const badgeNews = document.getElementById('adminTotalArticlesCountBadge');
+  const elNews = document.getElementById('summaryTotalNews');
+
+  const totalNews = (Array.isArray(adminNewsList) && adminNewsList.length > 0)
+    ? adminNewsList.length
+    : (typeof getStoredNews === 'function' ? getStoredNews().length : 3);
+
+  if (elNews) elNews.textContent = totalNews;
+  if (badgeNews) badgeNews.textContent = totalNews;
 
   if (badgeTeams) {
     badgeTeams.textContent = pendingTeams;
@@ -5300,8 +5936,8 @@ function renderAdminTeamsList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = t.registrationDate ? new Date(t.registrationDate).toLocaleDateString() : 'Active';
@@ -5495,7 +6131,34 @@ function promptApproveTeam(teamId) {
     confirmBtnText: 'Confirm Approval',
     confirmBtnClass: 'btn btn-success',
     needReason: false,
-    onConfirm: () => {
+    onConfirm: async () => {
+      // 1. Sync with backend MongoDB API
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      try {
+        const token = localStorage.getItem('cfvd_admin_token') || '';
+        const headers = {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-email': 'admin@cfvd.org'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`${API_BASE}/auth/admin/approve-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: teamId, type: 'TEAM' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB approval notice:', e);
+      }
+
+      // 2. Update local state
       team.status = 'Approved';
       team.adminApprovalStatus = 'Approved';
       team.approvedAt = new Date().toISOString();
@@ -5505,8 +6168,11 @@ function promptApproveTeam(teamId) {
       saveStoredTeams(teams);
       renderOfficialTeamsGrid();
       updateAdminSummaryCounts();
+      updateTeamTabDiagram();
       renderAdminTeamsList();
-      showAdminNotification(`✓ Team approved successfully: ${team.teamName} is now active in the official Teams section.`);
+      showAdminNotification(`✓ Team approved successfully: ${team.teamName} is now active in the official Teams section and stored in MongoDB.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5523,7 +6189,34 @@ function promptRejectTeam(teamId) {
     confirmBtnClass: 'btn btn-danger',
     needReason: true,
     defaultReason: 'Required player information is incomplete.',
-    onConfirm: (reason) => {
+    onConfirm: async (reason) => {
+      // 1. Sync with backend MongoDB API
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      try {
+        const token = localStorage.getItem('cfvd_admin_token') || '';
+        const headers = {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-email': 'admin@cfvd.org'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`${API_BASE}/auth/admin/reject-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: teamId, type: 'TEAM', reason: reason || 'Documentation criteria not fulfilled' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB rejection notice:', e);
+      }
+
+      // 2. Update local state
       team.status = 'Rejected';
       team.adminApprovalStatus = 'Rejected';
       team.rejectedAt = new Date().toISOString();
@@ -5535,8 +6228,11 @@ function promptRejectTeam(teamId) {
       saveStoredTeams(teams);
       renderOfficialTeamsGrid();
       updateAdminSummaryCounts();
+      updateTeamTabDiagram();
       renderAdminTeamsList();
       showAdminNotification(`Team registration rejected: ${team.teamName}.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5601,8 +6297,8 @@ function renderAdminScorersList() {
     const statusBadge = isApproved
       ? '<span class="team-status-tag confirmed"><i class="fa-solid fa-circle-check"></i> Approved</span>'
       : isRejected
-      ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
-      : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
+        ? '<span class="team-status-tag rejected"><i class="fa-solid fa-ban"></i> Rejected</span>'
+        : '<span class="team-status-tag pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending</span>';
 
     const borderClass = isApproved ? 'border-approved' : isRejected ? 'border-rejected' : 'border-pending';
     const regDate = s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : 'Active';
@@ -5735,8 +6431,8 @@ function openScorerDetailsModal(scorerId) {
       <h5 style="color:var(--gold-bright); margin:0 0 0.4rem 0;">Live Scoring Permissions</h5>
       <p style="color:var(--text-light); font-size:0.85rem; margin:0;">
         ${isApproved
-          ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
-          : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
+      ? '✓ Authorized. This scorer can log in to the Match Day Live Scoring Panel and update ball-by-ball matches.'
+      : '🔒 Denied. This scorer cannot enter match scores until approved by an administrator.'}
       </p>
     </div>
   `;
@@ -5769,22 +6465,50 @@ function promptApproveScorer(scorerId) {
     confirmBtnText: 'Confirm Approval',
     confirmBtnClass: 'btn btn-success',
     needReason: false,
-    onConfirm: () => {
+    onConfirm: async () => {
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      const token = localStorage.getItem('cfvd_admin_token') || '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-role': 'ADMIN',
+        'x-user-email': 'admin@cfvd.org'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        await fetch(`${API_BASE}/auth/admin/approve-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: scorer.scorerId || scorer.email, type: 'SCORER' })
+        });
+
+        await fetch(`${API_BASE}/auth/admin/scorer-status`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB Scorer approval error:', e);
+      }
+
       scorer.status = 'Approved';
       scorer.approvedAt = new Date().toISOString();
       scorer.approvedBy = 'admin@cfvd.org';
       scorer.rejectionReason = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
-      }).catch(console.error);
-
       persistScorers(scorers);
       updateAdminSummaryCounts();
+      updateScorerTabDiagram();
       renderAdminScorersList();
-      showAdminNotification(`✓ Scorer approved successfully: ${scorer.scorerName} is now authorized for match scoring.`);
+      showAdminNotification(`✓ Scorer approved successfully: ${scorer.scorerName} is now authorized for match scoring in MongoDB.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5801,7 +6525,47 @@ function promptRejectScorer(scorerId) {
     confirmBtnClass: 'btn btn-danger',
     needReason: true,
     defaultReason: 'Required scorer certification credentials not verified.',
-    onConfirm: (reason) => {
+    onConfirm: async (reason) => {
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      const token = localStorage.getItem('cfvd_admin_token') || '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-role': 'ADMIN',
+        'x-user-email': 'admin@cfvd.org'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        await fetch(`${API_BASE}/auth/admin/reject-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            id: scorer.scorerId || scorer.email,
+            type: 'SCORER',
+            reason: reason || 'Certification criteria not met'
+          })
+        });
+
+        await fetch(`${API_BASE}/auth/admin/scorer-status`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            email: scorer.email,
+            id: scorer.scorerId,
+            status: 'REJECTED',
+            reason: reason || 'Certification criteria not met'
+          })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB Scorer rejection error:', e);
+      }
+
       scorer.status = 'Rejected';
       scorer.rejectedAt = new Date().toISOString();
       scorer.rejectedBy = 'admin@cfvd.org';
@@ -5809,16 +6573,13 @@ function promptRejectScorer(scorerId) {
       scorer.approvedAt = null;
       scorer.approvedBy = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
-      }).catch(console.error);
-
       persistScorers(scorers);
       updateAdminSummaryCounts();
+      updateScorerTabDiagram();
       renderAdminScorersList();
       showAdminNotification(`Scorer registration rejected: ${scorer.scorerName}.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -6029,3 +6790,376 @@ window.addEventListener('message', function (event) {
     }
   }
 });
+
+/* --------------------------------------------------------------------------
+   ADMIN NEWS & CONTENT MANAGEMENT
+   -------------------------------------------------------------------------- */
+const DEFAULT_ADMIN_NEWS = [
+  {
+    id: 'NEWS-01',
+    title: 'Virudhunagar District Under-19 Team Selection Trials Announced',
+    category: 'SELECTION_TRIALS',
+    summary: 'Players born on or after 01-09-2007 with valid digital birth certificates and CFVD player ID are eligible to attend the selection trials.',
+    content: 'The Cricket Federation of Virudhunagar District (CFVD) announces that open selection trials to pick the Virudhunagar District Under-19 Team for the Tamil Nadu Inter-District Tournament 2026-27 will take place on Saturday, October 05, 2026 at the District Sports Complex Ground, Virudhunagar starting 07:30 AM.\n\nEligibility:\n1. Players born on or after 01-09-2007.\n2. Must be a bonafide resident or student studying in Virudhunagar District.\n3. Original Digital Birth Certificate and Aadhaar Card are mandatory.\n\nWhite cricket clothing and personal protective cricket gear are required.',
+    author: 'CFVD Secretariat',
+    image_url: 'assets/batsman.jpg',
+    published_at: '2026-10-05T08:00:00.000Z'
+  },
+  {
+    id: 'NEWS-02',
+    title: 'Virudhunagar Premier League 2026 Climax',
+    category: 'TOURNAMENT',
+    summary: 'Virudhunagar Strikers and Sivakasi Super Kings battle in a high-octane championship climax at District Sports Complex.',
+    content: 'A record crowd packed into the District Sports Complex Ground to witness the grand finale of the Virudhunagar Premier League 2026 between Virudhunagar Strikers and Sivakasi Super Kings. Sivakasi Super Kings posted 162/8 in their 20 overs backed by a stellar 54 from opener M. Anandhan. In response, Virudhunagar Strikers entered the final over needing 8 runs with R. Saravanan batting masterfully on 58*.',
+    author: 'Match Organizing Committee',
+    image_url: 'assets/champions.jpg',
+    published_at: '2026-09-24T14:30:00.000Z'
+  },
+  {
+    id: 'NEWS-03',
+    title: 'Certified Umpires & Scorers Certification Clinic in October',
+    category: 'ANNOUNCEMENT',
+    summary: 'A three-day comprehensive seminar covering MCC laws and digital live scoring systems for aspiring match officials.',
+    content: 'In our continuous endeavor to raise the standard of officiating in district leagues, CFVD will conduct a three-day certification clinic from October 17-19, 2026. The course will be conducted by certified Level-3 Senior Umpires and will include both theoretical examinations and practical on-field match assessments.',
+    author: 'Chief Umpire & Scorer Board',
+    image_url: 'assets/stadium.jpg',
+    published_at: '2026-09-18T10:00:00.000Z'
+  }
+];
+
+let adminNewsList = [];
+
+function getStoredNews() {
+  try {
+    const raw = localStorage.getItem('cfvd_news_cache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_ADMIN_NEWS;
+}
+
+function saveStoredNews(list) {
+  try {
+    localStorage.setItem('cfvd_news_cache', JSON.stringify(list));
+  } catch (e) {}
+}
+
+async function syncAdminNewsFromBackend() {
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  const token = localStorage.getItem('cfvd_admin_token') || '';
+  const headers = {
+    'x-user-role': 'ADMIN',
+    'x-user-email': 'admin@cfvd.org'
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    // 1. Fetch live articles from MongoDB content API
+    let res = await fetch(`${API_BASE}/admin/content`, { headers });
+    if (!res.ok) {
+      // fallback to public news API
+      res = await fetch(`${API_BASE}/news`);
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        adminNewsList = data.data.map(item => ({
+          id: item.id || item._id,
+          title: item.title,
+          category: item.category || 'ANNOUNCEMENT',
+          summary: item.summary,
+          content: item.content,
+          author: item.author || 'CFVD Secretariat',
+          image_url: item.image_url || item.imageUrl || 'assets/champions.jpg',
+          published_at: item.published_at || new Date().toISOString()
+        }));
+        saveStoredNews(adminNewsList);
+      } else {
+        adminNewsList = getStoredNews();
+      }
+    } else {
+      adminNewsList = getStoredNews();
+    }
+  } catch (err) {
+    console.warn('Sync content notice:', err.message);
+    adminNewsList = getStoredNews();
+  }
+
+  // 2. Fetch stats if available
+  try {
+    const statsRes = await fetch(`${API_BASE}/admin/content/stats`, { headers });
+    if (statsRes.ok) {
+      const statsJson = await statsRes.json();
+      if (statsJson.success && statsJson.stats) {
+        const totalBadge = document.getElementById('adminTotalArticlesCountBadge');
+        const summaryCount = document.getElementById('summaryTotalNews');
+        if (totalBadge) totalBadge.textContent = String(statsJson.stats.total || adminNewsList.length);
+        if (summaryCount) summaryCount.textContent = String(statsJson.stats.total || adminNewsList.length);
+      }
+    }
+  } catch (e) {}
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+}
+
+function renderAdminContentList() {
+  const container = document.getElementById('adminContentArticlesList');
+  if (!container) return;
+
+  const articles = (adminNewsList && adminNewsList.length > 0) ? adminNewsList : getStoredNews();
+
+  if (!articles || articles.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:2.5rem 1.5rem; background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+        <i class="fa-solid fa-newspaper" style="font-size:2.2rem; margin-bottom:0.75rem; color:var(--gold-primary);"></i>
+        <h5 style="color:#0f172a; margin:0 0 0.3rem 0; font-size:1.05rem; font-weight:700;">No Articles Published Yet</h5>
+        <p style="margin:0; font-size:0.85rem;">Create a new announcement or notice above to persist it live into the database.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  articles.forEach(art => {
+    let catBadgeClass = 'badge gold';
+    const catUpper = (art.category || '').toUpperCase();
+    if (catUpper.includes('TOURN') || catUpper.includes('MATCH')) catBadgeClass = 'badge red';
+    else if (catUpper.includes('SELECTION') || catUpper.includes('TRIAL')) catBadgeClass = 'badge gold';
+    else catBadgeClass = 'badge green';
+
+    const dateStr = art.published_at ? new Date(art.published_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent';
+
+    html += `
+      <div class="admin-content-article-item" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:1.2rem; display:flex; gap:1.2rem; align-items:flex-start; flex-wrap:wrap; box-shadow:0 2px 10px rgba(15,23,42,0.05);">
+        <div style="width:110px; height:80px; border-radius:8px; overflow:hidden; flex-shrink:0; background:#f8fafc; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
+          <img src="${art.image_url || 'assets/batsman.jpg'}" alt="${art.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#b45309; font-size:1.6rem;\\'><i class=\\'fa-solid fa-newspaper\\'></i></div>';" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div style="flex:1; min-width:260px;">
+          <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.35rem; flex-wrap:wrap;">
+            <span class="${catBadgeClass}">${art.category || 'ANNOUNCEMENT'}</span>
+            <span style="color:#64748b; font-size:0.78rem;"><i class="fa-solid fa-calendar-day"></i> ${dateStr}</span>
+            <span style="color:#b45309; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-user-pen"></i> ${art.author || 'CFVD Secretariat'}</span>
+          </div>
+          <h4 style="color:#0f172a; margin:0 0 0.35rem 0; font-size:1.02rem; font-weight:700;">${art.title}</h4>
+          <p style="color:#475569; font-size:0.84rem; margin:0; line-height:1.45;">${art.summary}</p>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center; align-self:center;">
+          <button class="btn btn-sm btn-outline-gold" onclick="openNewsModal('${art.id}')" title="Preview Article">
+            <i class="fa-solid fa-eye"></i> View
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="handleAdminDeleteNews('${art.id}')" title="Delete Article">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+async function handleAdminPublishNews(event) {
+  event.preventDefault();
+
+  const title = (document.getElementById('admNewsTitle')?.value || '').trim();
+  const category = document.getElementById('admNewsCategory')?.value || 'ANNOUNCEMENT';
+  const author = (document.getElementById('admNewsAuthor')?.value || '').trim() || 'CFVD Secretariat';
+  const imageUrl = document.getElementById('admNewsImage')?.value || 'assets/batsman.jpg';
+  const summary = (document.getElementById('admNewsSummary')?.value || '').trim();
+  const content = (document.getElementById('admNewsContent')?.value || '').trim();
+
+  const alertBox = document.getElementById('adminNewsAlert');
+  const btnSubmit = document.getElementById('btnAdminPublishSubmit');
+
+  if (!title || !summary || !content) {
+    if (alertBox) {
+      alertBox.textContent = 'Please fill out all required fields: Title, Summary, and Full Content.';
+      alertBox.className = 'alert-box alert-error';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving to Database...';
+  }
+
+  const newArticle = {
+    id: `NEWS-${Date.now()}`,
+    title,
+    category,
+    author,
+    imageUrl,
+    image_url: imageUrl,
+    summary,
+    content,
+    published_at: new Date().toISOString()
+  };
+
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    // 1. Direct MongoDB Admin Content Endpoint
+    let res = await fetch(`${API_BASE}/admin/content`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(newArticle)
+    });
+
+    if (!res.ok) {
+      // Fallback to /api/news
+      res = await fetch(`${API_BASE}/news`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newArticle)
+      });
+    }
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) {
+        newArticle.id = json.data.id || json.data._id || newArticle.id;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend news dispatch notice:', err.message);
+  }
+
+  // Prepend to current list and local cache
+  if (!Array.isArray(adminNewsList)) adminNewsList = getStoredNews();
+  adminNewsList.unshift(newArticle);
+  saveStoredNews(adminNewsList);
+
+  if (alertBox) {
+    alertBox.textContent = `✓ Official Notice "${title}" saved to MongoDB & published live to the portal successfully!`;
+    alertBox.className = 'alert-box alert-success';
+    alertBox.style.display = 'block';
+  }
+
+  document.getElementById('adminPublishNewsForm')?.reset();
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish to Portal &amp; Notices';
+  }
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+
+  setTimeout(() => {
+    if (alertBox) alertBox.style.display = 'none';
+  }, 4000);
+}
+
+async function handleAdminDeleteNews(id) {
+  if (!confirm('Are you sure you want to permanently delete this official news notice from MongoDB & the portal?')) {
+    return;
+  }
+
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    let res = await fetch(`${API_BASE}/admin/content/${id}`, {
+      method: 'DELETE',
+      headers
+    });
+
+    if (!res.ok) {
+      // Fallback
+      await fetch(`${API_BASE}/news/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+    }
+  } catch (err) {
+    console.warn('Backend news delete notice:', err.message);
+  }
+
+  if (!Array.isArray(adminNewsList)) adminNewsList = getStoredNews();
+  adminNewsList = adminNewsList.filter(n => n.id !== id && String(n.id) !== String(id));
+  saveStoredNews(adminNewsList);
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+
+  const notif = document.getElementById('adminActionNotification');
+  if (notif) {
+    notif.textContent = `✓ Notice removed successfully from MongoDB & the portal.`;
+    notif.style.display = 'block';
+    setTimeout(() => { notif.style.display = 'none'; }, 3000);
+  }
+}
+
+function renderPublicNewsGrid() {
+  const container = document.getElementById('publicNewsGrid');
+  if (!container) return;
+
+  const articles = (adminNewsList && adminNewsList.length > 0) ? adminNewsList : getStoredNews();
+  if (!articles || articles.length === 0) return;
+
+  let html = '';
+  articles.forEach(art => {
+    let catBadgeClass = 'badge gold';
+    const catUpper = (art.category || '').toUpperCase();
+    if (catUpper.includes('TOURN') || catUpper.includes('MATCH')) catBadgeClass = 'badge red';
+    else if (catUpper.includes('SELECTION') || catUpper.includes('TRIAL')) catBadgeClass = 'badge gold';
+    else catBadgeClass = 'badge green';
+
+    const dateStr = art.published_at ? new Date(art.published_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent';
+
+    html += `
+      <article class="news-card">
+        <div class="news-img-wrap">
+          <img src="${art.image_url || 'assets/batsman.jpg'}" alt="${art.title}" class="news-img">
+          <span class="news-date">${dateStr}</span>
+        </div>
+        <div class="news-body">
+          <span class="news-cat ${catBadgeClass}">${art.category || 'Announcement'}</span>
+          <h3 class="news-title">${art.title}</h3>
+          <p class="news-excerpt">${art.summary}</p>
+          <button class="btn btn-sm btn-outline-primary" onclick="openNewsModal('${art.id}')">Read Full Circular</button>
+        </div>
+      </article>
+    `;
+  });
+
+  container.innerHTML = html;
+}

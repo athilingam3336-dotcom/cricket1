@@ -17,7 +17,7 @@ async function sendOtpNotification({ toEmail, toPhone, recipientRole, otpCode, r
   // Documented hook point for external providers:
   if (process.env.SMTP_HOST) {
     // Example SMTP integration:
-    // await transporter.sendMail({ from: process.env.SMTP_FROM, to: toEmail, subject: 'Admin Security OTP', text: ... });
+     await transporter.sendMail({ from: process.env.SMTP_FROM, to: toEmail, subject: 'Admin Security OTP', text: "hi" });
   }
 
   return {

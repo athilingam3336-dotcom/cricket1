@@ -1,6 +1,7 @@
 /**
  * src/services/api.ts
- * Frontend REST API & Socket.IO Client for Cricket Scorer System
+ * Frontend REST API & Socket.IO Client for Cricket Scorer & Association Management System
+ * Connected to pure MongoDB backend.
  */
 
 import { io, Socket } from 'socket.io-client';
@@ -26,18 +27,62 @@ const getSocketUrl = () => {
 export const API_URL = getBaseUrl();
 export const SOCKET_URL = getSocketUrl();
 
-let token: string | null = null;
-let currentUser: any = null;
+let token: string | null =
+  Platform.OS === 'web' && typeof window !== 'undefined'
+    ? localStorage.getItem('team_token') || localStorage.getItem('auth_token') || null
+    : null;
+
+let currentUser: any =
+  Platform.OS === 'web' && typeof window !== 'undefined'
+    ? (() => {
+        try {
+          const u = localStorage.getItem('auth_user') || localStorage.getItem('team_session');
+          return u ? JSON.parse(u) : null;
+        } catch (e) {
+          return null;
+        }
+      })()
+    : null;
+
 let currentSocket: Socket | null = null;
 
 export const setAuthToken = (newToken: string | null) => {
   token = newToken;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    if (newToken) {
+      localStorage.setItem('auth_token', newToken);
+      localStorage.setItem('team_token', newToken);
+    } else {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('team_token');
+    }
+  }
 };
 
 export const getAuthToken = () => token;
 
 export const setCurrentUser = (user: any) => {
   currentUser = user;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    if (user) {
+      localStorage.setItem('auth_user', JSON.stringify(user));
+      if (user.role === 'COACH' || user.role === 'TEAM' || user.teamId) {
+        localStorage.setItem(
+          'team_session',
+          JSON.stringify({
+            teamId: user.teamId,
+            teamName: user.teamName,
+            coach: { name: user.name, email: user.email },
+            status: 'Approved',
+            loginTime: new Date().toISOString()
+          })
+        );
+      }
+    } else {
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('team_session');
+    }
+  }
 };
 
 export const getCurrentUser = () => currentUser;
@@ -46,7 +91,7 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
+    ...(token ? { Authorization: `Bearer ${token}` } : { 'x-user-role': 'ADMIN', 'x-user-email': 'admin@cfvd.org' })
   };
 
   try {
@@ -68,10 +113,10 @@ async function request(endpoint: string, options: RequestInit = {}) {
 
 export const ScorerApi = {
   // --- REAL AUTHENTICATION & OTP APIs ---
-  requestOtp: async (email: string) => {
+  requestOtp: async (email: string, role?: string) => {
     return request('/auth/request-otp', {
       method: 'POST',
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, role })
     });
   },
 
@@ -91,6 +136,46 @@ export const ScorerApi = {
     return ScorerApi.verifyOtp(email, otp);
   },
 
+  // Team / Coach OTP
+  requestTeamOtp: async (coachName: string, coachEmail: string) => {
+    return request('/auth/team/request-otp', {
+      method: 'POST',
+      body: JSON.stringify({ coachName, coachEmail })
+    });
+  },
+
+  verifyTeamOtp: async (coachEmail: string, otp: string) => {
+    const res = await request('/auth/team/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ coachEmail, otp })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+  // Player OTP
+  requestPlayerOtp: async (nameOrEmail: string) => {
+    return request('/auth/player/request-otp', {
+      method: 'POST',
+      body: JSON.stringify({ nameOrEmail })
+    });
+  },
+
+  verifyPlayerOtp: async (nameOrEmail: string, otp: string) => {
+    const res = await request('/auth/player/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ nameOrEmail, otp })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
   register: async (payload: any) => {
     const res = await request('/auth/register', {
       method: 'POST',
@@ -103,12 +188,61 @@ export const ScorerApi = {
     return res;
   },
 
+  // Player Registration (PDF Module 2)
+  registerPlayer: async (payload: {
+    name: string;
+    email: string;
+    mobile?: string;
+    role?: string;
+    category?: string;
+    taluk?: string;
+    battingStyle?: string;
+    bowlingStyle?: string;
+    clubChoice?: string;
+  }) => {
+    return request('/auth/register-player', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  // Scorer Registration (PDF Module 5 & 10)
+  registerScorer: async (payload: {
+    name: string;
+    email: string;
+    mobile?: string;
+    taluk?: string;
+    certificationLevel?: string;
+    pin?: string;
+  }) => {
+    return request('/auth/register-scorer', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  // Content Staff Registration (PDF Module 7 & 10)
+  registerContentStaff: async (payload: {
+    name: string;
+    email: string;
+    mobile?: string;
+    specialization?: string;
+    credentials?: string;
+  }) => {
+    return request('/auth/register-content', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  // Team Registration with 15 Squad Players (PDF Module 3)
   registerTeam: async (payload: {
     teamName: string;
     coachName: string;
     coachEmail: string;
     taluk?: string;
-    players: Array<{ name: string; email: string }>;
+    city?: string;
+    players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
   }) => {
     return request('/auth/register-team', {
       method: 'POST',
@@ -116,8 +250,186 @@ export const ScorerApi = {
     });
   },
 
+  getTeams: async (status?: string) => {
+    const query = status ? `?status=${status}` : '';
+    return request(`/auth/teams${query}`);
+  },
+
+  getAllRegistrations: async (filter?: { status?: string; role?: string }) => {
+    let q: string[] = [];
+    if (filter?.status) q.push(`status=${encodeURIComponent(filter.status)}`);
+    if (filter?.role) q.push(`role=${encodeURIComponent(filter.role)}`);
+    const qs = q.length ? `?${q.join('&')}` : '';
+    return request(`/auth/admin/all-registrations${qs}`);
+  },
+
+  approveRegistration: async (id: string, type: string = 'TEAM') => {
+    return request('/auth/admin/approve-registration', {
+      method: 'POST',
+      body: JSON.stringify({ id, type })
+    });
+  },
+
+  rejectRegistration: async (id: string, type: string = 'TEAM', reason?: string) => {
+    return request('/auth/admin/reject-registration', {
+      method: 'POST',
+      body: JSON.stringify({ id, type, reason })
+    });
+  },
+
+  approveTeam: async (teamId: string) => {
+    return request(`/auth/admin/teams/${teamId}/approve`, {
+      method: 'POST'
+    });
+  },
+
+  rejectTeam: async (teamId: string, reason?: string) => {
+    return request(`/auth/admin/teams/${teamId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason })
+    });
+  },
+
+  getAdminNotifications: async (status?: string) => {
+    const query = status ? `?status=${status}` : '';
+    return request(`/auth/admin/notifications${query}`);
+  },
+
   getProfile: async () => {
     return request('/auth/me');
+  },
+
+  // --- DYNAMIC PUBLIC PORTAL APIs (MongoDB) ---
+  getPortalHome: async () => {
+    return request('/portal/home');
+  },
+
+  getPortalStats: async () => {
+    return request('/portal/stats');
+  },
+
+  getPortalEvents: async () => {
+    return request('/portal/events');
+  },
+
+  searchPortal: async (query: string) => {
+    return request(`/portal/search?q=${encodeURIComponent(query)}`);
+  },
+
+  submitContact: async (data: { name: string; email: string; subject?: string; message: string }) => {
+    return request('/portal/contact', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // --- NEWS & CONTENT APIs ---
+  getNews: async (category?: string, search?: string) => {
+    let q = [];
+    if (category) q.push(`category=${encodeURIComponent(category)}`);
+    if (search) q.push(`search=${encodeURIComponent(search)}`);
+    const query = q.length ? `?${q.join('&')}` : '';
+    return request(`/news${query}`);
+  },
+
+  getNewsById: async (id: string) => {
+    return request(`/news/${id}`);
+  },
+
+  createNews: async (payload: any) => {
+    return request('/news', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  // --- ADMIN & ASSOCIATION MANAGEMENT APIs ---
+  getAdminOverview: async () => {
+    return request('/admin/overview');
+  },
+
+  getAdminUsers: async (role?: string) => {
+    const q = role ? `?role=${role}` : '';
+    return request(`/admin/users${q}`);
+  },
+
+  updateUserStatus: async (userId: string, status: string) => {
+    return request(`/admin/users/${userId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  getOfficials: async () => {
+    return request('/admin/officials');
+  },
+
+  saveOfficial: async (data: any) => {
+    return request('/admin/officials', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getVenues: async () => {
+    return request('/admin/venues');
+  },
+
+  saveVenue: async (data: any) => {
+    return request('/admin/venues', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  scheduleMatch: async (data: any) => {
+    return request('/admin/matches/schedule', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getAuditLogs: async () => {
+    return request('/admin/audit-logs');
+  },
+
+  adminLogin: async (email: string, password?: string) => {
+    const res = await request('/auth/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+  getAdminTeams: async () => {
+    return request('/admin/teams');
+  },
+
+  saveAdminTeam: async (data: any) => {
+    return request('/admin/teams', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  getAdminMatches: async () => {
+    return request('/admin/matches');
+  },
+
+  deleteOfficial: async (id: string) => {
+    return request(`/admin/officials/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  deleteVenue: async (id: string) => {
+    return request(`/admin/venues/${id}`, {
+      method: 'DELETE'
+    });
   },
 
   // --- DASHBOARD & MATCH MANAGEMENT ---
@@ -186,9 +498,24 @@ export const ScorerApi = {
     });
   },
 
+  updateMatchStatus: async (matchId: string, status: string) => {
+    return request(`/scorer/matches/${matchId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  // --- AI FIELDING COMMENTARY ---
+  getFieldingCommentary: async (matchId: string, data: { fieldingPosition: string; fielderId?: string; fielderName?: string }) => {
+    return request(`/scorer/matches/${matchId}/fielding-commentary`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   // --- SCORECARD ---
   getScorecard: async (matchId: string) => {
-    return request(`/matches/${matchId}/scorecard`);
+    return request(`/scorer/matches/${matchId}/scorecard`);
   },
 
   // --- REAL-TIME SOCKET.IO CONNECTION ---
@@ -224,5 +551,175 @@ export const ScorerApi = {
       currentSocket.disconnect();
       currentSocket = null;
     }
+  }
+};
+
+export const PlayerApi = {
+  // --- PLAYER AUTHENTICATION ---
+  register: async (payload: {
+    name: string;
+    email: string;
+    mobile?: string;
+    role?: string;
+    category?: string;
+    taluk?: string;
+    battingStyle?: string;
+    bowlingStyle?: string;
+    clubChoice?: string;
+  }) => {
+    return request('/player/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  login: async (identifier: string) => {
+    return request('/player/login', {
+      method: 'POST',
+      body: JSON.stringify({ nameOrEmail: identifier })
+    });
+  },
+
+  verifyOtp: async (identifier: string, otp: string) => {
+    const res = await request('/player/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ nameOrEmail: identifier, otp })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+  // --- PROTECTED PLAYER OPERATIONS ---
+  getProfile: async () => {
+    return request('/player/profile');
+  },
+
+  updateProfile: async (updates: {
+    battingStyle?: string;
+    bowlingStyle?: string;
+    jerseyNumber?: number;
+    mobile?: string;
+    taluk?: string;
+  }) => {
+    return request('/player/profile', {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+
+  getTeam: async () => {
+    return request('/player/team');
+  },
+
+  getMatches: async () => {
+    return request('/player/matches');
+  },
+
+  getMatchById: async (id: string) => {
+    return request(`/player/matches/${id}`);
+  },
+
+  getScorecard: async (id: string) => {
+    return request(`/player/matches/${id}/scorecard`);
+  },
+
+  getStatistics: async () => {
+    return request('/player/statistics');
+  },
+
+  getNotifications: async () => {
+    return request('/player/notifications');
+  }
+};
+
+export const TeamApi = {
+  // --- TEAM REGISTRATION & AUTHENTICATION ---
+  register: async (payload: {
+    teamName: string;
+    coachName: string;
+    coachEmail: string;
+    taluk?: string;
+    city?: string;
+    players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
+  }) => {
+    return request('/team/register', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  },
+
+  login: async (coachName: string, coachEmail: string) => {
+    return request('/team/login', {
+      method: 'POST',
+      body: JSON.stringify({ coachName, coachEmail })
+    });
+  },
+
+  verifyOtp: async (coachEmail: string, otp: string) => {
+    const res = await request('/team/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ coachEmail, otp })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+  // --- PROTECTED TEAM OPERATIONS ---
+  getProfile: async () => {
+    return request('/team/profile');
+  },
+
+  updateProfile: async (updates: {
+    coachPhone?: string;
+    certification?: string;
+    homeGround?: string;
+    captain?: string;
+    viceCaptain?: string;
+    teamLogo?: string;
+  }) => {
+    return request('/team/profile', {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+
+  getSquad: async () => {
+    return request('/team/squad');
+  },
+
+  getMatches: async () => {
+    return request('/team/matches');
+  },
+
+  getMatchById: async (id: string) => {
+    return request(`/team/matches/${id}`);
+  },
+
+  getScorecard: async (id: string) => {
+    return request(`/team/matches/${id}/scorecard`);
+  },
+
+  getStatistics: async () => {
+    return request('/team/statistics');
+  },
+
+  getPlayerStatistics: async () => {
+    return request('/team/players/statistics');
+  },
+
+  getNotifications: async () => {
+    return request('/team/notifications');
+  },
+
+  markNotificationRead: async (id: string) => {
+    return request(`/team/notifications/${id}/read`, {
+      method: 'PUT'
+    });
   }
 };

@@ -37,7 +37,8 @@ export default function HeroBanner({ theme, onOpenRegister, onNavigateMatches, o
 
           {/* Main Title & Subtitle */}
           <Text style={styles.mainTitle}>
-            THE PINNACLE OF{'\n'}VIRUDHUNAGAR CRICKET
+            THE PINNACLE OF{'\n'}
+            <Text style={{ color: theme.primary }}>VIRUDHUNAGAR CRICKET</Text>
           </Text>
 
           <Text style={styles.subTitle}>

@@ -15,7 +15,10 @@ import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 
 export default function ScorerAuthScreen() {
-  const [isLoginMode, setIsLoginMode] = useState(true);
+  const { navigate, onExit, params } = useScorerNavigation();
+  const [isLoginMode, setIsLoginMode] = useState(
+    params?.initialMode !== 'register' && params?.mode !== 'register'
+  );
   const [otpSent, setOtpSent] = useState(false);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -30,8 +33,6 @@ export default function ScorerAuthScreen() {
   // Status feedback states
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
-
-  const { navigate, onExit } = useScorerNavigation();
 
   const handleSendOTP = async () => {
     setStatusMessage(null);
@@ -56,12 +57,9 @@ export default function ScorerAuthScreen() {
     setStatusType('info');
 
     try {
-      const res = await ScorerApi.requestOtp(cleanEmail);
+      const res = await ScorerApi.requestOtp(cleanEmail, 'SCORER');
       setOtpSent(true);
-      if (res && res.devOtp) {
-        setOtp(String(res.devOtp));
-      }
-      setStatusMessage(res?.message || 'OTP sent successfully! Please check your email.');
+      setStatusMessage(`OTP verification code sent to ${cleanEmail}. Please check your email inbox (and spam folder).`);
       setStatusType('success');
     } catch (err: any) {
       const rawMsg = err.message || '';
@@ -424,7 +422,7 @@ export default function ScorerAuthScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        <SharedFooter />
+        {isLoginMode && <SharedFooter />}
       </ScrollView>
     </View>
   );

@@ -9,7 +9,6 @@
     "expo": "~57.0.25",
     "expo-status-bar": "~57.0.1",
     "express": "^5.2.1",
-    "mysql2": "^3.24.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
@@ -18,14 +17,20 @@
     "react-native-webview": "13.16.1"
   },
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "dev": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix mobile_frontend run dev",
+    "start": "concurrently -n \"backend,frontend\" -c \"blue,green\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "npm --prefix backend start",
+    "start:frontend": "npm --prefix mobile_frontend start",
+    "android": "npm --prefix mobile_frontend run android",
+    "ios": "npm --prefix mobile_frontend run ios",
+    "web": "npm --prefix mobile_frontend run web"
   },
   "private": true,
   "devDependencies": {
     "@types/react": "~19.2.4",
+    "concurrently": "^10.0.5",
     "typescript": "~6.0.3"
   }
 }

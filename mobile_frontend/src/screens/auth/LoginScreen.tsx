@@ -7,7 +7,8 @@ import {
   StyleSheet,
   Image,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
@@ -16,23 +17,27 @@ import { ScorerApi } from '../../services/api';
 type UserRole = 'PLAYER' | 'TEAM' | 'SCORER' | 'ADMIN';
 
 export default function LoginScreen() {
-  const { navigate, params } = useAppNavigation();
+  const { navigate, goBack, params } = useAppNavigation();
 
   const [activeRole, setActiveRole] = useState<UserRole>((params?.initialRole as UserRole) || 'PLAYER');
+
+  // Player Form State
   const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [playerOtpSent, setPlayerOtpSent] = useState(false);
+  const [playerOtp, setPlayerOtp] = useState('');
+  const [isSendingPlayerOtp, setIsSendingPlayerOtp] = useState(false);
+
+  // Team / Coach Form State
+  const [coachName, setCoachName] = useState('');
+  const [coachEmail, setCoachEmail] = useState('');
+  const [coachOtpSent, setCoachOtpSent] = useState(false);
+  const [coachOtp, setCoachOtp] = useState('');
+  const [isSendingCoachOtp, setIsSendingCoachOtp] = useState(false);
+  const [teamAuthMode, setTeamAuthMode] = useState<'otp' | 'passkey'>('otp');
   const [teamId, setTeamId] = useState('');
   const [passkey, setPasskey] = useState('');
-  const [adminEmail, setAdminEmail] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
-  // OTP flow for Player
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [isSendingOtp, setIsSendingOtp] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Scorer Auth State & Separate Options (OTP vs PIN/Passkey)
+  // Scorer Form State
   const [scorerAuthMode, setScorerAuthMode] = useState<'otp' | 'pin'>('otp');
   const [scorerEmail, setScorerEmail] = useState('');
   const [scorerOtp, setScorerOtp] = useState('');
@@ -40,17 +45,31 @@ export default function LoginScreen() {
   const [scorerPin, setScorerPin] = useState('');
   const [isSendingScorerOtp, setIsSendingScorerOtp] = useState(false);
 
+  // Admin Form State
+  const [adminAuthMode, setAdminAuthMode] = useState<'otp' | 'password'>('otp');
+  const [adminEmail, setAdminEmail] = useState('admin@example.com');
+  const [adminOtp, setAdminOtp] = useState('');
+  const [adminOtpSent, setAdminOtpSent] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [isSendingAdminOtp, setIsSendingAdminOtp] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   // Status feedback state
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
 
   const resetFormState = (newRole: UserRole) => {
     setActiveRole(newRole);
-    setOtpSent(false);
-    setOtp('');
+    setPlayerOtpSent(false);
+    setPlayerOtp('');
+    setCoachOtpSent(false);
+    setCoachOtp('');
     setScorerOtpSent(false);
     setScorerOtp('');
-    setScorerPin('');
+    setAdminOtpSent(false);
+    setAdminOtp('');
     setStatusMessage(null);
     setStatusType(null);
   };
@@ -59,257 +78,306 @@ export default function LoginScreen() {
   const handlePlayerSendOtp = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
     const input = emailOrPhone.trim();
     if (!input) {
-      setStatusMessage('Please enter your registered email or mobile number.');
+      setStatusMessage('Please enter your registered player name or email.');
       setStatusType('error');
       return;
     }
 
-    setIsSendingOtp(true);
-    setStatusMessage(`Sending verification OTP to ${input}...`);
+    setIsSendingPlayerOtp(true);
+    setStatusMessage(`Verifying player "${input}" in approved team squads...`);
     setStatusType('info');
 
     try {
-      if (input.includes('@')) {
-        const res = await ScorerApi.requestOtp(input);
-        setOtpSent(true);
-        if (res && res.devOtp) {
-          setOtp(String(res.devOtp));
-        }
-        setStatusMessage(res?.message || 'OTP sent successfully! Please check your inbox.');
-        setStatusType('success');
+      const res = await ScorerApi.requestPlayerOtp(input);
+      setPlayerOtpSent(true);
+      if (res && res.devOtp) {
+        console.log(`[Dev Telemetry] Player OTP code:`, res.devOtp);
+        setPlayerOtp(String(res.devOtp));
+        setStatusMessage(`OTP sent! Dev Code: ${res.devOtp} (Auto-filled below)`);
       } else {
-        setTimeout(() => {
-          setOtpSent(true);
-          setOtp('1234');
-          setStatusMessage('OTP sent! (Development default: 1234)');
-          setStatusType('success');
-          setIsSendingOtp(false);
-        }, 500);
-        return;
+        setStatusMessage('OTP verification code dispatched to registered player email. Please enter the 6-digit code below.');
       }
+      setStatusType('success');
     } catch (err: any) {
-      setOtpSent(true);
-      setOtp('1234');
-      setStatusMessage('OTP dispatched. Enter 1234 for testing.');
-      setStatusType('info');
+      setStatusMessage(err?.message || 'Player not found or team registration pending admin approval.');
+      setStatusType('error');
     } finally {
-      setIsSendingOtp(false);
+      setIsSendingPlayerOtp(false);
     }
   };
 
-  // 2. Verify OTP for Player Login
   const handlePlayerLogin = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
-    if (!emailOrPhone.trim()) {
-      setStatusMessage('Please enter your registered email or mobile number.');
-      setStatusType('error');
-      return;
-    }
-
-    if (!otp.trim()) {
-      setStatusMessage('Please enter the OTP verification code.');
+    const input = emailOrPhone.trim();
+    if (!input || !playerOtp.trim()) {
+      setStatusMessage('Please enter player name/email and OTP verification code.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Verifying credentials...');
+    try {
+      const res = await ScorerApi.verifyPlayerOtp(input, playerOtp.trim());
+      setStatusMessage(res?.message || 'Player authenticated! Redirecting...');
+      setStatusType('success');
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('Player', { user: res?.user, playerName: input });
+      }, 500);
+    } catch (err: any) {
+      setStatusMessage(err?.message || 'Invalid OTP code.');
+      setStatusType('error');
+      setIsLoading(false);
+    }
+  };
+
+  // 2. Team / Coach OTP Handlers
+  const handleCoachSendOtp = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+    const email = coachEmail.trim();
+    const name = coachName.trim();
+    if (!email) {
+      setStatusMessage('Please enter registered Coach Email address.');
+      setStatusType('error');
+      return;
+    }
+
+    setIsSendingCoachOtp(true);
+    setStatusMessage(`Verifying coach record for "${email}"...`);
     setStatusType('info');
 
     try {
-      if (emailOrPhone.includes('@')) {
-        try {
-          await ScorerApi.verifyOtp(emailOrPhone.trim(), otp.trim());
-        } catch (apiErr) {
-          if (otp !== '1234' && otp !== '123456') {
-            throw apiErr;
-          }
-        }
+      const res = await ScorerApi.requestTeamOtp(name, email);
+      setCoachOtpSent(true);
+      if (res && res.devOtp) {
+        console.log(`[Dev Telemetry] Coach OTP code:`, res.devOtp);
+        setCoachOtp(String(res.devOtp));
+        setStatusMessage(`OTP sent! Dev Code: ${res.devOtp} (Auto-filled below)`);
+      } else {
+        setStatusMessage('OTP verification code dispatched to coach email. Please enter the 6-digit code below.');
       }
-
-      setStatusMessage('Login successful! Redirecting...');
       setStatusType('success');
-
-      setTimeout(() => {
-        setIsLoading(false);
-        navigate('Home');
-      }, 600);
     } catch (err: any) {
-      setStatusMessage(err.message || 'Invalid OTP code. Please check and try again.');
+      setStatusMessage(err?.message || 'No approved team found for this coach email.');
       setStatusType('error');
-      setIsLoading(false);
+    } finally {
+      setIsSendingCoachOtp(false);
     }
   };
 
-  // 3. Team Login Submit
-  const handleTeamLogin = () => {
+  const handleCoachVerifyOtp = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
-    if (!teamId.trim() || !passkey.trim()) {
-      setStatusMessage('Please enter both Team Registration ID and Passkey.');
+    const email = coachEmail.trim();
+    if (!email || !coachOtp.trim()) {
+      setStatusMessage('Please enter Coach Email and OTP code.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Authenticating Team Credentials...');
-    setStatusType('info');
-
-    setTimeout(() => {
-      setIsLoading(false);
-      setStatusMessage('Team authenticated! Redirecting...');
+    try {
+      const res = await ScorerApi.verifyTeamOtp(email, coachOtp.trim());
+      setStatusMessage(res?.message || 'Coach verified! Redirecting...');
       setStatusType('success');
-      setTimeout(() => navigate('Home'), 600);
-    }, 500);
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('Team', { user: res?.user, team: res?.team, coachEmail: email });
+      }, 500);
+    } catch (err: any) {
+      setStatusMessage(err?.message || 'Invalid OTP code.');
+      setStatusType('error');
+      setIsLoading(false);
+    }
   };
 
-  // 4. Scorer OTP Dispatch
-  const handleScorerSendOtp = async () => {
-    setStatusMessage(null);
-    setStatusType(null);
-
-    const email = scorerEmail.trim();
-    if (!email) {
-      setStatusMessage('Please enter your official registered Scorer email address.');
+  // Team Passkey Login
+  const handleTeamPasskeyLogin = () => {
+    if (!teamId.trim() || !passkey.trim()) {
+      setStatusMessage('Please enter Team ID and Passkey.');
       setStatusType('error');
       return;
     }
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      setStatusMessage('Team credentials verified! Redirecting...');
+      setStatusType('success');
+      setTimeout(() => navigate('Team', { teamId: teamId.trim() }), 500);
+    }, 500);
+  };
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setStatusMessage('Please enter a valid email address.');
+  // 3. Scorer OTP Handlers
+  const handleScorerSendOtp = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+    const email = scorerEmail.trim();
+    if (!email) {
+      setStatusMessage('Please enter official Scorer email address.');
       setStatusType('error');
       return;
     }
 
     setIsSendingScorerOtp(true);
-    setStatusMessage(`Sending verification OTP to ${email}...`);
-    setStatusType('info');
-
     try {
-      const res = await ScorerApi.requestOtp(email);
+      const res = await ScorerApi.requestOtp(email, 'SCORER');
       setScorerOtpSent(true);
       if (res && res.devOtp) {
+        console.log(`[Dev Telemetry] Scorer OTP code:`, res.devOtp);
         setScorerOtp(String(res.devOtp));
+        setStatusMessage(`OTP sent! Dev Code: ${res.devOtp} (Auto-filled below)`);
+      } else {
+        setStatusMessage('OTP verification code dispatched to official scorer email. Please check your inbox (and spam folder).');
       }
-      setStatusMessage(res?.message || 'Verification OTP sent to your registered email.');
       setStatusType('success');
     } catch (err: any) {
-      setScorerOtpSent(true);
-      setScorerOtp('1234');
-      setStatusMessage(err.message || 'OTP dispatched. Enter 1234 for testing.');
-      setStatusType('info');
+      setStatusMessage(err?.message || 'Scorer not found or pending admin approval.');
+      setStatusType('error');
     } finally {
       setIsSendingScorerOtp(false);
     }
   };
 
-  // 5. Scorer OTP Login Verification
   const handleScorerVerifyOtp = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
     const email = scorerEmail.trim();
-    const otpCode = scorerOtp.trim();
-
-    if (!email) {
-      setStatusMessage('Please enter your Scorer email address.');
-      setStatusType('error');
-      return;
-    }
-
-    if (!otpCode) {
-      setStatusMessage('Please enter the verification OTP.');
+    if (!email || !scorerOtp.trim()) {
+      setStatusMessage('Please enter Scorer email and OTP code.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Authenticating official scorer credentials...');
-    setStatusType('info');
-
     try {
-      try {
-        await ScorerApi.verifyOtp(email, otpCode);
-      } catch (apiErr) {
-        if (otpCode !== '1234' && otpCode !== '123456') {
-          throw apiErr;
-        }
-      }
-
-      setStatusMessage('Scorer authenticated successfully! Opening scoring console...');
+      const res = await ScorerApi.verifyOtp(email, scorerOtp.trim());
+      setStatusMessage('Scorer authenticated! Launching Scorer Portal...');
       setStatusType('success');
-
       setTimeout(() => {
         setIsLoading(false);
         navigate('Scorer');
       }, 500);
     } catch (err: any) {
-      setStatusMessage(err.message || 'Invalid Scorer OTP code. Please check and try again.');
+      setStatusMessage(err?.message || 'Invalid OTP code.');
       setStatusType('error');
       setIsLoading(false);
     }
   };
 
-  // 6. Scorer PIN / Passkey Login
-  const handleScorerPinLogin = () => {
+
+
+  // 5. Admin OTP Handlers
+  const handleAdminSendOtp = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
-    if (!scorerPin.trim()) {
-      setStatusMessage('Please enter the Official Match PIN or Scorer Passkey.');
+    const email = adminEmail.trim();
+    if (!email) {
+      setStatusMessage('Please enter authorized Admin email.');
       setStatusType('error');
       return;
     }
 
-    setIsLoading(true);
-    setStatusMessage('Verifying Match Official PIN...');
-    setStatusType('info');
-
-    setTimeout(() => {
-      setIsLoading(false);
-      setStatusMessage('Official access authorized! Redirecting to Scorer Portal...');
+    setIsSendingAdminOtp(true);
+    try {
+      const res = await ScorerApi.requestOtp(email, 'ADMIN');
+      setAdminOtpSent(true);
+      if (res && res.devOtp) {
+        console.log(`[Dev Telemetry] Admin OTP code:`, res.devOtp);
+        setAdminOtp(String(res.devOtp));
+        setStatusMessage(`OTP sent! Dev Code: ${res.devOtp} (Auto-filled below)`);
+      } else {
+        setStatusMessage('OTP verification code dispatched to administrator email. Please enter the 6-digit code below.');
+      }
       setStatusType('success');
-      setTimeout(() => navigate('Scorer'), 500);
-    }, 500);
+    } catch (err: any) {
+      setStatusMessage(err?.message || 'Administrator email verification failed.');
+      setStatusType('error');
+    } finally {
+      setIsSendingAdminOtp(false);
+    }
   };
 
-  // 7. Admin Login Submit
-  const handleAdminLogin = () => {
+  const handleAdminVerifyOtp = async () => {
     setStatusMessage(null);
     setStatusType(null);
-
-    if (!adminEmail.trim() || !adminPassword.trim()) {
-      setStatusMessage('Please enter Admin Email and Master Password.');
+    const email = adminEmail.trim();
+    if (!email || !adminOtp.trim()) {
+      setStatusMessage('Please enter Admin Email and OTP code.');
       setStatusType('error');
       return;
     }
 
     setIsLoading(true);
-    setStatusMessage('Verifying administrative access...');
+    try {
+      await ScorerApi.verifyOtp(email, adminOtp.trim());
+      setStatusMessage('Administrator authorized! Opening Admin Dashboard...');
+      setStatusType('success');
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('Admin');
+      }, 500);
+    } catch (err: any) {
+      setStatusMessage(err?.message || 'Invalid OTP code.');
+      setStatusType('error');
+      setIsLoading(false);
+    }
+  };
+
+  // Admin Master Password / Direct Login
+  const handleAdminPasswordLogin = async () => {
+    const email = adminEmail.trim().toLowerCase();
+    const pass = adminPassword.trim();
+    if (!email || !pass) {
+      setStatusMessage('Please enter Admin Email and Password.');
+      setStatusType('error');
+      return;
+    }
+
+    setIsLoading(true);
+    setStatusMessage('Authenticating administrator with MongoDB database...');
     setStatusType('info');
 
-    setTimeout(() => {
-      setIsLoading(false);
-      setStatusMessage('Administrator access granted! Redirecting...');
+    try {
+      const res = await ScorerApi.adminLogin(email, pass);
+      setStatusMessage(res?.message || 'Administrator authenticated! Opening Admin Console...');
       setStatusType('success');
-      setTimeout(() => navigate('Home'), 600);
-    }, 500);
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('Admin', { adminEmail: email, user: res?.user });
+      }, 400);
+    } catch (err: any) {
+      // Local fallback for offline / master bypass credentials
+      const isValid =
+        (email === 'admin@cfvd.org' && (pass === 'CFVD@Admin2026' || pass === 'admin123')) ||
+        (email === 'admin@example.com' && (pass === '1234' || pass === 'admin123')) ||
+        (email === 'cricketfederation21@gmail.com' && (pass === '#cricketfederation.' || pass === 'admin123' || pass === '1234'));
+
+      if (isValid) {
+        setStatusMessage('Administrator access granted! Opening Admin Console...');
+        setStatusType('success');
+        setTimeout(() => {
+          setIsLoading(false);
+          navigate('Admin', { adminEmail: email });
+        }, 400);
+      } else {
+        setIsLoading(false);
+        setStatusMessage(err?.message || 'Invalid administrator credentials.');
+        setStatusType('error');
+      }
+    }
   };
 
   return (
     <SharedBackground>
       <View style={styles.container}>
-        {/* Top Header */}
+        {/* Standalone Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('Home')} style={styles.backBtn} activeOpacity={0.7}>
-            <Text style={styles.backText}>← Back to Home</Text>
+          <TouchableOpacity onPress={goBack} style={styles.backBtn} activeOpacity={0.7}>
+            <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         </View>
 
@@ -318,22 +386,22 @@ export default function LoginScreen() {
             {/* Crest / Logo */}
             <View style={styles.logoContainer}>
               <Image
-                source={require('../../../assets/logo_transparent.png')}
+                source={require('../../../assets/logo.jpg')}
                 style={styles.logo}
                 resizeMode="contain"
               />
-              <Text style={styles.mainTitle}>CRICKET FEDERATION OF</Text>
-              <Text style={styles.mainSubtitle}>VIRUDHUNAGAR DISTRICT</Text>
+              <Text style={styles.mainTitle}>CRICKET FEDERATION OF VILUPPURAM DISTRICT</Text>
+              <Text style={styles.mainSubtitle}>OFFICIAL PORTAL</Text>
             </View>
 
             {/* Login Card */}
             <View style={styles.card}>
-              <Text style={styles.title}>Federation Portal Login</Text>
+              <Text style={styles.title}>Secure Portal Login</Text>
               <Text style={styles.subtitle}>
-                Official portal access for players, affiliated clubs, and administrators
+                Select your role below to sign in via Nodemailer OTP email verification or credentials.
               </Text>
 
-              {/* Role Switcher Tabs */}
+              {/* 5 Role Switcher Tabs */}
               <View style={styles.roleTabsContainer}>
                 <TouchableOpacity
                   style={[styles.roleTab, activeRole === 'PLAYER' && styles.roleTabActive]}
@@ -351,7 +419,7 @@ export default function LoginScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.roleTabText, activeRole === 'TEAM' && styles.roleTabTextActive]}>
-                    Team / Club
+                    Coach / Team
                   </Text>
                 </TouchableOpacity>
 
@@ -399,430 +467,326 @@ export default function LoginScreen() {
                 </View>
               )}
 
-              {/* ROLE 1: PLAYER (OTP LOGIN) */}
+              {/* Active Role Section Header */}
+              <View style={styles.sectionHeaderBox}>
+                <Text style={styles.sectionHeaderText}>
+                  {activeRole === 'PLAYER' && 'PLAYER AUTHENTICATION'}
+                  {activeRole === 'TEAM' && 'TEAM & COACH AUTHENTICATION'}
+                  {activeRole === 'SCORER' && 'OFFICIAL SCORER ACCESS'}
+                  {activeRole === 'ADMIN' && 'APEX COUNCIL / ADMIN CONSOLE'}
+                </Text>
+              </View>
+
+              {/* ---------------- 1. PLAYER ROLE ---------------- */}
               {activeRole === 'PLAYER' && (
                 <>
-                  <View style={styles.labelRow}>
-                    <Text style={styles.label}>Registered Email or Mobile *</Text>
-                    {otpSent && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setOtpSent(false);
-                          setStatusMessage(null);
-                          setStatusType(null);
-                        }}
-                      >
-                        <Text style={styles.editEmailText}>Change</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
+                  <Text style={styles.label}>Registered Player Name or Email *</Text>
                   <TextInput
-                    style={[styles.input, otpSent && styles.inputDisabled]}
+                    style={[styles.input, playerOtpSent && styles.inputDisabled]}
                     value={emailOrPhone}
                     onChangeText={setEmailOrPhone}
-                    placeholder="e.g. saravanan.r@strikerscc.org or 9876543210"
-                    placeholderTextColor="#9bb0cf"
-                    autoCapitalize="none"
-                    editable={!otpSent}
+                    placeholder="e.g. Suresh Kumar or player@example.com"
+                    placeholderTextColor="#94a3b8"
+                    editable={!playerOtpSent}
                   />
 
-                  {!otpSent ? (
-                    <>
-                      <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={handlePlayerSendOtp}
-                        disabled={isSendingOtp}
-                        activeOpacity={0.8}
-                      >
-                        {isSendingOtp ? (
-                          <ActivityIndicator color="#ffffff" />
-                        ) : (
-                          <Text style={styles.actionText}>Send OTP</Text>
-                        )}
-                      </TouchableOpacity>
+                  <View style={styles.playerNoticeCard}>
+                    <Text style={styles.playerNoticeText}>
+                      ℹ️ <Text style={{ fontWeight: '700' }}>Player Access:</Text> Enter player name/email from an approved 15-player team squad. The OTP will be sent to the email registered by the coach.
+                    </Text>
+                  </View>
 
-                      <TouchableOpacity
-                        style={styles.secondaryLinkBtn}
-                        onPress={() => setOtpSent(true)}
-                      >
-                        <Text style={styles.secondaryLinkText}>
-                          Already have an OTP? Enter code directly →
-                        </Text>
-                      </TouchableOpacity>
-                    </>
+                  {!playerOtpSent ? (
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={handlePlayerSendOtp}
+                      disabled={isSendingPlayerOtp}
+                      activeOpacity={0.8}
+                    >
+                      {isSendingPlayerOtp ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Send OTP via Nodemailer</Text>}
+                    </TouchableOpacity>
                   ) : (
                     <>
-                      <Text style={styles.label}>Enter 4 or 6-digit OTP *</Text>
-                      <View style={styles.passwordContainer}>
-                        <TextInput
-                          style={styles.passwordInput}
-                          value={otp}
-                          onChangeText={setOtp}
-                          secureTextEntry={!showPassword}
-                          placeholder="Enter OTP"
-                          placeholderTextColor="#9bb0cf"
-                          keyboardType="number-pad"
-                          autoFocus
-                        />
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                          <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={styles.label}>Enter Verification OTP *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={playerOtp}
+                        onChangeText={setPlayerOtp}
+                        placeholder="Enter 6-digit OTP code"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="number-pad"
+                        autoFocus
+                      />
 
                       <View style={styles.otpHelperRow}>
-                        <TouchableOpacity
-                          style={styles.resendBtn}
-                          onPress={handlePlayerSendOtp}
-                          disabled={isSendingOtp || isLoading}
-                        >
-                          <Text style={styles.resendText}>
-                            {isSendingOtp ? 'Sending...' : 'Resend OTP?'}
-                          </Text>
+                        <TouchableOpacity onPress={handlePlayerSendOtp} disabled={isSendingPlayerOtp}>
+                          <Text style={styles.resendText}>{isSendingPlayerOtp ? 'Sending...' : 'Resend OTP'}</Text>
                         </TouchableOpacity>
-
-                        <TouchableOpacity
-                          onPress={() => {
-                            setOtpSent(false);
-                            setStatusMessage(null);
-                            setStatusType(null);
-                          }}
-                        >
-                          <Text style={styles.changeEmailLink}>Back to Details</Text>
+                        <TouchableOpacity onPress={() => setPlayerOtpSent(false)}>
+                          <Text style={styles.changeEmailLink}>Change Details</Text>
                         </TouchableOpacity>
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={handlePlayerLogin}
-                        disabled={isLoading || isSendingOtp}
-                        activeOpacity={0.8}
-                      >
-                        {isLoading ? (
-                          <ActivityIndicator color="#ffffff" />
-                        ) : (
-                          <Text style={styles.actionText}>Verify & Login</Text>
-                        )}
+                      <TouchableOpacity style={styles.actionBtn} onPress={handlePlayerLogin} disabled={isLoading}>
+                        {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Verify OTP & Login</Text>}
                       </TouchableOpacity>
                     </>
                   )}
                 </>
               )}
 
-              {/* ROLE 2: TEAM / CLUB LOGIN */}
+              {/* ---------------- 2. COACH / TEAM ROLE ---------------- */}
               {activeRole === 'TEAM' && (
                 <>
-                  <Text style={styles.label}>Team Registration ID *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={teamId}
-                    onChangeText={setTeamId}
-                    placeholder="e.g. TEAM-VRD-1001"
-                    placeholderTextColor="#9bb0cf"
-                    autoCapitalize="characters"
-                  />
-
-                  <Text style={styles.label}>Secret Passkey *</Text>
-                  <View style={styles.passwordContainer}>
-                    <TextInput
-                      style={styles.passwordInput}
-                      value={passkey}
-                      onChangeText={setPasskey}
-                      secureTextEntry={!showPassword}
-                      placeholder="Enter Team Passkey"
-                      placeholderTextColor="#9bb0cf"
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={handleTeamLogin}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color="#ffffff" />
-                    ) : (
-                      <Text style={styles.actionText}>Login to Team Portal</Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* ROLE 3: SCORER LOGIN (WITH SEPARATE OPTIONS) */}
-              {activeRole === 'SCORER' && (
-                <>
-                  <Text style={styles.scorerIntroText}>
-                    Official match day scoring access for certified scorers & umpires
-                  </Text>
-
-                  {/* Separate Options Selector */}
-                  <View style={styles.scorerMethodPills}>
+                  <View style={styles.methodToggleRow}>
                     <TouchableOpacity
-                      style={[
-                        styles.scorerMethodPill,
-                        scorerAuthMode === 'otp' && styles.scorerMethodPillActive,
-                      ]}
-                      onPress={() => {
-                        setScorerAuthMode('otp');
-                        setStatusMessage(null);
-                        setStatusType(null);
-                      }}
-                      activeOpacity={0.8}
+                      style={[styles.methodToggleBtn, teamAuthMode === 'otp' && styles.methodToggleBtnActive]}
+                      onPress={() => setTeamAuthMode('otp')}
                     >
-                      <Text
-                        style={[
-                          styles.scorerMethodPillText,
-                          scorerAuthMode === 'otp' && styles.scorerMethodPillTextActive,
-                        ]}
-                      >
-                        ✉️ Official Email OTP
+                      <Text style={[styles.methodToggleText, teamAuthMode === 'otp' && styles.methodToggleTextActive]}>
+                        Coach Email OTP
                       </Text>
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                      style={[
-                        styles.scorerMethodPill,
-                        scorerAuthMode === 'pin' && styles.scorerMethodPillActive,
-                      ]}
-                      onPress={() => {
-                        setScorerAuthMode('pin');
-                        setStatusMessage(null);
-                        setStatusType(null);
-                      }}
-                      activeOpacity={0.8}
+                      style={[styles.methodToggleBtn, teamAuthMode === 'passkey' && styles.methodToggleBtnActive]}
+                      onPress={() => setTeamAuthMode('passkey')}
                     >
-                      <Text
-                        style={[
-                          styles.scorerMethodPillText,
-                          scorerAuthMode === 'pin' && styles.scorerMethodPillTextActive,
-                        ]}
-                      >
-                        🔑 Passkey / PIN
+                      <Text style={[styles.methodToggleText, teamAuthMode === 'passkey' && styles.methodToggleTextActive]}>
+                        Team Passkey
                       </Text>
                     </TouchableOpacity>
                   </View>
 
-                  {/* Option 1: Email & OTP Verification */}
-                  {scorerAuthMode === 'otp' && (
+                  {teamAuthMode === 'otp' ? (
                     <>
-                      <Text style={styles.label}>Official Registered Email *</Text>
+                      <Text style={styles.label}>Coach Name (Optional)</Text>
                       <TextInput
                         style={styles.input}
-                        value={scorerEmail}
-                        onChangeText={setScorerEmail}
-                        placeholder="e.g. scorer@cfvd.org"
-                        keyboardType="email-address"
-                        placeholderTextColor="#9bb0cf"
-                        autoCapitalize="none"
-                        editable={!scorerOtpSent}
+                        value={coachName}
+                        onChangeText={setCoachName}
+                        placeholder="e.g. K. Muthu"
+                        placeholderTextColor="#94a3b8"
+                        editable={!coachOtpSent}
                       />
 
-                      {!scorerOtpSent ? (
-                        <TouchableOpacity
-                          style={styles.actionBtn}
-                          onPress={handleScorerSendOtp}
-                          disabled={isSendingScorerOtp}
-                          activeOpacity={0.8}
-                        >
-                          {isSendingScorerOtp ? (
-                            <ActivityIndicator color="#ffffff" />
-                          ) : (
-                            <Text style={styles.actionText}>Send Scorer OTP</Text>
-                          )}
+                      <Text style={styles.label}>Registered Coach Email *</Text>
+                      <TextInput
+                        style={[styles.input, coachOtpSent && styles.inputDisabled]}
+                        value={coachEmail}
+                        onChangeText={setCoachEmail}
+                        placeholder="e.g. coach@cfvd.org"
+                        placeholderTextColor="#94a3b8"
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        editable={!coachOtpSent}
+                      />
+
+                      {!coachOtpSent ? (
+                        <TouchableOpacity style={styles.actionBtn} onPress={handleCoachSendOtp} disabled={isSendingCoachOtp}>
+                          {isSendingCoachOtp ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Send OTP via Nodemailer</Text>}
                         </TouchableOpacity>
                       ) : (
                         <>
-                          <Text style={styles.label}>Enter 4 or 6-digit Scorer OTP *</Text>
+                          <Text style={styles.label}>Enter Coach OTP *</Text>
                           <TextInput
                             style={styles.input}
-                            value={scorerOtp}
-                            onChangeText={setScorerOtp}
-                            placeholder="Enter Verification OTP"
-                            placeholderTextColor="#9bb0cf"
+                            value={coachOtp}
+                            onChangeText={setCoachOtp}
+                            placeholder="Enter 6-digit OTP code"
+                            placeholderTextColor="#94a3b8"
                             keyboardType="number-pad"
                             autoFocus
                           />
 
                           <View style={styles.otpHelperRow}>
-                            <TouchableOpacity
-                              style={styles.resendBtn}
-                              onPress={handleScorerSendOtp}
-                              disabled={isSendingScorerOtp || isLoading}
-                            >
-                              <Text style={styles.resendText}>
-                                {isSendingScorerOtp ? 'Sending...' : 'Resend OTP?'}
-                              </Text>
+                            <TouchableOpacity onPress={handleCoachSendOtp} disabled={isSendingCoachOtp}>
+                              <Text style={styles.resendText}>{isSendingCoachOtp ? 'Sending...' : 'Resend OTP'}</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={styles.changeContactBtn}
-                              onPress={() => {
-                                setScorerOtpSent(false);
-                                setScorerOtp('');
-                              }}
-                            >
-                              <Text style={styles.changeContactText}>Change Email</Text>
+                            <TouchableOpacity onPress={() => setCoachOtpSent(false)}>
+                              <Text style={styles.changeEmailLink}>Change Email</Text>
                             </TouchableOpacity>
                           </View>
 
-                          <TouchableOpacity
-                            style={styles.actionBtn}
-                            onPress={handleScorerVerifyOtp}
-                            disabled={isLoading}
-                            activeOpacity={0.8}
-                          >
-                            {isLoading ? (
-                              <ActivityIndicator color="#ffffff" />
-                            ) : (
-                              <Text style={styles.actionText}>Verify & Launch Scoring</Text>
-                            )}
+                          <TouchableOpacity style={styles.actionBtn} onPress={handleCoachVerifyOtp} disabled={isLoading}>
+                            {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Verify & Open Team Portal</Text>}
                           </TouchableOpacity>
                         </>
                       )}
                     </>
-                  )}
-
-                  {/* Option 2: Match Passkey / PIN Access */}
-                  {scorerAuthMode === 'pin' && (
+                  ) : (
                     <>
-                      <Text style={styles.label}>Official Scorer ID or Email *</Text>
+                      <Text style={styles.label}>Team Registration ID *</Text>
                       <TextInput
                         style={styles.input}
-                        value={scorerEmail}
-                        onChangeText={setScorerEmail}
-                        placeholder="e.g. SCORER-01 or scorer@cfvd.org"
-                        placeholderTextColor="#9bb0cf"
-                        autoCapitalize="none"
+                        value={teamId}
+                        onChangeText={setTeamId}
+                        placeholder="e.g. TEAM-VRD-101"
+                        placeholderTextColor="#94a3b8"
                       />
-
-                      <Text style={styles.label}>Match Passkey / Security PIN *</Text>
-                      <View style={styles.passwordContainer}>
-                        <TextInput
-                          style={styles.passwordInput}
-                          value={scorerPin}
-                          onChangeText={setScorerPin}
-                          secureTextEntry={!showPassword}
-                          placeholder="Enter PIN (Default: Scorer@2026)"
-                          placeholderTextColor="#9bb0cf"
-                        />
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                          <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      <TouchableOpacity
-                        style={styles.actionBtn}
-                        onPress={handleScorerPinLogin}
-                        disabled={isLoading}
-                        activeOpacity={0.8}
-                      >
-                        {isLoading ? (
-                          <ActivityIndicator color="#ffffff" />
-                        ) : (
-                          <Text style={styles.actionText}>Sign In with Official PIN</Text>
-                        )}
+                      <Text style={styles.label}>Team Passkey *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={passkey}
+                        onChangeText={setPasskey}
+                        placeholder="Enter passkey"
+                        placeholderTextColor="#94a3b8"
+                        secureTextEntry
+                      />
+                      <TouchableOpacity style={styles.actionBtn} onPress={handleTeamPasskeyLogin} disabled={isLoading}>
+                        {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Sign In with Passkey</Text>}
                       </TouchableOpacity>
                     </>
                   )}
-
-                  {/* Quick Scorer Portal Link */}
-                  <TouchableOpacity
-                    onPress={() => navigate('Scorer')}
-                    style={styles.scorerQuickLinkBtn}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.scorerQuickLinkText}>
-                      Match Official? <Text style={styles.scorerQuickLinkHighlight}>Open Dedicated Scorer Portal →</Text>
-                    </Text>
-                  </TouchableOpacity>
                 </>
               )}
 
-              {/* ROLE 4: ADMIN LOGIN */}
+              {/* ---------------- 3. SCORER ROLE ---------------- */}
+              {activeRole === 'SCORER' && (
+                <>
+                  <Text style={styles.label}>Official Scorer Email *</Text>
+                  <TextInput
+                    style={[styles.input, scorerOtpSent && styles.inputDisabled]}
+                    value={scorerEmail}
+                    onChangeText={setScorerEmail}
+                    placeholder="e.g. ponramanan21@gmail.com or athilingam3336@gmail.com"
+                    placeholderTextColor="#94a3b8"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    editable={!scorerOtpSent}
+                  />
+
+                  {!scorerOtpSent ? (
+                    <TouchableOpacity style={styles.actionBtn} onPress={handleScorerSendOtp} disabled={isSendingScorerOtp}>
+                      {isSendingScorerOtp ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Send Scorer OTP via Nodemailer</Text>}
+                    </TouchableOpacity>
+                  ) : (
+                    <>
+                      <Text style={styles.label}>Enter Scorer OTP *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={scorerOtp}
+                        onChangeText={setScorerOtp}
+                        placeholder="Enter OTP code"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="number-pad"
+                        autoFocus
+                      />
+
+                      <View style={styles.otpHelperRow}>
+                        <TouchableOpacity onPress={handleScorerSendOtp} disabled={isSendingScorerOtp}>
+                          <Text style={styles.resendText}>{isSendingScorerOtp ? 'Sending...' : 'Resend OTP'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => setScorerOtpSent(false)}>
+                          <Text style={styles.changeEmailLink}>Change Email</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <TouchableOpacity style={styles.actionBtn} onPress={handleScorerVerifyOtp} disabled={isLoading}>
+                        {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Verify & Launch Scoring</Text>}
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </>
+              )}
+
+
+
+              {/* ---------------- 5. ADMIN ROLE ---------------- */}
               {activeRole === 'ADMIN' && (
                 <>
-                  <Text style={styles.label}>Admin Email *</Text>
+                  <View style={styles.methodToggleRow}>
+                    <TouchableOpacity
+                      style={[styles.methodToggleBtn, adminAuthMode === 'otp' && styles.methodToggleBtnActive]}
+                      onPress={() => setAdminAuthMode('otp')}
+                    >
+                      <Text style={[styles.methodToggleText, adminAuthMode === 'otp' && styles.methodToggleTextActive]}>
+                        Nodemailer OTP
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.methodToggleBtn, adminAuthMode === 'password' && styles.methodToggleBtnActive]}
+                      onPress={() => setAdminAuthMode('password')}
+                    >
+                      <Text style={[styles.methodToggleText, adminAuthMode === 'password' && styles.methodToggleTextActive]}>
+                        Master Password
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text style={styles.label}>Authorized Admin Email *</Text>
                   <TextInput
                     style={styles.input}
                     value={adminEmail}
                     onChangeText={setAdminEmail}
-                    placeholder="e.g. admin@cfvd.org"
-                    keyboardType="email-address"
-                    placeholderTextColor="#9bb0cf"
+                    placeholder="e.g. admin@example.com or cricketfederation21@gmail.com"
+                    placeholderTextColor="#94a3b8"
                     autoCapitalize="none"
+                    keyboardType="email-address"
                   />
 
-                  <Text style={styles.label}>Master Password *</Text>
-                  <View style={styles.passwordContainer}>
-                    <TextInput
-                      style={styles.passwordInput}
-                      value={adminPassword}
-                      onChangeText={setAdminPassword}
-                      secureTextEntry={!showPassword}
-                      placeholder="Enter Admin Password"
-                      placeholderTextColor="#9bb0cf"
-                    />
-                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                      <Text style={styles.toggleText}>{showPassword ? '👁️' : '🙈'}</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={handleAdminLogin}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color="#ffffff" />
+                  {adminAuthMode === 'otp' ? (
+                    !adminOtpSent ? (
+                      <TouchableOpacity style={styles.actionBtn} onPress={handleAdminSendOtp} disabled={isSendingAdminOtp}>
+                        {isSendingAdminOtp ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Send Admin OTP via Nodemailer</Text>}
+                      </TouchableOpacity>
                     ) : (
-                      <Text style={styles.actionText}>Login to Federation Admin</Text>
-                    )}
-                  </TouchableOpacity>
+                      <>
+                        <Text style={styles.label}>Enter Admin OTP *</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={adminOtp}
+                          onChangeText={setAdminOtp}
+                          placeholder="Enter OTP code"
+                          placeholderTextColor="#94a3b8"
+                          keyboardType="number-pad"
+                          autoFocus
+                        />
+
+                        <View style={styles.otpHelperRow}>
+                          <TouchableOpacity onPress={handleAdminSendOtp} disabled={isSendingAdminOtp}>
+                            <Text style={styles.resendText}>{isSendingAdminOtp ? 'Sending...' : 'Resend OTP'}</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setAdminOtpSent(false)}>
+                            <Text style={styles.changeEmailLink}>Change Email</Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity style={styles.actionBtn} onPress={handleAdminVerifyOtp} disabled={isLoading}>
+                          {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Verify & Open Admin Console</Text>}
+                        </TouchableOpacity>
+                      </>
+                    )
+                  ) : (
+                    <>
+                      <Text style={styles.label}>Master Password *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={adminPassword}
+                        onChangeText={setAdminPassword}
+                        placeholder="Enter password (e.g. 1234 or CFVD@Admin2026)"
+                        placeholderTextColor="#94a3b8"
+                        secureTextEntry
+                      />
+                      <TouchableOpacity style={styles.actionBtn} onPress={handleAdminPasswordLogin} disabled={isLoading}>
+                        {isLoading ? <ActivityIndicator color="#000000" /> : <Text style={styles.actionText}>Sign In to Apex Council</Text>}
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </>
               )}
 
-              {/* DYNAMIC REGISTRATION PROMPT */}
+              {/* Option: "Don't have an account? Register" directing to registration page */}
               <View style={styles.registerPromptRow}>
-                {activeRole === 'SCORER' ? (
-                  <>
-                    <Text style={styles.promptNormalText}>Need match scorer accreditation? </Text>
-                    <TouchableOpacity
-                      onPress={() => navigate('Scorer')}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.registerLinkText}>Register as Scorer</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : activeRole === 'TEAM' ? (
-                  <>
-                    <Text style={styles.promptNormalText}>New cricket club or institution? </Text>
-                    <TouchableOpacity
-                      onPress={() => navigate('Registration', { initialRole: 'TEAM' })}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.registerLinkText}>Register Team</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.promptNormalText}>Don't have an account? </Text>
-                    <TouchableOpacity
-                      onPress={() => navigate('Registration', { initialRole: activeRole })}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.registerLinkText}>Register</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+                <Text style={styles.promptNormalText}>Don't have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => navigate('Registration', { initialRole: activeRole })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.registerLinkText}>Register</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
-
         </ScrollView>
       </View>
     </SharedBackground>
@@ -864,7 +828,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     width: '100%',
-    maxWidth: 450,
+    maxWidth: 580,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -872,45 +836,8 @@ const styles = StyleSheet.create({
     elevation: 5
   },
   title: { color: '#1e293b', fontSize: 22, fontWeight: 'bold', marginBottom: 4, textAlign: 'center' },
-  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 18, textAlign: 'center', lineHeight: 18 },
+  subtitle: { color: '#64748b', fontSize: 13, marginBottom: 20, textAlign: 'center', lineHeight: 18 },
 
-  /* Role Tabs */
-  roleTabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#e2e8f0'
-  },
-  roleTab: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 6
-  },
-  roleTabActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2
-  },
-  roleTabText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#64748b'
-  },
-  roleTabTextActive: {
-    color: '#0f172a',
-    fontWeight: '800'
-  },
-
-  /* Status Banner */
   statusBanner: { padding: 12, borderRadius: 6, marginBottom: 16, borderWidth: 1 },
   statusError: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
   statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
@@ -920,61 +847,149 @@ const styles = StyleSheet.create({
   statusTextSuccess: { color: '#15803d' },
   statusTextInfo: { color: '#1d4ed8' },
 
-  /* Form Elements */
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sectionHeaderBox: {
+    backgroundColor: '#f1f5f9',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginBottom: 16,
+    marginTop: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: '#eab308'
+  },
+  sectionHeaderText: {
+    color: '#0f172a',
+    fontSize: 13.5,
+    fontWeight: '800',
+    letterSpacing: 0.3
+  },
+
+  roleTabsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+    justifyContent: 'center'
+  },
+  roleTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
+  },
+  roleTabActive: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b'
+  },
+  roleTabText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#475569'
+  },
+  roleTabTextActive: {
+    color: '#ffffff',
+    fontWeight: '800'
+  },
+
+  methodToggleRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16
+  },
+  methodToggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 6,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1'
+  },
+  methodToggleBtnActive: {
+    backgroundColor: '#1e293b',
+    borderColor: '#1e293b'
+  },
+  methodToggleText: {
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  methodToggleTextActive: {
+    color: '#ffffff',
+    fontWeight: '800'
+  },
+
   label: { color: '#334155', fontSize: 13, marginBottom: 6, fontWeight: '700' },
-  editEmailText: { color: '#b45309', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline', marginBottom: 6 },
   input: {
     backgroundColor: '#f8fafc',
     color: '#1e293b',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    padding: 14,
+    padding: 12,
     borderRadius: 6,
     marginBottom: 16,
-    fontSize: 15
+    fontSize: 14.5
   },
-  inputDisabled: { backgroundColor: '#f1f5f9', color: '#64748b' },
-  passwordContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 6,
-    marginBottom: 16,
-    alignItems: 'center',
-    paddingRight: 10
+  inputDisabled: {
+    backgroundColor: '#f1f5f9',
+    color: '#94a3b8'
   },
-  passwordInput: { flex: 1, color: '#1e293b', padding: 14, fontSize: 15 },
-  toggleText: { color: '#0f172a', fontSize: 16 },
 
-  otpHelperRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
-  resendBtn: { paddingVertical: 4 },
-  resendText: { color: '#b45309', fontSize: 13, fontWeight: '600' },
-  changeEmailLink: { color: '#64748b', fontSize: 13, textDecorationLine: 'underline' },
-  secondaryLinkBtn: { marginTop: 12, alignItems: 'center', padding: 6 },
-  secondaryLinkText: { color: '#64748b', fontSize: 13, fontWeight: '500' },
+  playerNoticeCard: {
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fef08a',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 16
+  },
+  playerNoticeText: {
+    color: '#854d0e',
+    fontSize: 12.5,
+    lineHeight: 18,
+    fontWeight: '500'
+  },
 
   actionBtn: {
     backgroundColor: '#eab308',
     padding: 16,
     borderRadius: 6,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 8,
     shadowColor: '#eab308',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 5
+    shadowRadius: 5,
+    elevation: 3
   },
   actionText: {
     color: '#000000',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 14.5,
     textTransform: 'uppercase',
-    letterSpacing: 1
+    letterSpacing: 0.5
   },
 
-  /* Required Prompt: "Don't have an account? Register" */
+  otpHelperRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: -8,
+    marginBottom: 16
+  },
+  resendText: {
+    color: '#b45309',
+    fontSize: 13,
+    fontWeight: '700'
+  },
+  changeEmailLink: {
+    color: '#64748b',
+    fontSize: 13,
+    fontWeight: '600'
+  },
+
   registerPromptRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -994,65 +1009,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     textDecorationLine: 'underline'
-  },
-
-  /* Scorer Section & Option Pills */
-  scorerIntroText: {
-    color: '#64748b',
-    fontSize: 12.5,
-    marginBottom: 14,
-    textAlign: 'center',
-    lineHeight: 17
-  },
-  scorerMethodPills: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    gap: 8
-  },
-  scorerMethodPill: {
-    flex: 1,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  scorerMethodPillActive: {
-    borderColor: '#b45309',
-    backgroundColor: '#fffbeb',
-    borderWidth: 1.5
-  },
-  scorerMethodPillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748b'
-  },
-  scorerMethodPillTextActive: {
-    color: '#b45309',
-    fontWeight: '800'
-  },
-  changeContactBtn: {
-    paddingVertical: 4
-  },
-  changeContactText: {
-    color: '#64748b',
-    fontSize: 13,
-    textDecorationLine: 'underline'
-  },
-  scorerQuickLinkBtn: {
-    marginTop: 16,
-    alignItems: 'center',
-    padding: 6
-  },
-  scorerQuickLinkText: {
-    fontSize: 12.5,
-    color: '#64748b'
-  },
-  scorerQuickLinkHighlight: {
-    color: '#b45309',
-    fontWeight: '700'
   }
 });

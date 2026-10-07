@@ -1,6 +1,7 @@
-﻿/**
+/**
  * routes/scorerRoutes.js
- * Scorer Portal REST APIs
+ * Comprehensive Scorer Portal REST APIs
+ * Fully connected to MongoDB
  */
 
 const express = require('express');
@@ -10,34 +11,74 @@ const authService = require('../services/authService');
 const scorerService = require('../services/scorerService');
 const scoringEngine = require('../services/scoringEngine');
 const matchService = require('../services/matchService');
-const { requireScorerAuth } = require('../middleware/authMiddleware');
+const { requireScorerAuth, verifyMatchPermission } = require('../middleware/authMiddleware');
 const { acquireMatchLock } = require('../middleware/concurrencyLock');
 
-// --- PUBLIC AUTH ROUTES ---
-router.post('/login', async (req, res, next) => {
-  try {
-    const { email, otp, password } = req.body;
-    const result = await authService.login(email, otp || password);
-    res.json({ success: true, ...result });
-  } catch (err) {
-    res.status(err.status || 500).json({ success: false, error: err.message });
-  }
-});
+// ==========================================
+// 1. PUBLIC AUTH ROUTES
+// ==========================================
 
-router.post('/register', async (req, res, next) => {
+// Scorer Registration (Requirement 1 & 12)
+router.post('/register', async (req, res) => {
   try {
-    const result = await authService.register(req.body);
+    const result = await authService.registerScorer(req.body);
     res.status(201).json({ success: true, ...result });
   } catch (err) {
-    res.status(err.status || 500).json({ success: false, error: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message, error: err.message });
   }
 });
 
-// --- PROTECTED SCORER ROUTES ---
+// Scorer Login - Step 1: Request OTP or Direct Verify (Requirement 2 & 12)
+router.post('/login', async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Scorer email is required.' });
+    }
+
+    if (otp || password) {
+      const result = await authService.verifyOtp(email, otp || password);
+      return res.json({ success: true, ...result });
+    }
+
+    // Generate & send OTP (enforcing approved status)
+    const result = await authService.requestOtp(email, 'SCORER');
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// Scorer Login - Request OTP explicitly
+router.post('/request-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.requestOtp(email, 'SCORER');
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// Scorer Login - Step 2: Verify OTP (Requirement 3 & 12)
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const result = await authService.verifyOtp(email, otp);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(err.status || 401).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// ==========================================
+// 2. PROTECTED SCORER ROUTES
+// Verified by requireScorerAuth (Role=SCORER/ADMIN, Status=ACTIVE/APPROVED)
+// ==========================================
 router.use(requireScorerAuth);
 
 // Scorer Profile
-router.get('/me', async (req, res) => {
+router.get(['/profile', '/me'], async (req, res) => {
   try {
     const profile = await authService.getProfile(req.user.id);
     res.json({ success: true, data: profile });
@@ -46,26 +87,36 @@ router.get('/me', async (req, res) => {
   }
 });
 
-// Scorer Dashboard Stats
+// Scorer Dashboard Stats (Requirement 4 & 12)
 router.get('/dashboard', async (req, res) => {
   try {
-    const stats = await scorerService.getDashboardStats(req.user.id);
+    const stats = await scorerService.getDashboardStats(req.user.id, req.user.email);
     res.json({ success: true, data: stats });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, error: err.message });
   }
 });
 
-// Assigned Matches List
+// Assigned Matches List (Requirement 4 & 12)
 router.get('/matches', async (req, res) => {
   try {
     const { filter } = req.query;
-    const stats = await scorerService.getDashboardStats(req.user.id);
+    const stats = await scorerService.getDashboardStats(req.user.id, req.user.email);
     let list = stats.matches || [];
     if (filter) {
       list = list.filter(m => m.status.toLowerCase() === filter.toLowerCase());
     }
     res.json({ success: true, data: list });
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, error: err.message });
+  }
+});
+
+// Match Details / Live State alias
+router.get('/matches/:matchId', async (req, res) => {
+  try {
+    const liveState = await scorerService.getLiveMatchState(req.params.matchId);
+    res.json({ success: true, data: liveState });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, error: err.message });
   }
@@ -82,7 +133,7 @@ router.get('/matches/:matchId/setup', async (req, res) => {
 });
 
 // Start Match (Toss, Playing XI)
-router.post('/matches/:matchId/start', async (req, res) => {
+router.post('/matches/:matchId/start', verifyMatchPermission, async (req, res) => {
   try {
     const result = await matchService.startMatch(req.params.matchId, req.body);
     res.json(result);
@@ -91,7 +142,7 @@ router.post('/matches/:matchId/start', async (req, res) => {
   }
 });
 
-// Live Scoring Screen State
+// Live Scoring Screen State (Requirement 5)
 router.get('/matches/:matchId/live', async (req, res) => {
   try {
     const liveState = await scorerService.getLiveMatchState(req.params.matchId);
@@ -101,17 +152,21 @@ router.get('/matches/:matchId/live', async (req, res) => {
   }
 });
 
-// Record Delivery (Ball-by-Ball) with Concurrency Locking & Duplicate Protection
-router.post('/matches/:matchId/deliveries', acquireMatchLock, async (req, res) => {
+// Record Delivery (Ball-by-Ball) (Requirement 5, 8 & 12)
+// Supports both /deliveries and /ball
+const handleRecordDelivery = async (req, res) => {
   try {
     const result = await scoringEngine.recordDelivery(req.params.matchId, req.body, req.user.id);
     res.json(result);
   } catch (err) {
-    res.status(err.status || 500).json({ success: false, error: err.message });
+    res.status(err.status || 500).json({ success: false, message: err.message, error: err.message });
   }
-});
+};
 
-// Full Scorecard
+router.post('/matches/:matchId/deliveries', acquireMatchLock, verifyMatchPermission, handleRecordDelivery);
+router.post('/matches/:matchId/ball', acquireMatchLock, verifyMatchPermission, handleRecordDelivery);
+
+// Full Scorecard (Requirement 6 & 12)
 router.get('/matches/:matchId/scorecard', async (req, res) => {
   try {
     const scorecard = await scorerService.getFullScorecard(req.params.matchId);
@@ -121,8 +176,28 @@ router.get('/matches/:matchId/scorecard', async (req, res) => {
   }
 });
 
+// AI Fielding Commentary Integration (Requirement 9)
+router.post('/matches/:matchId/fielding-commentary', async (req, res) => {
+  try {
+    const result = await scorerService.generateFieldingCommentary(req.params.matchId, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, error: err.message });
+  }
+});
+
+// Update Match State (Requirement 7 & 12)
+router.put('/matches/:matchId/status', verifyMatchPermission, async (req, res) => {
+  try {
+    const result = await scoringEngine.updateMatchStatus(req.params.matchId, req.body.status);
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ success: false, error: err.message });
+  }
+});
+
 // End Over
-router.post('/matches/:matchId/end-over', async (req, res) => {
+router.post('/matches/:matchId/end-over', verifyMatchPermission, async (req, res) => {
   try {
     const result = await scoringEngine.endOver(req.params.matchId, req.body.nextBowlerId);
     res.json(result);
@@ -132,7 +207,7 @@ router.post('/matches/:matchId/end-over', async (req, res) => {
 });
 
 // End Innings
-router.post('/matches/:matchId/end-innings', async (req, res) => {
+router.post('/matches/:matchId/end-innings', verifyMatchPermission, async (req, res) => {
   try {
     const result = await scoringEngine.endInnings(req.params.matchId);
     res.json(result);
@@ -142,7 +217,7 @@ router.post('/matches/:matchId/end-innings', async (req, res) => {
 });
 
 // Undo Last Delivery
-router.post('/matches/:matchId/undo', async (req, res) => {
+router.post('/matches/:matchId/undo', verifyMatchPermission, async (req, res) => {
   try {
     const result = await scoringEngine.undoLastDelivery(req.params.matchId);
     res.json(result);
@@ -151,19 +226,8 @@ router.post('/matches/:matchId/undo', async (req, res) => {
   }
 });
 
-
-// Edit Delivery with Recalculation
-router.patch('/matches/:matchId/deliveries/:deliveryId', acquireMatchLock, async (req, res) => {
-  try {
-    const result = await scoringEngine.editDelivery(req.params.matchId, req.params.deliveryId, req.body, req.user.id);
-    res.json(result);
-  } catch (err) {
-    res.status(err.status || 500).json({ success: false, error: err.message });
-  }
-});
-
 // Conclude / End Match
-router.post('/matches/:matchId/end', async (req, res) => {
+router.post('/matches/:matchId/end', verifyMatchPermission, async (req, res) => {
   try {
     const result = await scoringEngine.endMatch(req.params.matchId, req.body);
     res.json(result);

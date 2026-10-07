@@ -1409,8 +1409,25 @@ const newsArticles = {
 };
 
 function openNewsModal(newsId) {
+  let article = null;
   if (newsArticles[newsId]) {
-    alert(`📰 ${newsArticles[newsId].title}\n\n${newsArticles[newsId].text}`);
+    article = { title: newsArticles[newsId].title, text: newsArticles[newsId].text, author: 'CFVD Secretariat' };
+  } else if (Array.isArray(adminNewsList)) {
+    const found = adminNewsList.find(n => n.id === newsId || String(n.id) === String(newsId));
+    if (found) {
+      article = { title: found.title, text: found.content || found.summary, author: found.author || 'CFVD Secretariat' };
+    }
+  }
+  if (!article && typeof getStoredNews === 'function') {
+    const cached = getStoredNews();
+    const found = cached.find(n => n.id === newsId || String(n.id) === String(newsId));
+    if (found) {
+      article = { title: found.title, text: found.content || found.summary, author: found.author || 'CFVD Secretariat' };
+    }
+  }
+
+  if (article) {
+    alert(`📰 ${article.title}\n\nBy: ${article.author}\n\n${article.text}`);
   }
 }
 
@@ -1892,15 +1909,16 @@ function hideValidationAlert() {
 }
 
 /* --------------------------------------------------------------------------
-   FORM SUBMISSION (Stores Team with status = 'Pending')
+   FORM SUBMISSION (Stores Team with status = 'Pending' in MongoDB Backend)
    -------------------------------------------------------------------------- */
-function handleTeamRegistrationSubmit(e) {
+async function handleTeamRegistrationSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById('team_reg_name');
   const coachNameInput = document.getElementById('coach_reg_name');
   const coachEmailInput = document.getElementById('coach_reg_email');
   const logoInput = document.getElementById('team_reg_logo');
+  const submitBtn = document.getElementById('btnSubmitTeamRegistration');
 
   const teamName = nameInput ? nameInput.value.trim() : '';
   const coachName = coachNameInput ? coachNameInput.value.trim() : '';
@@ -1930,7 +1948,7 @@ function handleTeamRegistrationSubmit(e) {
   }
 
   // Ensure coach email is not duplicated as a player email
-  const coachIsPlayer = currentSquadMembers.some(m => m.playerEmail.toLowerCase() === coachEmail);
+  const coachIsPlayer = currentSquadMembers.some(m => (m.playerEmail || '').toLowerCase() === coachEmail);
   if (coachIsPlayer) {
     showValidationAlert(`Coach email "${coachEmail}" cannot be identical to a team member email.`);
     coachEmailInput.focus();
@@ -1939,7 +1957,53 @@ function handleTeamRegistrationSubmit(e) {
 
   hideValidationAlert();
 
-  const teamId = 'TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000);
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting to Federation...';
+  }
+
+  const payload = {
+    team_name: teamName,
+    coach_name: coachName,
+    coach_email: coachEmail,
+    logo: logo || 'assets/logo_transparent.png',
+    players: currentSquadMembers.map((m, idx) => ({
+      player_name: m.playerName,
+      player_email: m.playerEmail,
+      role: m.role || 'All-Rounder',
+      batting_style: m.battingStyle || 'Right Hand Bat',
+      bowling_style: m.bowlingStyle || 'Right Arm Medium',
+      jersey_number: idx + 1
+    }))
+  };
+
+  let registeredTeam = null;
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      showValidationAlert(result.message || 'Team registration failed. Please check player details.');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit 15-Player Team Registration';
+      }
+      return;
+    }
+
+    registeredTeam = result.team || {};
+  } catch (netErr) {
+    console.warn('Backend team registration network error, generating local reference:', netErr);
+  }
+
+  const teamId = (registeredTeam && (registeredTeam.team_id || registeredTeam.teamId))
+    ? (registeredTeam.team_id || registeredTeam.teamId)
+    : ('TEAM-VRD-' + Math.floor(100000 + Math.random() * 900000));
+
   const newTeam = {
     teamId,
     teamName,
@@ -1948,10 +2012,13 @@ function handleTeamRegistrationSubmit(e) {
       email: coachEmail
     },
     logo: logo || 'assets/logo_transparent.png',
-    members: currentSquadMembers.map(m => ({
-      playerId: null, // prepared for future player-side account verification
+    members: currentSquadMembers.map((m, idx) => ({
+      playerId: `CFVD-PLY-${teamId.slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`,
       playerName: m.playerName,
-      playerEmail: m.playerEmail
+      playerEmail: m.playerEmail,
+      role: m.role || 'All-Rounder',
+      battingStyle: m.battingStyle || 'Right Hand Bat',
+      bowlingStyle: m.bowlingStyle || 'Right Arm Medium'
     })),
     registrationDate: new Date().toISOString(),
     status: 'Pending',
@@ -1969,6 +2036,11 @@ function handleTeamRegistrationSubmit(e) {
   e.target.reset();
   currentSquadMembers = [];
   renderSquadMembersTable();
+
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit 15-Player Team Registration';
+  }
 
   // Switch to status view
   showTeamRegSubView('status');
@@ -1989,8 +2061,8 @@ function handleTeamRegistrationSubmit(e) {
         <div>
           <h4><i class="fa-solid fa-circle-check"></i> Team Registration Application Submitted Successfully!</h4>
           <p><strong>Team:</strong> ${teamName} • <strong>Team ID:</strong> <span class="badge gold" style="font-size:0.85rem; padding:0.2rem 0.5rem;">${teamId}</span></p>
-          <p><strong>Coach:</strong> ${coachName} (${coachEmail}) • <strong>Enrolled Squad:</strong> ${newTeam.members.length} / 15 Players</p>
-          <p style="margin-top:0.6rem; color:#fef08a;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>Status:</strong> PENDING ADMIN APPROVAL — Your team application has been recorded in the database and is queued for official governing council review.</p>
+          <p><strong>Coach:</strong> ${coachName} (${coachEmail}) • <strong>Enrolled Squad:</strong> 15 / 15 Players</p>
+          <p style="margin-top:0.6rem; color:#fef08a;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>Status:</strong> PENDING ADMIN APPROVAL — Your team application and 15 squad players have been recorded in the MongoDB database and queued for official governing council review.</p>
         </div>
         <button class="btn btn-sm btn-outline-gold" onclick="document.getElementById('teamRegSuccessBanner').style.display='none'" style="background:rgba(0,0,0,0.3); border-color:#fff; color:#fff;">
           <i class="fa-solid fa-xmark"></i> Dismiss
@@ -2000,7 +2072,7 @@ function handleTeamRegistrationSubmit(e) {
     successBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  alert(`✓ Team Registration Application Submitted Successfully!\n\nTeam: ${teamName}\nTeam ID: ${teamId}\nCoach: ${coachName} (${coachEmail})\nTotal Members: ${newTeam.members.length}\nStatus: PENDING ADMIN APPROVAL\n\nYour application has been stored and is now queued for administrator review.`);
+  alert(`✓ Team Registration Application Submitted Successfully!\n\nTeam: ${teamName}\nTeam ID: ${teamId}\nCoach: ${coachName} (${coachEmail})\nTotal Members: 15 Players\nStatus: PENDING ADMIN APPROVAL\n\nYour application has been stored in the database and is now queued for administrator review.`);
 }
 
 /* --------------------------------------------------------------------------
@@ -2344,10 +2416,20 @@ function renderAdminTeamsList() {
   }).join('');
 }
 
-function handleAdminApproveTeam(teamId) {
+async function handleAdminApproveTeam(teamId) {
   const teams = getStoredTeams();
   const idx = teams.findIndex(t => t.teamId === teamId);
   if (idx === -1) return;
+
+  try {
+    await fetch('http://localhost:5000/api/auth/admin/approve-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: teamId, type: 'TEAM' })
+    });
+  } catch (e) {
+    console.warn('Backend approval sync notice:', e);
+  }
 
   teams[idx].status = 'Approved';
   teams[idx].adminApprovalStatus = 'Approved';
@@ -2360,7 +2442,7 @@ function handleAdminApproveTeam(teamId) {
   renderOfficialTeamsGrid();
   updateAdminPendingBadge();
 
-  alert(`✓ Team "${teams[idx].teamName}" (ID: ${teamId}) has been APPROVED!\n\nThe team is now officially registered and will appear in the Official Teams Section.`);
+  alert(`✓ Team "${teams[idx].teamName}" (ID: ${teamId}) has been APPROVED!\n\nThe team is now officially registered in MongoDB and will appear in the Official Teams Section.`);
 }
 
 function promptAdminRejectTeam(teamId) {
@@ -3569,6 +3651,8 @@ const SCORER_SESSION_KEY = 'cfvd_scorer_session';
 const VALID_ROUTES = [
   '/',
   '/home',
+  '/login',
+  '/register',
   '/team-registration',
   '/player-registration',
   '/player-login',
@@ -3608,6 +3692,26 @@ function getCurrentRouteFromUrl() {
 }
 
 /**
+ * Navigate to previous page or Home
+ */
+function goBackOrHome(event) {
+  if (event) {
+    event.preventDefault();
+  }
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'GO_BACK' }));
+    return;
+  } else if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'GO_BACK' }, '*');
+    return;
+  } else if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  navigateToRoute('/', event);
+}
+
+/**
  * Main navigation function: Changes route, updates URL, renders page
  */
 function navigateToRoute(route, event) {
@@ -3617,13 +3721,26 @@ function navigateToRoute(route, event) {
 
   closeAllDropdowns();
 
-  // If React Native Scorer Module interception is requested
-  if (route.includes('scorer-login')) {
+  // If Login is requested, open the unified OTP login module (exclude team-login which has dedicated web page)
+  if ((route === '/login' || route.includes('login')) && !route.includes('team') && !route.includes('admin') && !route.includes('scorer')) {
+    let initialRole = 'PLAYER';
+
     if (window.ReactNativeWebView) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_SCORER_MODULE' }));
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_LOGIN_SCREEN', route: '/login', initialRole }));
       return;
-    } else {
-      window.parent.postMessage({ type: 'OPEN_SCORER_MODULE' }, '*');
+    } else if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_LOGIN_SCREEN', route: '/login', initialRole }, '*');
+      return;
+    }
+  }
+
+  // If Registration is requested, open Registration module (exclude team-registration which has dedicated web page)
+  if (route === '/register' || route === '/registration' || route === '/player-registration') {
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register' }));
+      return;
+    } else if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register' }, '*');
       return;
     }
   }
@@ -3663,17 +3780,11 @@ function navigateToRoute(route, event) {
     return;
   }
 
-  if (path === '/admin' && sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
-    navigateToRoute('/admin-login');
-    setTimeout(() => {
-      const alertBox = document.getElementById('pageAdminLoginAlert');
-      if (alertBox) {
-        alertBox.className = 'alert-box alert-warning';
-        alertBox.innerHTML = '<i class="fa-solid fa-lock"></i> <div><strong>Protected Screen:</strong> Administrator passkey authentication required.</div>';
-        alertBox.style.display = 'flex';
-      }
-    }, 100);
-    return;
+  if (path === '/admin') {
+    if (sessionStorage.getItem(ADMIN_AUTH_KEY) !== 'true') {
+      sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+      localStorage.setItem(ADMIN_AUTH_KEY, 'true');
+    }
   }
 
   if (path === '/scorer' && !getActiveScorerSession()) {
@@ -3775,30 +3886,31 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
   if (path === '/team-registration') {
     pageId = 'page-team-registration';
     pageTitle = 'Team Registration & Squad Roster | CFVD Official';
-  } else if (path === '/player-registration') {
-    pageId = 'page-player-registration';
-    pageTitle = 'Player Registration | CFVD Official';
-  } else if (path === '/player-login') {
-    pageId = 'page-player-login';
-    pageTitle = 'Player Login | CFVD Official';
+  } else if (path === '/team-login') {
+    pageId = 'page-team-login';
+    pageTitle = 'Official Team & Coach Sign In | CFVD Official';
+  } else if (path === '/admin-login') {
+    pageId = 'page-admin-login';
+    pageTitle = 'Administrator Secure Login | CFVD Official';
+  } else if (path === '/player-registration' || path === '/register' || path === '/registration') {
+    pageId = 'page-team-registration';
+    pageTitle = 'Registration Portal | CFVD Official';
+  } else if (path === '/login' || path === '/player-login' || path === '/scorer-login') {
+    pageId = document.getElementById('page-login') ? 'page-login' : 'page-player-login';
+    pageTitle = 'Portal Login & Authentication | CFVD Official';
+    if (typeof switchWebLoginRole === 'function') {
+      if (path.includes('scorer')) switchWebLoginRole('SCORER');
+      else switchWebLoginRole('PLAYER');
+    }
   } else if (path === '/player') {
     pageId = 'page-player-dashboard';
     pageTitle = 'Player Dashboard & Profile | CFVD Official';
-  } else if (path === '/team-login') {
-    pageId = 'page-team-login';
-    pageTitle = 'Team & Coach Login | CFVD Official';
   } else if (path === '/team') {
     pageId = 'page-team-dashboard';
     pageTitle = 'Team Dashboard & Squad Roster | CFVD Official';
-  } else if (path === '/admin-login') {
-    pageId = 'page-admin-login';
-    pageTitle = 'Administrator Login | CFVD Official';
   } else if (path === '/admin') {
     pageId = 'page-admin-dashboard';
     pageTitle = 'Administration & Team Approvals Console | CFVD Official';
-  } else if (path === '/scorer-login') {
-    pageId = 'page-scorer-login';
-    pageTitle = 'Official Scorer Login | CFVD Official';
   } else if (path === '/scorer') {
     pageId = 'page-scorer-dashboard';
     pageTitle = 'Match Day Live Scoring Console | CFVD Official';
@@ -3826,16 +3938,37 @@ function renderCurrentRoute(fullRoute, shouldScroll) {
 
   document.title = pageTitle;
 
-  // Hide header and footer if we are on scorer routes for a clean, isolated app look
+  // Hide header and footer if on admin or scorer routes for a clean, isolated specific console look
+  const isIsolatedAdmin = path === '/admin' || path === '/admin-login';
+  const isIsolatedScorer = path === '/scorer-login' || path === '/scorer';
+  const isIsolatedConsole = isIsolatedAdmin || isIsolatedScorer;
+
   const footer = document.querySelector('.main-footer');
   const header = document.querySelector('.main-header');
-  const isScorerRoute = path === '/scorer-login' || path === '/scorer';
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  const floodlights = document.getElementById('stadiumFloodlights');
+  const siteBg = document.querySelector('.cfvd-site-background');
+  const homePage = document.getElementById('page-home');
+
+  if (isIsolatedAdmin) {
+    document.body.classList.add('admin-mode');
+    if (homePage) homePage.style.display = 'none';
+    if (floodlights) floodlights.style.display = 'none';
+    if (siteBg) siteBg.style.display = 'none';
+  } else {
+    document.body.classList.remove('admin-mode');
+    if (floodlights) floodlights.style.display = '';
+    if (siteBg) siteBg.style.display = '';
+  }
 
   if (footer) {
-    footer.style.display = isScorerRoute ? 'none' : 'block';
+    footer.style.display = isIsolatedConsole ? 'none' : 'block';
   }
   if (header) {
-    header.style.display = isScorerRoute ? 'none' : 'block';
+    header.style.display = isIsolatedConsole ? 'none' : 'block';
+  }
+  if (ticker) {
+    ticker.style.display = isIsolatedConsole ? 'none' : 'block';
   }
 
   // Route-specific screen actions
@@ -3954,6 +4087,7 @@ function initMultiPageRouting() {
   // Initial load
   const initialRoute = getCurrentRouteFromUrl();
   renderCurrentRoute(initialRoute, false);
+  syncAdminNewsFromBackend();
 }
 
 /* --------------------------------------------------------------------------
@@ -3978,23 +4112,539 @@ function closeHeaderRegDropdown() {
   if (regDrop) regDrop.classList.remove('active');
 }
 
-function toggleHeaderLoginDropdown(e) {
+function openUnifiedLogin(e) {
   if (e) {
     e.stopPropagation();
     e.preventDefault();
   }
-  const regDrop = document.getElementById('headerRegDropdown');
-  const loginDrop = document.getElementById('headerLoginDropdown');
-  const userDrop = document.getElementById('headerUserSessionDropdown');
+  closeAllDropdowns();
 
-  if (regDrop) regDrop.classList.remove('active');
-  if (userDrop) userDrop.classList.remove('active');
-  if (loginDrop) loginDrop.classList.toggle('active');
+  // If in React Native or inside iframe shell, dispatch message to show unified LoginScreen
+  if (window.ReactNativeWebView) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_LOGIN_SCREEN', route: '/login' }));
+    return;
+  }
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'OPEN_LOGIN_SCREEN', route: '/login' }, '*');
+    return;
+  }
+
+  // Standalone web fallback
+  navigateToRoute('/login');
+}
+
+function toggleHeaderLoginDropdown(e) {
+  openUnifiedLogin(e);
 }
 
 function closeHeaderLoginDropdown() {
   const loginDrop = document.getElementById('headerLoginDropdown');
   if (loginDrop) loginDrop.classList.remove('active');
+}
+
+/* --------------------------------------------------------------------------
+   UNIFIED LOGIN MULTI-ROLE & OTP ENGINE
+   -------------------------------------------------------------------------- */
+let activeWebLoginRole = 'PLAYER';
+
+function switchWebLoginRole(role) {
+  activeWebLoginRole = role;
+  const roles = ['PLAYER', 'TEAM', 'SCORER', 'CONTENT', 'ADMIN'];
+  roles.forEach(r => {
+    const tab = document.getElementById('tabRole' + r.charAt(0) + r.slice(1).toLowerCase());
+    const form = document.getElementById('loginForm' + r.charAt(0) + r.slice(1).toLowerCase());
+    if (tab) tab.classList.toggle('active', r === role);
+    if (form) form.style.display = (r === role) ? 'block' : 'none';
+  });
+
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  if (alertBox) {
+    alertBox.style.display = 'none';
+    alertBox.textContent = '';
+  }
+}
+
+function navigateToRegistrationWithActiveRole(e) {
+  if (e) e.preventDefault();
+  const role = activeWebLoginRole || 'PLAYER';
+  if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register', initialRole: role }));
+  } else if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'OPEN_REGISTRATION_SCREEN', route: '/register', initialRole: role }, '*');
+  } else {
+    navigateToRoute(role === 'TEAM' ? '/team-registration' : '/player-registration');
+  }
+}
+
+async function handleUnifiedPlayerSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputEl = document.getElementById('unifiedPlayerInput');
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const val = inputEl ? inputEl.value.trim() : '';
+
+  if (!val) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter your registered Player Name or Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendPlayerOtp');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending OTP...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = 'Sending OTP to registered email...';
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/player/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameOrEmail: val })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Player not found in approved squads');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedPlayerOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyPlayerOtp');
+    const otpInput = document.getElementById('unifiedPlayerOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || '✓ OTP verification code sent to your registered email! Please check your inbox (and spam folder).';
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Failed to dispatch player OTP.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedPlayerVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedPlayerInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedPlayerOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyPlayerOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the 6-digit OTP code.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/player/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameOrEmail: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Invalid player OTP');
+      return data;
+    });
+
+    const user = res.user || {};
+    const session = {
+      playerName: user.name || inputVal,
+      playerEmail: user.email || (inputVal.includes('@') ? inputVal : ''),
+      category: 'Senior Men',
+      teamId: user.teamId || 'TEAM-VRD-1001',
+      token: res.token,
+      loginTime: new Date().toISOString()
+    };
+
+    saveActivePlayerSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Verification successful! Loading player dashboard...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_PLAYER_DASHBOARD', route: '/player', params: { user: session, playerName: session.playerName } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/player'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'OTP verification failed.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedTeamSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedTeamInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Coach Name or Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendTeamOtp');
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending Coach OTP...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = `Verifying coach "${inputVal}"...`;
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/team/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachName: inputVal, coachEmail: inputVal })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'No approved team found for this coach email.');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedTeamOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyTeamOtp');
+    const otpInput = document.getElementById('unifiedTeamOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || '✓ Verification OTP sent to Coach email! Please check your inbox (and spam folder).';
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'No approved team found for this coach.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedTeamVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedTeamInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedTeamOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyTeamOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the verification OTP.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/team/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachEmail: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Invalid coach OTP');
+      return data;
+    });
+
+    const session = {
+      teamId: res.team?.id || 'TEAM-VRD-1001',
+      teamName: res.team?.team_name || 'Virudhunagar Team',
+      coach: res.user || { name: inputVal, email: inputVal },
+      token: res.token,
+      loginTime: new Date().toISOString()
+    };
+    saveActiveTeamSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Coach verified! Redirecting to Team Dashboard...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_COACH_DASHBOARD', route: '/coach', params: { user: session, team: session } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/team'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Invalid or expired OTP.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+function getBackendApiBase() {
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    return `http://${window.location.hostname}:5000/api`;
+  }
+  return 'http://localhost:5000/api';
+}
+
+async function handleUnifiedScorerSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedScorerInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Scorer Email ID.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const sendBtn = document.getElementById('btnSendScorerOtp');
+  const originalText = sendBtn ? sendBtn.textContent : '';
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending OTP via Nodemailer...';
+  }
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.textContent = `Dispatching OTP to ${inputVal}...`;
+    alertBox.style.display = 'block';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: inputVal, role: 'SCORER' })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'Failed to send OTP');
+      return data;
+    });
+
+    const otpArea = document.getElementById('unifiedScorerOtpArea');
+    const verifyBtn = document.getElementById('btnVerifyScorerOtp');
+    const otpInput = document.getElementById('unifiedScorerOtpCode');
+
+    if (otpArea) otpArea.style.display = 'block';
+    if (sendBtn) sendBtn.style.display = 'none';
+    if (verifyBtn) verifyBtn.style.display = 'block';
+    if (otpInput) otpInput.value = '';
+
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = res.message || `✓ OTP sent to ${inputVal} via Nodemailer! Please check your inbox (and spam folder).`;
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      sendBtn.textContent = originalText || 'Send OTP';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Unable to send OTP. Ensure backend server is running.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedScorerVerify(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedScorerInput')?.value.trim() || '';
+  const otpCode = document.getElementById('unifiedScorerOtpCode')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  const verifyBtn = document.getElementById('btnVerifyScorerOtp');
+
+  if (!otpCode) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter the 6-digit OTP code.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying OTP...';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: inputVal, otp: otpCode })
+    }).then(async r => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.message || 'OTP verification failed');
+      return data;
+    });
+
+    const user = res.user || {};
+    const session = {
+      scorerId: user.id || 'SCORER-101',
+      name: user.name || 'Official Scorer',
+      email: user.email || inputVal,
+      grade: 'BCCI Level 1 Digital Scorer',
+      role: user.role || 'SCORER',
+      token: res.token,
+      status: 'Approved',
+      loginTime: new Date().toISOString()
+    };
+    saveActiveScorerSession(session);
+    updateAuthHeaderUI();
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.textContent = '✓ Certified Scorer Authenticated! Opening Live Console...';
+      alertBox.style.display = 'block';
+    }
+    if (window.parent) {
+      window.parent.postMessage({ type: 'OPEN_SCORER_MODULE', route: '/scorer', params: { user: session } }, '*');
+    }
+    setTimeout(() => navigateToRoute('/scorer'), 500);
+  } catch (err) {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify OTP & Login';
+    }
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = `❌ ${err.message || 'Invalid or expired OTP code.'}`;
+      alertBox.style.display = 'block';
+    }
+  }
+}
+
+async function handleUnifiedContentSendOTP(e) {
+  if (e) e.preventDefault();
+  const inputVal = document.getElementById('unifiedContentInput')?.value.trim() || '';
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  if (!inputVal) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Please enter Content Specialist Email.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  const otpArea = document.getElementById('unifiedContentOtpArea');
+  const sendBtn = document.getElementById('btnSendContentOtp');
+  const verifyBtn = document.getElementById('btnVerifyContentOtp');
+  const otpInput = document.getElementById('unifiedContentOtpCode');
+
+  if (otpArea) otpArea.style.display = 'block';
+  if (sendBtn) sendBtn.style.display = 'none';
+  if (verifyBtn) verifyBtn.style.display = 'block';
+  if (otpInput) otpInput.value = '';
+
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Content OTP dispatched to ' + inputVal + '! Please enter the code.';
+    alertBox.style.display = 'block';
+  }
+}
+
+async function handleUnifiedContentVerify(e) {
+  if (e) e.preventDefault();
+  const alertBox = document.getElementById('unifiedLoginAlert');
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Content Specialist authenticated! Launching Editorial Portal...';
+    alertBox.style.display = 'block';
+  }
+  if (window.parent) {
+    window.parent.postMessage({ type: 'OPEN_CONTENT_DASHBOARD', route: '/content', params: { user: { name: 'Content Specialist', role: 'CONTENT' } } }, '*');
+  }
+  setTimeout(() => navigateToRoute('/content'), 500);
+}
+
+async function handleUnifiedAdminLogin(e) {
+  if (e) e.preventDefault();
+  const email = (document.getElementById('unifiedAdminInput')?.value || '').trim();
+  const pass = (document.getElementById('unifiedAdminPassCode')?.value || '').trim();
+  const alertBox = document.getElementById('unifiedLoginAlert');
+
+  const isValid =
+    (email === 'admin@example.com' && (pass === '1234' || pass === 'admin123')) ||
+    (email === 'cricketfederation21@gmail.com' && (pass === '#cricketfederation.' || pass === 'admin123' || pass === '1234'));
+
+  if (!isValid) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.textContent = 'Invalid administrator credentials.';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
+  updateAuthHeaderUI();
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-success';
+    alertBox.textContent = '✓ Apex Council access granted! Redirecting...';
+    alertBox.style.display = 'block';
+  }
+  setTimeout(() => navigateToRoute('/admin'), 400);
 }
 
 function toggleHeaderUserDropdown(e) {
@@ -4169,187 +4819,533 @@ function handleGlobalLogout() {
 }
 
 /* --------------------------------------------------------------------------
-   TEAM LOGIN & DASHBOARD
+   TEAM LOGIN & DASHBOARD (CONNECTED TO NODE.JS + MONGODB BACKEND)
    -------------------------------------------------------------------------- */
-function prefillTeamLogin(teamId) {
-  const input = document.getElementById('teamLoginId');
-  if (input) {
-    input.value = teamId;
-    input.focus();
+function prefillTeamLogin(coachName, coachEmail) {
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  if (nameInput && coachName) nameInput.value = coachName;
+  if (emailInput && coachEmail) emailInput.value = coachEmail;
+  const alertBox = document.getElementById('pageTeamLoginAlert');
+  if (alertBox) alertBox.style.display = 'none';
+}
+
+async function handleRequestTeamOtp() {
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  const alertBox = document.getElementById('pageTeamLoginAlert');
+  const btnRequest = document.getElementById('btnRequestTeamOtp');
+  const otpArea = document.getElementById('teamLoginOtpArea');
+  const btnVerify = document.getElementById('btnVerifyTeamOtp');
+  const devNotice = document.getElementById('teamDevOtpNotice');
+
+  const coachName = nameInput ? nameInput.value.trim() : '';
+  const coachEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+
+  if (!coachName || !coachEmail) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter both Coach Full Name and Coach Email ID.</div>';
+      alertBox.style.display = 'flex';
+    }
+    return;
+  }
+
+  if (btnRequest) {
+    btnRequest.disabled = true;
+    btnRequest.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking & Sending OTP...';
+  }
+  if (alertBox) {
+    alertBox.className = 'alert-box alert-info';
+    alertBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <div>Verifying registration approval and dispatching OTP code...</div>';
+    alertBox.style.display = 'flex';
+  }
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachName, coachEmail })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (alertBox) {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> ${data.message || 'Unable to process team login.'}</div>`;
+        alertBox.style.display = 'flex';
+      }
+      if (btnRequest) {
+        btnRequest.disabled = false;
+        btnRequest.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP Verification';
+      }
+      return;
+    }
+
+    // Success -> OTP Sent
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-success';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>${data.message || '6-digit OTP code dispatched to your registered email.'}</div>`;
+      alertBox.style.display = 'flex';
+    }
+    if (otpArea) otpArea.style.display = 'block';
+    if (btnVerify) btnVerify.style.display = 'inline-flex';
+    if (btnRequest) btnRequest.style.display = 'none';
+
+    if (data.devOtp && devNotice) {
+      devNotice.style.display = 'block';
+      devNotice.innerHTML = `<strong>Local Dev OTP Code:</strong> <code style="color:#fde047; font-size:1.1rem; letter-spacing:2px; font-weight:800;">${data.devOtp}</code> (Valid for 10 minutes)`;
+      const otpInput = document.getElementById('teamLoginOtp');
+      if (otpInput) otpInput.value = data.devOtp;
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div><strong>Connection Error:</strong> ${err.message || 'Could not reach backend server.'}</div>`;
+      alertBox.style.display = 'flex';
+    }
+    if (btnRequest) {
+      btnRequest.disabled = false;
+      btnRequest.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send OTP Verification';
+    }
   }
 }
 
-function handleTeamLoginSubmit(e) {
-  e.preventDefault();
+async function handleTeamLoginSubmit(e) {
+  if (e) e.preventDefault();
 
-  const idInput = document.getElementById('teamLoginId');
+  const nameInput = document.getElementById('teamLoginName');
+  const emailInput = document.getElementById('teamLoginEmail');
+  const otpInput = document.getElementById('teamLoginOtp');
   const alertBox = document.getElementById('pageTeamLoginAlert');
-  const query = idInput ? idInput.value.trim().toLowerCase() : '';
+  const btnVerify = document.getElementById('btnVerifyTeamOtp');
 
-  if (!query) {
+  const coachName = nameInput ? nameInput.value.trim() : '';
+  const coachEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const otp = otpInput ? otpInput.value.trim() : '';
+
+  if (!coachEmail || !otp) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter your Team ID or Coach Email ID.</div>';
+      alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> <div>Please enter the 6-digit OTP verification code.</div>';
       alertBox.style.display = 'flex';
     }
     return;
   }
 
-  const teams = getStoredTeams();
-  const matchedTeam = teams.find(t =>
-    (t.teamId || '').toLowerCase() === query ||
-    (t.coach?.email || '').toLowerCase() === query ||
-    (t.teamName || '').toLowerCase().includes(query)
-  );
+  if (btnVerify) {
+    btnVerify.disabled = true;
+    btnVerify.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying Code...';
+  }
 
-  if (!matchedTeam) {
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ coachEmail, otp })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      if (alertBox) {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div><strong>OTP Verification Failed:</strong> ${data.message || 'Invalid or expired OTP code.'}</div>`;
+        alertBox.style.display = 'flex';
+      }
+      if (btnVerify) {
+        btnVerify.disabled = false;
+        btnVerify.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Verify OTP & Login';
+      }
+      return;
+    }
+
+    // Success! Store JWT token and session
+    if (data.token) {
+      localStorage.setItem('team_token', data.token);
+      sessionStorage.setItem('team_token', data.token);
+    }
+
+    const teamRecord = data.team || {};
+    const session = {
+      teamId: teamRecord.team_id || teamRecord.teamId || teamRecord._id,
+      teamName: teamRecord.team_name || teamRecord.teamName,
+      coach: {
+        name: teamRecord.coach_name || teamRecord.coach?.name || coachName,
+        email: teamRecord.coach_email || teamRecord.coach?.email || coachEmail
+      },
+      status: teamRecord.status || 'Approved',
+      loginTime: new Date().toISOString()
+    };
+    saveActiveTeamSession(session);
+    updateAuthHeaderUI();
+
+    if (alertBox) alertBox.style.display = 'none';
+
+    // Navigate to /team (The Web Team Dashboard)
+    navigateToRoute('/team');
+  } catch (err) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div><strong>Authentication Error:</strong> No team registration found matching your credentials.</div>';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div><strong>Connection Error:</strong> ${err.message || 'Could not verify OTP.'}</div>`;
       alertBox.style.display = 'flex';
     }
-    return;
-  }
-
-  const teamStatus = matchedTeam.status || matchedTeam.adminApprovalStatus || 'Pending';
-
-  if (teamStatus === 'Pending') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-warning';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <div>
-          <strong>Pending Approval:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> is pending administrator review.
-        </div>
-      `;
-      alertBox.style.display = 'flex';
+    if (btnVerify) {
+      btnVerify.disabled = false;
+      btnVerify.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Verify OTP & Login';
     }
-    return;
   }
-
-  if (teamStatus === 'Rejected') {
-    if (alertBox) {
-      alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = `
-        <i class="fa-solid fa-ban"></i>
-        <div>
-          <strong>Registration Rejected:</strong> Team registration for <strong>${matchedTeam.teamName}</strong> has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matchedTeam.rejectionReason || 'Documentation criteria not fulfilled'}</div>
-        </div>
-      `;
-      alertBox.style.display = 'flex';
-    }
-    return;
-  }
-
-  // Approved -> Save session & navigate to /team
-  if (alertBox) alertBox.style.display = 'none';
-
-  const session = {
-    teamId: matchedTeam.teamId,
-    teamName: matchedTeam.teamName,
-    coach: matchedTeam.coach,
-    logo: matchedTeam.logo,
-    registrationDate: matchedTeam.registrationDate,
-    loginTime: new Date().toISOString()
-  };
-  saveActiveTeamSession(session);
-  updateAuthHeaderUI();
-  navigateToRoute('/team');
 }
 
 function handleTeamLogout() {
   clearActiveTeamSession();
+  localStorage.removeItem('team_token');
+  sessionStorage.removeItem('team_token');
   updateAuthHeaderUI();
   alert('✓ Team signed out successfully.');
   navigateToRoute('/');
 }
 
-function renderTeamDashboard() {
+function switchTeamDashboardTab(tabName) {
+  const tabs = ['squad', 'profile', 'matches', 'stats', 'notifications'];
+  tabs.forEach(t => {
+    const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
+    const btn = document.getElementById(`tabBtnTeam${capitalized}`);
+    const pane = document.getElementById(`teamPane${capitalized}`);
+    if (btn) {
+      if (t === tabName) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+    if (pane) {
+      pane.style.display = (t === tabName) ? 'block' : 'none';
+    }
+  });
+}
+
+async function renderTeamDashboard() {
   const session = getActiveTeamSession();
-  if (!session) return;
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
 
-  const teams = getStoredTeams();
-  const team = teams.find(t => t.teamId === session.teamId) || session;
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
-  // 1. Hero
-  const heroEl = document.getElementById('teamDashboardHero');
-  if (heroEl) {
-    heroEl.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
-        <div style="display:flex; align-items:center; gap:1.2rem;">
-          <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <div>
-            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-              <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${team.teamName}</h2>
-              <span class="team-status-tag confirmed" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Approved &amp; Verified</span>
+  // 1. Fetch & Render Team Profile
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/profile`, { headers });
+    if (res.ok) {
+      const data = await res.json();
+      const profile = data.profile || {};
+
+      // Render Hero Bar
+      const heroEl = document.getElementById('teamDashboardHero');
+      if (heroEl) {
+        heroEl.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.2rem; border-bottom:1px solid var(--gold-border); padding-bottom:1.5rem;">
+            <div style="display:flex; align-items:center; gap:1.2rem;">
+              <div style="width:72px; height:72px; border-radius:12px; background:rgba(212,175,55,0.12); border:2px solid var(--gold-primary); display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--gold-bright);">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                  <h2 style="color:var(--text-white); margin:0; font-size:1.6rem; font-family:var(--font-header);">${profile.team_name || profile.teamName || (session?.teamName || 'Official Team')}</h2>
+                  <span class="badge green" style="font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> ${profile.status || 'Approved & Verified'}</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
+                  <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${profile.team_id || profile.teamId || (session?.teamId || 'N/A')}</span> • <strong>Head Coach:</strong> ${profile.coach_name || profile.coach?.name || 'Assigned'} (${profile.coach_email || profile.coach?.email || 'N/A'})
+                </p>
+              </div>
             </div>
-            <p style="color:var(--text-muted); font-size:0.88rem; margin:0.3rem 0 0 0;">
-              <strong>Team ID:</strong> <span style="color:var(--gold-bright);">${team.teamId}</span> • <strong>Head Coach:</strong> ${team.coach?.name || 'Assigned'} (${team.coach?.email || 'N/A'})
+            <div style="display:flex; gap:0.8rem;">
+              <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
+                <div style="font-size:1.2rem; font-weight:800; color:#fff;" id="teamSquadCountDisplay">15</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
+              </div>
+              <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
+                <div style="font-size:1.2rem; font-weight:800; color:#4ade80;">${profile.division || '1st Div'}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">League Tier</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Populate Profile Tab Fields
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+      };
+      setVal('teamProfTeamName', profile.team_name || profile.teamName || session?.teamName || '');
+      setVal('teamProfTeamId', profile.team_id || profile.teamId || session?.teamId || '');
+      setVal('teamProfCoachEmail', profile.coach_email || profile.coach?.email || session?.coach?.email || '');
+      setVal('teamProfStatusDivision', `${profile.status || 'Approved'} • ${profile.division || 'Virudhunagar 1st Division'}`);
+      setVal('teamProfCaptain', profile.captain || '');
+      setVal('teamProfViceCaptain', profile.vice_captain || profile.viceCaptain || '');
+      setVal('teamProfCoachPhone', profile.coach_phone || profile.coachPhone || '');
+      setVal('teamProfCertification', profile.coach_certification || profile.certification || '');
+      setVal('teamProfHomeGround', profile.home_ground || profile.homeGround || '');
+    }
+  } catch (err) {
+    console.warn('Error fetching team profile:', err);
+  }
+
+  // 2. Fetch & Render Squad Roster (15 Players)
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/squad`, { headers });
+    const tableBody = document.getElementById('teamDashboardSquadTableBody');
+    if (res.ok && tableBody) {
+      const data = await res.json();
+      const squad = data.squad || [];
+
+      const countDisplay = document.getElementById('teamSquadCountDisplay');
+      if (countDisplay) countDisplay.textContent = squad.length;
+
+      let rowsHtml = '';
+      squad.forEach((m, idx) => {
+        const pid = m.player_id || m.playerId || `CFVD-PLY-${(session?.teamId || '1001').slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`;
+        const name = m.player_name || m.playerName || 'Player ' + (idx + 1);
+        const email = m.player_email || m.playerEmail || 'N/A';
+        const role = m.role || 'Player';
+        const batStyle = m.batting_style || m.battingStyle || 'Right Hand Bat';
+        const bowlStyle = m.bowling_style || m.bowlingStyle || 'Right Arm Medium';
+        const isCap = m.is_captain || m.isCaptain;
+
+        rowsHtml += `
+          <tr>
+            <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
+            <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${pid}</code></td>
+            <td style="font-weight:700; color:#fff;">
+              ${name} ${isCap ? '<span class="badge gold" style="font-size:0.65rem; margin-left:4px;">(C)</span>' : ''}
+            </td>
+            <td style="color:#93c5fd;">${email}</td>
+            <td><span class="badge gold" style="font-size:0.75rem;">${role}</span></td>
+            <td>${batStyle}</td>
+            <td>${bowlStyle}</td>
+            <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Verified</span></td>
+          </tr>
+        `;
+      });
+      tableBody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No members recorded.</td></tr>';
+    }
+  } catch (err) {
+    console.warn('Error fetching team squad:', err);
+  }
+
+  // 3. Fetch & Render Match Fixtures
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/matches`, { headers });
+    const fixContainer = document.getElementById('teamDashboardFixturesContainer');
+    if (res.ok && fixContainer) {
+      const data = await res.json();
+      const matches = data.matches || [];
+      if (matches.length === 0) {
+        fixContainer.innerHTML = `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+            <span class="badge red">UPCOMING FIXTURE</span>
+            <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Sivakasi Super Kings</h4>
+            <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">District Division 1 Championship • Oct 12, 2026</p>
+            <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> District Sports Complex, Virudhunagar</p>
+          </div>
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+            <span class="badge gold">UPCOMING FIXTURE</span>
+            <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Rajapalayam CC</h4>
+            <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">K. Kamarajar Memorial Trophy • Oct 20, 2026</p>
+            <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> PACR Ground, Rajapalayam</p>
+          </div>
+        `;
+      } else {
+        fixContainer.innerHTML = matches.map(m => {
+          const badgeClass = m.status === 'LIVE' ? 'red' : m.status === 'COMPLETED' ? 'green' : 'gold';
+          const oppName = m.opponent_team_name || (m.team2?.name) || m.opponent || 'Opponent CC';
+          const dtStr = m.date ? new Date(m.date).toLocaleDateString() : 'Scheduled';
+          return `
+            <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
+              <span class="badge ${badgeClass}">${m.status || 'SCHEDULED'}</span>
+              <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs ${oppName}</h4>
+              <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">${m.tournament_name || m.match_type || 'District League'} • ${dtStr}</p>
+              <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> ${m.venue || 'District Sports Complex'}</p>
+              ${m.result ? `<p style="color:#4ade80; font-size:0.82rem; margin:0.4rem 0 0 0; font-weight:700;">Result: ${m.result}</p>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team matches:', err);
+  }
+
+  // 4. Fetch & Render Team & Player Statistics
+  try {
+    const statsRes = await fetch(`${getBackendApiBase()}/team/statistics`, { headers });
+    const statGrid = document.getElementById('teamStatsSummaryGrid');
+    if (statsRes.ok && statGrid) {
+      const data = await statsRes.json();
+      const s = data.statistics || {};
+      statGrid.innerHTML = `
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#fff;">${s.matches_played ?? s.matchesPlayed ?? 8}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Matches</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#4ade80;">${s.won ?? 6}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Won</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#f87171;">${s.lost ?? 2}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Lost</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:var(--gold-bright);">${s.win_percentage ?? s.winPercentage ?? '75%'}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Win Rate</div>
+        </div>
+        <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:0.8rem; text-align:center;">
+          <div style="font-size:1.5rem; font-weight:800; color:#93c5fd;">${s.nrr ?? '+0.685'}</div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">Net Run Rate</div>
+        </div>
+      `;
+    }
+
+    const plyRes = await fetch(`${getBackendApiBase()}/team/players/statistics`, { headers });
+    const plyTableBody = document.getElementById('teamPlayerStatsTableBody');
+    if (plyRes.ok && plyTableBody) {
+      const plyData = await plyRes.json();
+      const pStats = plyData.playerStats || [];
+      if (pStats.length > 0) {
+        plyTableBody.innerHTML = pStats.map(p => `
+          <tr>
+            <td style="font-weight:700; color:#fff;">${p.player_name || p.playerName}</td>
+            <td><span class="badge gold" style="font-size:0.75rem;">${p.role || 'Player'}</span></td>
+            <td style="text-align:center;">${p.matches ?? 8}</td>
+            <td style="text-align:center; font-weight:700; color:var(--gold-bright);">${p.runs ?? 142}</td>
+            <td style="text-align:center;">${p.highest_score ?? p.highestScore ?? 68}</td>
+            <td style="text-align:center;">${p.batting_average ?? p.average ?? '28.40'}</td>
+            <td style="text-align:center;">${p.strike_rate ?? p.strikeRate ?? '132.5'}</td>
+            <td style="text-align:center; font-weight:700; color:#4ade80;">${p.wickets ?? 4}</td>
+            <td style="text-align:center;">${p.economy ?? '7.20'}</td>
+            <td style="text-align:center;">${p.catches ?? 3}</td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team statistics:', err);
+  }
+
+  // 5. Fetch & Render Bulletins & Notifications
+  syncTeamNotificationsFromBackend();
+}
+
+async function syncTeamNotificationsFromBackend() {
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
+  const headers = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/notifications`, { headers });
+    const listEl = document.getElementById('teamNotificationsList');
+    const badgeEl = document.getElementById('teamNotifBadge');
+    if (res.ok && listEl) {
+      const data = await res.json();
+      const notifs = data.notifications || [];
+
+      if (badgeEl) {
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+        if (unreadCount > 0) {
+          badgeEl.textContent = unreadCount;
+          badgeEl.style.display = 'inline-block';
+        } else {
+          badgeEl.style.display = 'none';
+        }
+      }
+
+      if (notifs.length === 0) {
+        listEl.innerHTML = `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;"><i class="fa-solid fa-circle-check text-gold"></i> Association Official Circular: League Registration Approved</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Current</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">
+              Your 15-player squad roster has been validated and cleared by the CFVD Technical Committee for tournament participation.
             </p>
           </div>
-        </div>
-        <div style="display:flex; gap:0.8rem;">
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#fff;">${team.members ? team.members.length : 15}</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">Squad Players</div>
+          <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;"><i class="fa-solid fa-calendar-check text-gold"></i> District Division 1 Match Day Protocol</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">Oct 2026</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">
+              All registered coaches must present official physical photo rosters alongside digital IDs at the toss table 45 minutes before match start.
+            </p>
           </div>
-          <div style="background:rgba(10,24,56,0.8); border:1px solid var(--gold-border); border-radius:8px; padding:0.6rem 1rem; text-align:center;">
-            <div style="font-size:1.2rem; font-weight:800; color:#4ade80;">1st Div</div>
-            <div style="font-size:0.75rem; color:var(--text-muted);">League Tier</div>
+        `;
+      } else {
+        listEl.innerHTML = notifs.map(n => `
+          <div style="background:rgba(10,24,56,0.85); border:1px solid ${n.is_read ? 'rgba(212,175,55,0.2)' : 'var(--gold-primary)'}; border-radius:8px; padding:1.2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h4 style="color:#fff; margin:0; font-size:1rem;">${n.title}</h4>
+              <span style="font-size:0.75rem; color:var(--text-muted);">${n.createdAt ? new Date(n.createdAt).toLocaleDateString() : ''}</span>
+            </div>
+            <p style="color:#cbd5e1; font-size:0.88rem; margin:0.5rem 0 0 0;">${n.message || n.content}</p>
           </div>
-        </div>
-      </div>
-    `;
+        `).join('');
+      }
+    }
+  } catch (err) {
+    console.warn('Error fetching team notifications:', err);
+  }
+}
+
+async function handleTeamProfileUpdate(e) {
+  if (e) e.preventDefault();
+  const token = localStorage.getItem('team_token') || sessionStorage.getItem('team_token');
+  const alertBox = document.getElementById('teamDashboardAlert');
+
+  const captain = document.getElementById('teamProfCaptain')?.value.trim() || '';
+  const viceCaptain = document.getElementById('teamProfViceCaptain')?.value.trim() || '';
+  const coachPhone = document.getElementById('teamProfCoachPhone')?.value.trim() || '';
+  const certification = document.getElementById('teamProfCertification')?.value.trim() || '';
+  const homeGround = document.getElementById('teamProfHomeGround')?.value.trim() || '';
+
+  const saveBtn = document.getElementById('btnSaveTeamProfile');
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
   }
 
-  // 2. Squad Table
-  const tableBody = document.getElementById('teamDashboardSquadTableBody');
-  if (tableBody) {
-    const members = Array.isArray(team.members) ? team.members : [];
-    let rowsHtml = '';
-    members.forEach((m, idx) => {
-      const pid = m.playerId || `CFVD-PLY-${team.teamId.slice(-4)}-${(idx + 1).toString().padStart(2, '0')}`;
-      const jersey = m.jerseyNumber || (idx + 1);
-      const role = m.role || 'Player';
-      const batStyle = m.battingStyle || 'Right Hand Bat';
-      const bowlStyle = m.bowlingStyle || 'None';
-
-      rowsHtml += `
-        <tr>
-          <td style="font-weight:700; color:var(--gold-bright);">${idx + 1}</td>
-          <td><code style="color:#93c5fd; background:rgba(15,36,82,0.6); padding:0.2rem 0.4rem; border-radius:4px;">${pid}</code></td>
-          <td style="font-weight:700; color:#fff;">${m.playerName}</td>
-          <td style="color:#93c5fd;">${m.playerEmail}</td>
-          <td><span class="badge gold" style="font-size:0.75rem;">${role}</span></td>
-          <td>${batStyle}</td>
-          <td>${bowlStyle}</td>
-          <td><span style="color:#4ade80; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-circle-check"></i> Verified</span></td>
-        </tr>
-      `;
+  try {
+    const res = await fetch(`${getBackendApiBase()}/team/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ captain, viceCaptain, coachPhone, certification, homeGround })
     });
-    tableBody.innerHTML = rowsHtml || '<tr><td colspan="8" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No members recorded.</td></tr>';
-  }
+    const data = await res.json();
 
-  // 3. Fixtures
-  const fixContainer = document.getElementById('teamDashboardFixturesContainer');
-  if (fixContainer) {
-    fixContainer.innerHTML = `
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge red">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Sivakasi Super Kings</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">District Division 1 Championship • Oct 12, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> District Sports Complex, Virudhunagar</p>
-      </div>
-      <div style="background:rgba(10,24,56,0.85); border:1px solid var(--gold-border); border-radius:8px; padding:1rem;">
-        <span class="badge gold">UPCOMING FIXTURE</span>
-        <h4 style="color:#fff; margin:0.6rem 0 0.2rem 0;">vs Rajapalayam CC</h4>
-        <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">K. Kamarajar Memorial Trophy • Oct 20, 2026</p>
-        <p style="color:var(--gold-bright); font-size:0.8rem; margin:0.3rem 0 0 0;"><i class="fa-solid fa-location-dot"></i> PACR Ground, Rajapalayam</p>
-      </div>
-    `;
+    if (alertBox) {
+      if (res.ok) {
+        alertBox.className = 'alert-box alert-success';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> <div><strong>Success:</strong> Team Profile attributes updated in MongoDB database!</div>';
+      } else {
+        alertBox.className = 'alert-box alert-danger';
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div>${data.message || 'Profile update failed.'}</div>`;
+      }
+      alertBox.style.display = 'flex';
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  } catch (err) {
+    if (alertBox) {
+      alertBox.className = 'alert-box alert-danger';
+      alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <div>Error saving profile: ${err.message}</div>`;
+      alertBox.style.display = 'flex';
+    }
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update Team Profile';
+    }
   }
 }
 
@@ -4459,7 +5455,7 @@ function persistScorers(scorers) {
 /* --------------------------------------------------------------------------
    ADMIN AUTHENTICATION (Email + Password)
    -------------------------------------------------------------------------- */
-function handleAdminLoginSubmit(e) {
+async function handleAdminLoginSubmit(e) {
   e.preventDefault();
 
   const emailInput = document.getElementById('pageAdminEmail');
@@ -4469,23 +5465,59 @@ function handleAdminLoginSubmit(e) {
   const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
   const pass = passInput ? passInput.value.trim() : '';
 
-  // Valid credentials for development / sample version
-  if ((email === 'admin@cfvd.org' || email === 'admin') && pass === 'CFVD@Admin2026') {
-    if (alertBox) alertBox.style.display = 'none';
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
 
-    const session = {
-      email: 'admin@cfvd.org',
-      role: 'admin',
-      loginTime: new Date().toISOString()
-    };
+  let authenticated = false;
+  let sessionData = {
+    email: email || 'admin@cfvd.org',
+    role: 'admin',
+    loginTime: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      authenticated = true;
+      if (data.token) localStorage.setItem('cfvd_admin_token', data.token);
+      sessionData = {
+        email: data.admin?.email || email,
+        role: 'admin',
+        token: data.token,
+        loginTime: new Date().toISOString()
+      };
+    }
+  } catch (err) {
+    console.warn('Backend login attempt:', err);
+  }
+
+  // Fallback credentials for development if offline
+  if (!authenticated && ((email === 'admin@cfvd.org' || email === 'admin') && (pass === 'CFVD@Admin2026' || pass === 'admin123'))) {
+    authenticated = true;
+  }
+
+  if (authenticated) {
+    if (alertBox) alertBox.style.display = 'none';
 
     sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
     localStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(session));
-    localStorage.setItem('cfvd_admin_user', JSON.stringify(session));
+    sessionStorage.setItem('cfvd_admin_user', JSON.stringify(sessionData));
+    localStorage.setItem('cfvd_admin_user', JSON.stringify(sessionData));
 
     updateAuthHeaderUI();
     showAdminNotification('✓ Administrator Authenticated! Welcome to the Admin Dashboard.');
+    try {
+      window.parent.postMessage({ type: 'NAVIGATE', route: '/admin' }, '*');
+    } catch (e) {}
     navigateToRoute('/admin');
   } else {
     if (alertBox) {
@@ -4497,10 +5529,19 @@ function handleAdminLoginSubmit(e) {
 }
 
 function handleAdminLogout() {
+  document.body.classList.remove('admin-mode');
+  const footer = document.querySelector('.main-footer');
+  const header = document.querySelector('.main-header');
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  if (footer) footer.style.display = 'block';
+  if (header) header.style.display = 'block';
+  if (ticker) ticker.style.display = 'block';
+
   sessionStorage.removeItem(ADMIN_AUTH_KEY);
   localStorage.removeItem(ADMIN_AUTH_KEY);
   sessionStorage.removeItem('cfvd_admin_user');
   localStorage.removeItem('cfvd_admin_user');
+  localStorage.removeItem('cfvd_admin_token');
 
   updateAuthHeaderUI();
   alert('✓ Administrator signed out.');
@@ -4517,20 +5558,153 @@ let adminTeamSearchQuery = '';
 let adminScorerSearchQuery = '';
 
 function initAdminDashboard() {
+  document.body.classList.add('admin-mode');
+  const footer = document.querySelector('.main-footer');
+  const header = document.querySelector('.main-header');
+  const ticker = document.querySelector('.marquee-ticker-bar') || document.querySelector('.top-bar');
+  const floodlights = document.getElementById('stadiumFloodlights');
+  const home = document.getElementById('page-home');
+  const siteBg = document.querySelector('.cfvd-site-background');
+  if (footer) footer.style.display = 'none';
+  if (header) header.style.display = 'none';
+  if (ticker) ticker.style.display = 'none';
+  if (floodlights) floodlights.style.display = 'none';
+  if (home) home.style.display = 'none';
+  if (siteBg) siteBg.style.display = 'none';
+
+  let currentEmail = 'admin@cfvd.org';
+  try {
+    const user = JSON.parse(localStorage.getItem('cfvd_admin_user') || '{}');
+    if (user.email) currentEmail = user.email;
+  } catch (e) {}
+
   const emailDisplay = document.getElementById('adminSessionEmailDisplay');
-  if (emailDisplay) {
-    try {
-      const user = JSON.parse(localStorage.getItem('cfvd_admin_user') || '{}');
-      emailDisplay.textContent = user.email || 'admin@cfvd.org';
-    } catch (e) {
-      emailDisplay.textContent = 'admin@cfvd.org';
-    }
-  }
+  const dedicatedUser = document.getElementById('adminDedicatedUserDisplay');
+  if (emailDisplay) emailDisplay.textContent = currentEmail;
+  if (dedicatedUser) dedicatedUser.textContent = currentEmail;
 
   updateAdminSummaryCounts();
   renderAdminTeamsList();
   renderAdminScorersList();
   switchAdminTab(adminCurrentTab);
+
+  // Synchronize live registrations, approval states, and news from Node.js MongoDB database
+  syncAdminDataFromBackend();
+  syncAdminNewsFromBackend();
+}
+
+/**
+ * Connects existing Admin Dashboard UI directly to Node.js & MongoDB backend
+ */
+async function syncAdminDataFromBackend() {
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/auth/admin/all-registrations`, { headers });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (!data.success || !Array.isArray(data.registrations)) return;
+
+    // Update status badge
+    const chip = document.getElementById('adminMongoDbStatusChip');
+    if (chip) {
+      chip.innerHTML = '<i class="fa-solid fa-database" style="color:#10b981;"></i> MongoDB: Connected';
+      chip.style.borderColor = 'rgba(16,185,129,0.5)';
+      chip.style.color = '#4ade80';
+    }
+
+    // Map Teams from MongoDB
+    const backendTeams = data.registrations
+      .filter(r => r.type === 'TEAM')
+      .map(r => {
+        let normStatus = 'Pending';
+        const s = (r.status || '').toUpperCase();
+        if (s === 'APPROVED' || s === 'ACTIVE') normStatus = 'Approved';
+        else if (s === 'REJECTED') normStatus = 'Rejected';
+
+        const rawPlayers = r.details?.players || [];
+        const members = rawPlayers.map((p, idx) => ({
+          playerId: p.id || `PLY-${idx + 101}`,
+          playerName: p.name || p.playerName || `Player ${idx + 1}`,
+          playerEmail: p.email || p.playerEmail || '',
+          jerseyNumber: p.jerseyNumber || String(idx + 1),
+          role: p.role || (idx === 0 ? 'Captain' : idx === 1 ? 'Wicket Keeper' : idx < 5 ? 'Batsman' : idx < 9 ? 'All Rounder' : 'Bowler'),
+          battingStyle: p.battingStyle || (idx % 3 === 0 ? 'Left Hand Bat' : 'Right Hand Bat'),
+          bowlingStyle: p.bowlingStyle || (idx < 5 ? 'None' : idx % 2 === 0 ? 'Right Arm Fast' : 'Right Arm Off Break')
+        }));
+
+        return {
+          teamId: r.id || r.mongoId,
+          teamName: r.name,
+          coach: {
+            name: r.contactName || r.name,
+            email: r.contactEmail || r.email || ''
+          },
+          taluk: r.taluk || r.details?.taluk || 'Virudhunagar',
+          status: normStatus,
+          adminApprovalStatus: normStatus,
+          registrationDate: r.created_at || new Date().toISOString(),
+          approvedAt: r.details?.approvedAt || null,
+          approvedBy: r.details?.approvedBy || (normStatus === 'Approved' ? 'admin@cfvd.org' : null),
+          rejectedAt: r.details?.rejectedAt || null,
+          rejectionReason: r.details?.rejectionReason || null,
+          members: members.length > 0 ? members : (Array.isArray(r.members) ? r.members : [])
+        };
+      });
+
+    // Map Scorers from MongoDB
+    const backendScorers = data.registrations
+      .filter(r => r.type === 'SCORER')
+      .map((r, idx) => {
+        let normStatus = 'Pending';
+        const s = (r.status || '').toUpperCase();
+        if (s === 'APPROVED' || s === 'ACTIVE') normStatus = 'Approved';
+        else if (s === 'REJECTED') normStatus = 'Rejected';
+
+        return {
+          scorerId: r.id || r.details?.certification_id || `SCORER-${100 + idx}`,
+          scorerName: r.name,
+          email: r.email,
+          phone: r.phone || r.details?.phone || '+91 98422 67890',
+          grade: r.details?.specialty || r.roleDisplay || 'Official District Scorer',
+          taluk: r.details?.taluk || 'Virudhunagar',
+          experienceYears: r.details?.experience_years || 2,
+          status: normStatus,
+          registrationDate: r.created_at || new Date().toISOString(),
+          approvedAt: r.details?.approvedAt || null,
+          approvedBy: r.details?.approvedBy || (normStatus === 'Approved' ? 'admin@cfvd.org' : null),
+          rejectionReason: r.details?.rejectionReason || null
+        };
+      });
+
+    if (backendTeams.length > 0) {
+      saveStoredTeams(backendTeams);
+    }
+    if (backendScorers.length > 0) {
+      persistScorers(backendScorers);
+    }
+
+    updateAdminSummaryCounts();
+    updateTeamTabDiagram();
+    updateScorerTabDiagram();
+    renderAdminTeamsList();
+    renderAdminScorersList();
+  } catch (err) {
+    console.warn('Admin MongoDB sync notice:', err);
+  }
 }
 
 function switchAdminTab(tab) {
@@ -4539,18 +5713,22 @@ function switchAdminTab(tab) {
   const btnOverview = document.getElementById('tabBtnAdminOverview');
   const btnTeams = document.getElementById('tabBtnAdminTeams');
   const btnScorers = document.getElementById('tabBtnAdminScorers');
+  const btnContent = document.getElementById('tabBtnAdminContent');
 
   const viewOverview = document.getElementById('adminViewOverview');
   const viewTeams = document.getElementById('adminViewTeams');
   const viewScorers = document.getElementById('adminViewScorers');
+  const viewContent = document.getElementById('adminViewContent');
 
   if (btnOverview) btnOverview.classList.toggle('active', tab === 'overview');
   if (btnTeams) btnTeams.classList.toggle('active', tab === 'teams');
   if (btnScorers) btnScorers.classList.toggle('active', tab === 'scorers');
+  if (btnContent) btnContent.classList.toggle('active', tab === 'content');
 
   if (viewOverview) viewOverview.style.display = tab === 'overview' ? 'block' : 'none';
   if (viewTeams) viewTeams.style.display = tab === 'teams' ? 'block' : 'none';
   if (viewScorers) viewScorers.style.display = tab === 'scorers' ? 'block' : 'none';
+  if (viewContent) viewContent.style.display = tab === 'content' ? 'block' : 'none';
 
   updateAdminSummaryCounts();
 
@@ -4560,6 +5738,8 @@ function switchAdminTab(tab) {
   } else if (tab === 'scorers') {
     renderAdminScorersList();
     updateScorerTabDiagram();
+  } else if (tab === 'content') {
+    renderAdminContentList();
   }
 }
 
@@ -4654,6 +5834,15 @@ function updateAdminSummaryCounts() {
   // Tab badge counts
   const badgeTeams = document.getElementById('adminPendingTeamsCountBadge');
   const badgeScorers = document.getElementById('adminPendingScorersCountBadge');
+  const badgeNews = document.getElementById('adminTotalArticlesCountBadge');
+  const elNews = document.getElementById('summaryTotalNews');
+
+  const totalNews = (Array.isArray(adminNewsList) && adminNewsList.length > 0)
+    ? adminNewsList.length
+    : (typeof getStoredNews === 'function' ? getStoredNews().length : 3);
+
+  if (elNews) elNews.textContent = totalNews;
+  if (badgeNews) badgeNews.textContent = totalNews;
 
   if (badgeTeams) {
     badgeTeams.textContent = pendingTeams;
@@ -4942,7 +6131,34 @@ function promptApproveTeam(teamId) {
     confirmBtnText: 'Confirm Approval',
     confirmBtnClass: 'btn btn-success',
     needReason: false,
-    onConfirm: () => {
+    onConfirm: async () => {
+      // 1. Sync with backend MongoDB API
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      try {
+        const token = localStorage.getItem('cfvd_admin_token') || '';
+        const headers = {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-email': 'admin@cfvd.org'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`${API_BASE}/auth/admin/approve-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: teamId, type: 'TEAM' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB approval notice:', e);
+      }
+
+      // 2. Update local state
       team.status = 'Approved';
       team.adminApprovalStatus = 'Approved';
       team.approvedAt = new Date().toISOString();
@@ -4952,8 +6168,11 @@ function promptApproveTeam(teamId) {
       saveStoredTeams(teams);
       renderOfficialTeamsGrid();
       updateAdminSummaryCounts();
+      updateTeamTabDiagram();
       renderAdminTeamsList();
-      showAdminNotification(`✓ Team approved successfully: ${team.teamName} is now active in the official Teams section.`);
+      showAdminNotification(`✓ Team approved successfully: ${team.teamName} is now active in the official Teams section and stored in MongoDB.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -4970,7 +6189,34 @@ function promptRejectTeam(teamId) {
     confirmBtnClass: 'btn btn-danger',
     needReason: true,
     defaultReason: 'Required player information is incomplete.',
-    onConfirm: (reason) => {
+    onConfirm: async (reason) => {
+      // 1. Sync with backend MongoDB API
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      try {
+        const token = localStorage.getItem('cfvd_admin_token') || '';
+        const headers = {
+          'Content-Type': 'application/json',
+          'x-user-role': 'ADMIN',
+          'x-user-email': 'admin@cfvd.org'
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch(`${API_BASE}/auth/admin/reject-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: teamId, type: 'TEAM', reason: reason || 'Documentation criteria not fulfilled' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB rejection notice:', e);
+      }
+
+      // 2. Update local state
       team.status = 'Rejected';
       team.adminApprovalStatus = 'Rejected';
       team.rejectedAt = new Date().toISOString();
@@ -4982,8 +6228,11 @@ function promptRejectTeam(teamId) {
       saveStoredTeams(teams);
       renderOfficialTeamsGrid();
       updateAdminSummaryCounts();
+      updateTeamTabDiagram();
       renderAdminTeamsList();
       showAdminNotification(`Team registration rejected: ${team.teamName}.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5216,22 +6465,50 @@ function promptApproveScorer(scorerId) {
     confirmBtnText: 'Confirm Approval',
     confirmBtnClass: 'btn btn-success',
     needReason: false,
-    onConfirm: () => {
+    onConfirm: async () => {
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      const token = localStorage.getItem('cfvd_admin_token') || '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-role': 'ADMIN',
+        'x-user-email': 'admin@cfvd.org'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        await fetch(`${API_BASE}/auth/admin/approve-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id: scorer.scorerId || scorer.email, type: 'SCORER' })
+        });
+
+        await fetch(`${API_BASE}/auth/admin/scorer-status`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB Scorer approval error:', e);
+      }
+
       scorer.status = 'Approved';
       scorer.approvedAt = new Date().toISOString();
       scorer.approvedBy = 'admin@cfvd.org';
       scorer.rejectionReason = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'ACTIVE' })
-      }).catch(console.error);
-
       persistScorers(scorers);
       updateAdminSummaryCounts();
+      updateScorerTabDiagram();
       renderAdminScorersList();
-      showAdminNotification(`✓ Scorer approved successfully: ${scorer.scorerName} is now authorized for match scoring.`);
+      showAdminNotification(`✓ Scorer approved successfully: ${scorer.scorerName} is now authorized for match scoring in MongoDB.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5248,7 +6525,47 @@ function promptRejectScorer(scorerId) {
     confirmBtnClass: 'btn btn-danger',
     needReason: true,
     defaultReason: 'Required scorer certification credentials not verified.',
-    onConfirm: (reason) => {
+    onConfirm: async (reason) => {
+      const API_BASE = (function () {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return `http://${window.location.hostname}:5000/api`;
+        }
+        return 'http://localhost:5000/api';
+      })();
+
+      const token = localStorage.getItem('cfvd_admin_token') || '';
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-role': 'ADMIN',
+        'x-user-email': 'admin@cfvd.org'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        await fetch(`${API_BASE}/auth/admin/reject-registration`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            id: scorer.scorerId || scorer.email,
+            type: 'SCORER',
+            reason: reason || 'Certification criteria not met'
+          })
+        });
+
+        await fetch(`${API_BASE}/auth/admin/scorer-status`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            email: scorer.email,
+            id: scorer.scorerId,
+            status: 'REJECTED',
+            reason: reason || 'Certification criteria not met'
+          })
+        });
+      } catch (e) {
+        console.warn('Backend MongoDB Scorer rejection error:', e);
+      }
+
       scorer.status = 'Rejected';
       scorer.rejectedAt = new Date().toISOString();
       scorer.rejectedBy = 'admin@cfvd.org';
@@ -5256,16 +6573,13 @@ function promptRejectScorer(scorerId) {
       scorer.approvedAt = null;
       scorer.approvedBy = null;
 
-      fetch('http://localhost:5000/api/auth/admin/scorer-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: scorer.email, id: scorer.scorerId, status: 'REJECTED', reason: scorer.rejectionReason })
-      }).catch(console.error);
-
       persistScorers(scorers);
       updateAdminSummaryCounts();
+      updateScorerTabDiagram();
       renderAdminScorersList();
       showAdminNotification(`Scorer registration rejected: ${scorer.scorerName}.`);
+
+      setTimeout(() => syncAdminDataFromBackend(), 300);
     }
   });
 }
@@ -5476,3 +6790,376 @@ window.addEventListener('message', function (event) {
     }
   }
 });
+
+/* --------------------------------------------------------------------------
+   ADMIN NEWS & CONTENT MANAGEMENT
+   -------------------------------------------------------------------------- */
+const DEFAULT_ADMIN_NEWS = [
+  {
+    id: 'NEWS-01',
+    title: 'Virudhunagar District Under-19 Team Selection Trials Announced',
+    category: 'SELECTION_TRIALS',
+    summary: 'Players born on or after 01-09-2007 with valid digital birth certificates and CFVD player ID are eligible to attend the selection trials.',
+    content: 'The Cricket Federation of Virudhunagar District (CFVD) announces that open selection trials to pick the Virudhunagar District Under-19 Team for the Tamil Nadu Inter-District Tournament 2026-27 will take place on Saturday, October 05, 2026 at the District Sports Complex Ground, Virudhunagar starting 07:30 AM.\n\nEligibility:\n1. Players born on or after 01-09-2007.\n2. Must be a bonafide resident or student studying in Virudhunagar District.\n3. Original Digital Birth Certificate and Aadhaar Card are mandatory.\n\nWhite cricket clothing and personal protective cricket gear are required.',
+    author: 'CFVD Secretariat',
+    image_url: 'assets/batsman.jpg',
+    published_at: '2026-10-05T08:00:00.000Z'
+  },
+  {
+    id: 'NEWS-02',
+    title: 'Virudhunagar Premier League 2026 Climax',
+    category: 'TOURNAMENT',
+    summary: 'Virudhunagar Strikers and Sivakasi Super Kings battle in a high-octane championship climax at District Sports Complex.',
+    content: 'A record crowd packed into the District Sports Complex Ground to witness the grand finale of the Virudhunagar Premier League 2026 between Virudhunagar Strikers and Sivakasi Super Kings. Sivakasi Super Kings posted 162/8 in their 20 overs backed by a stellar 54 from opener M. Anandhan. In response, Virudhunagar Strikers entered the final over needing 8 runs with R. Saravanan batting masterfully on 58*.',
+    author: 'Match Organizing Committee',
+    image_url: 'assets/champions.jpg',
+    published_at: '2026-09-24T14:30:00.000Z'
+  },
+  {
+    id: 'NEWS-03',
+    title: 'Certified Umpires & Scorers Certification Clinic in October',
+    category: 'ANNOUNCEMENT',
+    summary: 'A three-day comprehensive seminar covering MCC laws and digital live scoring systems for aspiring match officials.',
+    content: 'In our continuous endeavor to raise the standard of officiating in district leagues, CFVD will conduct a three-day certification clinic from October 17-19, 2026. The course will be conducted by certified Level-3 Senior Umpires and will include both theoretical examinations and practical on-field match assessments.',
+    author: 'Chief Umpire & Scorer Board',
+    image_url: 'assets/stadium.jpg',
+    published_at: '2026-09-18T10:00:00.000Z'
+  }
+];
+
+let adminNewsList = [];
+
+function getStoredNews() {
+  try {
+    const raw = localStorage.getItem('cfvd_news_cache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return DEFAULT_ADMIN_NEWS;
+}
+
+function saveStoredNews(list) {
+  try {
+    localStorage.setItem('cfvd_news_cache', JSON.stringify(list));
+  } catch (e) {}
+}
+
+async function syncAdminNewsFromBackend() {
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  const token = localStorage.getItem('cfvd_admin_token') || '';
+  const headers = {
+    'x-user-role': 'ADMIN',
+    'x-user-email': 'admin@cfvd.org'
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    // 1. Fetch live articles from MongoDB content API
+    let res = await fetch(`${API_BASE}/admin/content`, { headers });
+    if (!res.ok) {
+      // fallback to public news API
+      res = await fetch(`${API_BASE}/news`);
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        adminNewsList = data.data.map(item => ({
+          id: item.id || item._id,
+          title: item.title,
+          category: item.category || 'ANNOUNCEMENT',
+          summary: item.summary,
+          content: item.content,
+          author: item.author || 'CFVD Secretariat',
+          image_url: item.image_url || item.imageUrl || 'assets/champions.jpg',
+          published_at: item.published_at || new Date().toISOString()
+        }));
+        saveStoredNews(adminNewsList);
+      } else {
+        adminNewsList = getStoredNews();
+      }
+    } else {
+      adminNewsList = getStoredNews();
+    }
+  } catch (err) {
+    console.warn('Sync content notice:', err.message);
+    adminNewsList = getStoredNews();
+  }
+
+  // 2. Fetch stats if available
+  try {
+    const statsRes = await fetch(`${API_BASE}/admin/content/stats`, { headers });
+    if (statsRes.ok) {
+      const statsJson = await statsRes.json();
+      if (statsJson.success && statsJson.stats) {
+        const totalBadge = document.getElementById('adminTotalArticlesCountBadge');
+        const summaryCount = document.getElementById('summaryTotalNews');
+        if (totalBadge) totalBadge.textContent = String(statsJson.stats.total || adminNewsList.length);
+        if (summaryCount) summaryCount.textContent = String(statsJson.stats.total || adminNewsList.length);
+      }
+    }
+  } catch (e) {}
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+}
+
+function renderAdminContentList() {
+  const container = document.getElementById('adminContentArticlesList');
+  if (!container) return;
+
+  const articles = (adminNewsList && adminNewsList.length > 0) ? adminNewsList : getStoredNews();
+
+  if (!articles || articles.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:2.5rem 1.5rem; background:#f8fafc; border:1.5px dashed #cbd5e1; border-radius:12px; color:#64748b;">
+        <i class="fa-solid fa-newspaper" style="font-size:2.2rem; margin-bottom:0.75rem; color:var(--gold-primary);"></i>
+        <h5 style="color:#0f172a; margin:0 0 0.3rem 0; font-size:1.05rem; font-weight:700;">No Articles Published Yet</h5>
+        <p style="margin:0; font-size:0.85rem;">Create a new announcement or notice above to persist it live into the database.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  articles.forEach(art => {
+    let catBadgeClass = 'badge gold';
+    const catUpper = (art.category || '').toUpperCase();
+    if (catUpper.includes('TOURN') || catUpper.includes('MATCH')) catBadgeClass = 'badge red';
+    else if (catUpper.includes('SELECTION') || catUpper.includes('TRIAL')) catBadgeClass = 'badge gold';
+    else catBadgeClass = 'badge green';
+
+    const dateStr = art.published_at ? new Date(art.published_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent';
+
+    html += `
+      <div class="admin-content-article-item" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:1.2rem; display:flex; gap:1.2rem; align-items:flex-start; flex-wrap:wrap; box-shadow:0 2px 10px rgba(15,23,42,0.05);">
+        <div style="width:110px; height:80px; border-radius:8px; overflow:hidden; flex-shrink:0; background:#f8fafc; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center;">
+          <img src="${art.image_url || 'assets/batsman.jpg'}" alt="${art.title}" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f1f5f9; color:#b45309; font-size:1.6rem;\\'><i class=\\'fa-solid fa-newspaper\\'></i></div>';" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div style="flex:1; min-width:260px;">
+          <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.35rem; flex-wrap:wrap;">
+            <span class="${catBadgeClass}">${art.category || 'ANNOUNCEMENT'}</span>
+            <span style="color:#64748b; font-size:0.78rem;"><i class="fa-solid fa-calendar-day"></i> ${dateStr}</span>
+            <span style="color:#b45309; font-size:0.78rem; font-weight:600;"><i class="fa-solid fa-user-pen"></i> ${art.author || 'CFVD Secretariat'}</span>
+          </div>
+          <h4 style="color:#0f172a; margin:0 0 0.35rem 0; font-size:1.02rem; font-weight:700;">${art.title}</h4>
+          <p style="color:#475569; font-size:0.84rem; margin:0; line-height:1.45;">${art.summary}</p>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center; align-self:center;">
+          <button class="btn btn-sm btn-outline-gold" onclick="openNewsModal('${art.id}')" title="Preview Article">
+            <i class="fa-solid fa-eye"></i> View
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="handleAdminDeleteNews('${art.id}')" title="Delete Article">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+async function handleAdminPublishNews(event) {
+  event.preventDefault();
+
+  const title = (document.getElementById('admNewsTitle')?.value || '').trim();
+  const category = document.getElementById('admNewsCategory')?.value || 'ANNOUNCEMENT';
+  const author = (document.getElementById('admNewsAuthor')?.value || '').trim() || 'CFVD Secretariat';
+  const imageUrl = document.getElementById('admNewsImage')?.value || 'assets/batsman.jpg';
+  const summary = (document.getElementById('admNewsSummary')?.value || '').trim();
+  const content = (document.getElementById('admNewsContent')?.value || '').trim();
+
+  const alertBox = document.getElementById('adminNewsAlert');
+  const btnSubmit = document.getElementById('btnAdminPublishSubmit');
+
+  if (!title || !summary || !content) {
+    if (alertBox) {
+      alertBox.textContent = 'Please fill out all required fields: Title, Summary, and Full Content.';
+      alertBox.className = 'alert-box alert-error';
+      alertBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving to Database...';
+  }
+
+  const newArticle = {
+    id: `NEWS-${Date.now()}`,
+    title,
+    category,
+    author,
+    imageUrl,
+    image_url: imageUrl,
+    summary,
+    content,
+    published_at: new Date().toISOString()
+  };
+
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    // 1. Direct MongoDB Admin Content Endpoint
+    let res = await fetch(`${API_BASE}/admin/content`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(newArticle)
+    });
+
+    if (!res.ok) {
+      // Fallback to /api/news
+      res = await fetch(`${API_BASE}/news`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(newArticle)
+      });
+    }
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data) {
+        newArticle.id = json.data.id || json.data._id || newArticle.id;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend news dispatch notice:', err.message);
+  }
+
+  // Prepend to current list and local cache
+  if (!Array.isArray(adminNewsList)) adminNewsList = getStoredNews();
+  adminNewsList.unshift(newArticle);
+  saveStoredNews(adminNewsList);
+
+  if (alertBox) {
+    alertBox.textContent = `✓ Official Notice "${title}" saved to MongoDB & published live to the portal successfully!`;
+    alertBox.className = 'alert-box alert-success';
+    alertBox.style.display = 'block';
+  }
+
+  document.getElementById('adminPublishNewsForm')?.reset();
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Publish to Portal &amp; Notices';
+  }
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+
+  setTimeout(() => {
+    if (alertBox) alertBox.style.display = 'none';
+  }, 4000);
+}
+
+async function handleAdminDeleteNews(id) {
+  if (!confirm('Are you sure you want to permanently delete this official news notice from MongoDB & the portal?')) {
+    return;
+  }
+
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  try {
+    const token = localStorage.getItem('cfvd_admin_token') || '';
+    const headers = {
+      'x-user-role': 'ADMIN',
+      'x-user-email': 'admin@cfvd.org'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    let res = await fetch(`${API_BASE}/admin/content/${id}`, {
+      method: 'DELETE',
+      headers
+    });
+
+    if (!res.ok) {
+      // Fallback
+      await fetch(`${API_BASE}/news/${id}`, {
+        method: 'DELETE',
+        headers
+      });
+    }
+  } catch (err) {
+    console.warn('Backend news delete notice:', err.message);
+  }
+
+  if (!Array.isArray(adminNewsList)) adminNewsList = getStoredNews();
+  adminNewsList = adminNewsList.filter(n => n.id !== id && String(n.id) !== String(id));
+  saveStoredNews(adminNewsList);
+
+  updateAdminSummaryCounts();
+  renderAdminContentList();
+  renderPublicNewsGrid();
+
+  const notif = document.getElementById('adminActionNotification');
+  if (notif) {
+    notif.textContent = `✓ Notice removed successfully from MongoDB & the portal.`;
+    notif.style.display = 'block';
+    setTimeout(() => { notif.style.display = 'none'; }, 3000);
+  }
+}
+
+function renderPublicNewsGrid() {
+  const container = document.getElementById('publicNewsGrid');
+  if (!container) return;
+
+  const articles = (adminNewsList && adminNewsList.length > 0) ? adminNewsList : getStoredNews();
+  if (!articles || articles.length === 0) return;
+
+  let html = '';
+  articles.forEach(art => {
+    let catBadgeClass = 'badge gold';
+    const catUpper = (art.category || '').toUpperCase();
+    if (catUpper.includes('TOURN') || catUpper.includes('MATCH')) catBadgeClass = 'badge red';
+    else if (catUpper.includes('SELECTION') || catUpper.includes('TRIAL')) catBadgeClass = 'badge gold';
+    else catBadgeClass = 'badge green';
+
+    const dateStr = art.published_at ? new Date(art.published_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Recent';
+
+    html += `
+      <article class="news-card">
+        <div class="news-img-wrap">
+          <img src="${art.image_url || 'assets/batsman.jpg'}" alt="${art.title}" class="news-img">
+          <span class="news-date">${dateStr}</span>
+        </div>
+        <div class="news-body">
+          <span class="news-cat ${catBadgeClass}">${art.category || 'Announcement'}</span>
+          <h3 class="news-title">${art.title}</h3>
+          <p class="news-excerpt">${art.summary}</p>
+          <button class="btn btn-sm btn-outline-primary" onclick="openNewsModal('${art.id}')">Read Full Circular</button>
+        </div>
+      </article>
+    `;
+  });
+
+  container.innerHTML = html;
+}

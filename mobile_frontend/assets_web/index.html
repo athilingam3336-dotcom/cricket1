@@ -186,8 +186,8 @@
               <i class="fa-solid fa-gear"></i> Operations Hub <i class="fa-solid fa-chevron-down"></i>
             </a>
             <ul class="dropdown-menu">
-              <li><a href="#operations-hub" onclick="navigateToSection('operations-hub', 'admin', event)"><i
-                    class="fa-solid fa-screwdriver-wrench"></i> 1. Admin Setup (Manage College)</a></li>
+              <li><a href="/admin" onclick="navigateToRoute('/admin', event)"><i
+                    class="fa-solid fa-shield-halved"></i> 1. Admin Dashboard Console</a></li>
               <li><a href="#operations-hub" onclick="navigateToSection('operations-hub', 'institutions', event)"><i
                     class="fa-solid fa-building-columns"></i> 2. Registered Institutions</a></li>
               <li><a href="#operations-hub" onclick="navigateToSection('operations-hub', 'teams', event)"><i
@@ -208,59 +208,12 @@
 
       <!-- Action Button, Theme Toggle & Mobile Hamburger -->
       <div class="header-actions">
-        <!-- Separate Registration Dropdown Button -->
-        <div class="reg-header-dropdown" id="headerRegDropdown">
-          <button class="btn btn-gold btn-sm dropdown-toggle" id="headerRegBtn" onclick="toggleHeaderRegDropdown(event)"
-            title="CFVD Official Registrations">
-            <i class="fa-solid fa-id-card-clip"></i> <span id="headerRegBtnLabel">Registration</span> <i
-              class="fa-solid fa-chevron-down" style="font-size:0.65rem; margin-left:0.2rem;"></i>
-          </button>
-          <ul class="dropdown-menu reg-dropdown-menu" id="headerRegMenu">
-            <li><a href="/team-registration"
-                onclick="navigateToRoute('/team-registration', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-users-line text-gold"></i> <strong>Team Registration</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">15 Players Squad Roster</small></a></li>
-            <li><a href="/player-registration"
-                onclick="navigateToRoute('/player-registration', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-user-plus text-gold"></i> <strong>Player Registration</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">District Official Enrollment</small></a></li>
-            <li><a href="javascript:void(0)" onclick="openInstitutionModal(); closeAllDropdowns();"><i
-                  class="fa-solid fa-building-columns"></i> <strong>Institution Registration</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Clubs, Colleges, Schools</small></a></li>
-            <li><a href="javascript:void(0)" onclick="openOfficialsRegisterModal(); closeAllDropdowns();"><i
-                  class="fa-solid fa-clipboard-user"></i> <strong>Scorer Registration</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Official Digital &amp; Paper
-                  Scorer</small></a></li>
-            <li style="border-top:1px solid rgba(212,175,55,0.25); margin:0.35rem 0;"></li>
-            <li><a href="/team-registration?tab=status"
-                onclick="navigateToRoute('/team-registration?tab=status', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-magnifying-glass"></i> Check Team Registration Status</a></li>
-          </ul>
-        </div>
-
-        <!-- Separate Login Dropdown Button -->
+        <!-- Unified Login Button: ONLY Login Option Shown (No duplicate logins, OTP-capable) -->
         <div class="login-header-dropdown" id="headerLoginDropdown">
-          <button class="btn btn-outline-gold btn-sm dropdown-toggle" id="headerLoginBtn"
-            onclick="toggleHeaderLoginDropdown(event)" title="CFVD Portals Login">
-            <i class="fa-solid fa-circle-user"></i> <span id="headerLoginBtnLabel">Login</span> <i
-              class="fa-solid fa-chevron-down" style="font-size:0.65rem; margin-left:0.2rem;"></i>
+          <button class="btn btn-gold btn-sm" id="headerLoginBtn"
+            onclick="openUnifiedLogin(event)" title="Login to CFVD Portals">
+            <i class="fa-solid fa-circle-user"></i> <span id="headerLoginBtnLabel">Login</span>
           </button>
-          <ul class="dropdown-menu reg-dropdown-menu" id="headerLoginMenu">
-            <li><a href="/player-login" onclick="navigateToRoute('/player-login', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-circle-user text-gold"></i> <strong>Player Login</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Official Player Sign In &amp;
-                  Dashboard</small></a></li>
-            <li><a href="/team-login" onclick="navigateToRoute('/team-login', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-shield-halved text-gold"></i> <strong>Team Login</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Coach &amp; Club Team Dashboard</small></a>
-            </li>
-            <li><a href="/admin-login" onclick="navigateToRoute('/admin-login', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-screwdriver-wrench text-gold"></i> <strong>Admin Login</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Federation Approvals Console</small></a></li>
-            <li><a href="/scorer-login" onclick="navigateToRoute('/scorer-login', event); closeAllDropdowns();"><i
-                  class="fa-solid fa-satellite-dish text-gold"></i> <strong>Scorer Login</strong> <small
-                  style="display:block; font-size:0.75rem; color:#fde68a;">Match Day Live Scoring Panel</small></a></li>
-          </ul>
         </div>
 
         <!-- Dynamic User Session Pill Button -->
@@ -281,14 +234,6 @@
           </ul>
         </div>
 
-        <button id="floodlightToggleBtn" class="floodlight-toggle-btn active"
-          title="Stadium Floodlights: Toggle Match Night Illumination" aria-label="Toggle Stadium Floodlights">
-          <i class="fa-solid fa-bolt"></i>
-          <span>Lights</span>
-        </button>
-        <button id="themeToggleBtn" class="theme-btn" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
-          <i class="fa-solid fa-moon"></i>
-        </button>
         <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Open Navigation Menu">
           <span></span><span></span><span></span>
         </button>
@@ -495,11 +440,11 @@
                   infrastructure, and institution credentials</p>
               </div>
               <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button class="btn btn-gold btn-sm" onclick="navigateToRoute('/admin', event)">
+                  <i class="fa-solid fa-shield-halved"></i> Dedicated Admin Dashboard
+                </button>
                 <button class="btn btn-outline-gold btn-sm" onclick="openTeamRegistrationModal('status')">
                   <i class="fa-solid fa-magnifying-glass"></i> Check Team Status
-                </button>
-                <button class="btn btn-gold btn-sm" onclick="openTeamRegistrationModal('form')">
-                  <i class="fa-solid fa-users-line"></i> Register Team (Over Site)
                 </button>
                 <button class="btn btn-primary btn-sm"
                   onclick="document.getElementById('addCollegeFormBox').scrollIntoView({behavior:'smooth'})">
@@ -1829,7 +1774,7 @@
           <h2 class="section-title">Federation Press Releases &amp; Circulars</h2>
         </div>
 
-        <div class="news-grid">
+        <div class="news-grid" id="publicNewsGrid">
           <article class="news-card">
             <div class="news-img-wrap">
               <img src="assets/batsman.jpg" alt="Trials News" class="news-img">
@@ -1965,8 +1910,8 @@
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
             <span class="current">Team Registration</span>
           </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          <button class="btn btn-outline-gold btn-sm" onclick="goBackOrHome(event)">
+            <i class="fa-solid fa-arrow-left"></i> Back
           </button>
         </div>
         <h1 class="page-main-title">
@@ -2169,8 +2114,8 @@
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
             <span class="current">Player Registration</span>
           </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          <button class="btn btn-outline-gold btn-sm" onclick="goBackOrHome(event)">
+            <i class="fa-solid fa-arrow-left"></i> Back
           </button>
         </div>
         <h1 class="page-main-title">
@@ -2310,182 +2255,202 @@
   </div>
 
   <!-- ======================================================================= -->
-  <!-- PAGE 4: PLAYER LOGIN (DEDICATED FULL PAGE / ROUTE)                      -->
+  <!-- PAGE 4: UNIFIED PORTAL LOGIN (OTP CAPABLE ACROSS ALL ROLES)             -->
   <!-- ======================================================================= -->
-  <div id="page-player-login" class="app-page" style="display:none; padding-top: 1.5rem;">
+  <div id="page-login" class="app-page" style="display:none;">
+    <div class="page-header-banner">
+      <div class="container">
+        <div class="page-header-nav-row">
+          <div class="page-breadcrumbs">
+            <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
+            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
+            <span>Authentication</span>
+            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
+            <span class="current">Official Portal Login</span>
+          </div>
+          <button class="btn btn-outline-gold btn-sm" onclick="goBackOrHome(event)">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
+        </div>
+        <h1 class="page-main-title">
+          <i class="fa-solid fa-shield-halved text-gold"></i> Official District Portal Login
+        </h1>
+        <p class="page-main-subtitle">
+          Secure multi-role authentication with OTP verification delivered via Nodemailer to registered credentials.
+        </p>
+      </div>
+    </div>
 
     <div class="container page-content-wrapper">
       <div class="page-login-box">
-
-        <!-- STEP 1: IDENTITY INPUT -->
-        <div id="playerLoginStep1" style="display:block;">
-          <div class="player-login-intro-box">
-            <div class="player-login-crest">
-              <i class="fa-solid fa-user-shield text-gold"></i>
-            </div>
-            <div>
-              <h4
-                style="font-family:var(--font-header); font-size:1.25rem; font-weight:800; color:var(--text-white); margin-bottom:0.25rem;">
-                Player Sign In
-              </h4>
-              <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.45; margin:0;">
-                Enter your registered <strong>Player Name</strong> and <strong>Email ID</strong> to receive your secure
-                OTP verification code.
-              </p>
-            </div>
+        <!-- Intro Header -->
+        <div class="player-login-intro-box" style="margin-bottom: 1.2rem;">
+          <div class="player-login-crest">
+            <i class="fa-solid fa-shield-halved text-gold"></i>
           </div>
-
-          <div id="playerLoginAlert" class="alert-box" style="display:none; margin:1rem 0;"></div>
-
-          <form id="playerLoginForm" onsubmit="handlePlayerSendOTP(event)" style="margin-top:1.2rem;">
-            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:1.2rem;">
-              <div class="form-group">
-                <label for="playerLoginName"
-                  style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-                  <i class="fa-solid fa-user"></i> Player Name <span class="required" style="color:#ef4444;">*</span>
-                </label>
-                <input type="text" id="playerLoginName" class="form-control" placeholder="e.g. Arun or R. Saravanan"
-                  required autocomplete="name" style="width:100%; height:44px;">
-              </div>
-
-              <div class="form-group">
-                <label for="playerLoginEmail"
-                  style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-                  <i class="fa-solid fa-envelope"></i> Player Email ID <span class="required"
-                    style="color:#ef4444;">*</span>
-                </label>
-                <input type="email" id="playerLoginEmail" class="form-control" placeholder="e.g. arun@gmail.com"
-                  required autocomplete="email" style="width:100%; height:44px;">
-              </div>
-            </div>
-
-            <div style="margin-top:1.5rem; display:flex; gap:0.8rem; justify-content:flex-end;">
-              <button type="button" class="btn btn-outline-gold btn-sm"
-                onclick="navigateToRoute('/', event)">Cancel</button>
-              <button type="submit" id="btnSendOTP" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
-                <i class="fa-solid fa-paper-plane"></i> Send OTP
-              </button>
-            </div>
-          </form>
-
-          <!-- Quick Test Verification Helper -->
-          <div class="player-login-helpers-card"
-            style="margin-top:2rem; padding:1.2rem; border-radius:10px; background:rgba(212,175,55,0.06); border:1px dashed var(--gold-border);">
-            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem;">
-              <i class="fa-solid fa-circle-info text-gold"></i>
-              <strong style="color:var(--gold-bright); font-size:0.9rem;">Test Verification Profiles (Pre-seeded in Team
-                Database):</strong>
-            </div>
-            <div class="test-profiles-grid"
-              style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0.8rem; font-size:0.82rem;">
-              <div class="test-profile-chip" onclick="prefillPlayerLogin('R. Saravanan', 'saravanan.r@strikerscc.org')"
-                style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(34,197,94,0.4);"
-                title="Click to prefill">
-                <span class="badge green" style="font-size:0.7rem; padding:0.15rem 0.4rem;">APPROVED TEAM</span>
-                <div style="font-weight:700; color:#fff; margin-top:3px;">R. Saravanan</div>
-                <div style="color:#93c5fd;">saravanan.r@strikerscc.org</div>
-                <div style="color:#fde68a; font-size:0.75rem; margin-top:2px;">Virudhunagar Strikers CC</div>
-              </div>
-
-              <div class="test-profile-chip" onclick="prefillPlayerLogin('Arun', 'arun@gmail.com')"
-                style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(245,158,11,0.4);"
-                title="Click to prefill">
-                <span class="badge gold" style="font-size:0.7rem; padding:0.15rem 0.4rem;">PENDING APPROVAL</span>
-                <div style="font-weight:700; color:#fff; margin-top:3px;">Arun</div>
-                <div style="color:#93c5fd;">arun@gmail.com</div>
-                <div style="color:#fde68a; font-size:0.75rem; margin-top:2px;">ABC Cricket Club</div>
-              </div>
-
-              <div class="test-profile-chip" onclick="prefillPlayerLogin('Karthik', 'karthik@satturcc.com')"
-                style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(239,68,68,0.4);"
-                title="Click to prefill">
-                <span class="badge red" style="font-size:0.7rem; padding:0.15rem 0.4rem;">REJECTED TEAM</span>
-                <div style="font-weight:700; color:#fff; margin-top:3px;">Karthik</div>
-                <div style="color:#93c5fd;">karthik@satturcc.com</div>
-                <div style="color:#fde68a; font-size:0.75rem; margin-top:2px;">Sattur Rising CC</div>
-              </div>
-            </div>
-            <p style="margin:0.6rem 0 0; font-size:0.78rem; color:var(--text-muted);">
-              <i class="fa-solid fa-hand-pointer text-gold"></i> Click any card to auto-fill login fields. OTP for demo:
-              <strong style="color:var(--gold-bright);">123456</strong>
+          <div>
+            <h4
+              style="font-family:var(--font-header); font-size:1.25rem; font-weight:800; color:var(--text-white); margin-bottom:0.25rem;">
+              Portal Authentication
+            </h4>
+            <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.45; margin:0;">
+              Role-based sign in with OTP verification delivered to registered emails.
             </p>
           </div>
         </div>
 
-        <!-- STEP 2: OTP VERIFICATION -->
-        <div id="playerLoginStep2" style="display:none;">
-          <div style="text-align:center; margin-bottom:1.8rem;">
-            <!-- Icon with animated ring -->
-            <div
-              style="position:relative; display:inline-flex; align-items:center; justify-content:center; margin-bottom:1.2rem;">
-              <div
-                style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,rgba(234,179,8,0.2),rgba(234,179,8,0.05)); border:2px solid rgba(234,179,8,0.4); display:flex; align-items:center; justify-content:center; box-shadow:0 0 30px rgba(234,179,8,0.15);">
-                <i class="fa-solid fa-mobile-screen-button" style="font-size:2rem; color:#fbbf24;"></i>
-              </div>
+        <!-- 5 Role Switcher Tabs -->
+        <div class="unified-login-tabs" id="webLoginRoleTabs">
+          <button type="button" class="unified-login-tab active" id="tabRolePlayer" onclick="switchWebLoginRole('PLAYER')">
+            <i class="fa-solid fa-user"></i> Player
+          </button>
+          <button type="button" class="unified-login-tab" id="tabRoleTeam" onclick="switchWebLoginRole('TEAM')">
+            <i class="fa-solid fa-shield-halved"></i> Team
+          </button>
+          <button type="button" class="unified-login-tab" id="tabRoleScorer" onclick="switchWebLoginRole('SCORER')">
+            <i class="fa-solid fa-satellite-dish"></i> Scorer
+          </button>
+          <button type="button" class="unified-login-tab" id="tabRoleContent" onclick="switchWebLoginRole('CONTENT')">
+            <i class="fa-solid fa-pen-nib"></i> Content
+          </button>
+          <button type="button" class="unified-login-tab" id="tabRoleAdmin" onclick="switchWebLoginRole('ADMIN')">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Admin
+          </button>
+        </div>
+
+        <div id="unifiedLoginAlert" class="alert-box" style="display:none; margin-bottom:1rem;"></div>
+
+        <!-- ROLE 1: PLAYER -->
+        <div id="loginFormPlayer" class="unified-role-form" style="display:block;">
+          <form onsubmit="handleUnifiedPlayerSendOTP(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Player Name or Email *
+              </label>
+              <input type="text" id="unifiedPlayerInput" class="form-control" placeholder="e.g. R. Saravanan or saravanan.r@strikerscc.org" required style="width:100%; height:42px;">
             </div>
-            <h4
-              style="font-family:var(--font-header); font-size:1.35rem; font-weight:800; color:#fff; margin:0 0 0.4rem;">
-              OTP Verification</h4>
-            <p style="color:var(--text-muted); font-size:0.9rem; margin:0 0 0.3rem;">A 6-digit OTP has been sent to</p>
-            <div id="otpSentToDisplay"
-              style="color:var(--gold-bright); font-weight:700; font-size:1rem; margin-bottom:0.3rem;"></div>
-            <p style="color:rgba(180,196,230,0.6); font-size:0.78rem; margin:0;">
-              <i class="fa-solid fa-circle-info" style="font-size:0.7rem;"></i> Demo OTP: <strong
-                style="color:#fbbf24;">123456</strong> (simulated — no real SMS/email sent)
-            </p>
-          </div>
-
-          <!-- OTP Alert -->
-          <div id="otpAlert" class="alert-box" style="display:none; margin-bottom:1rem;"></div>
-
-          <!-- 6-box OTP Input -->
-          <div style="display:flex; justify-content:center; gap:0.6rem; margin-bottom:1.5rem;" id="otpBoxesContainer">
-            <input type="text" class="otp-box" id="otp0" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              autocomplete="one-time-code"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 0)" onkeydown="otpBoxKeydown(event, 0)" onpaste="otpBoxPaste(event)">
-            <input type="text" class="otp-box" id="otp1" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 1)" onkeydown="otpBoxKeydown(event, 1)">
-            <input type="text" class="otp-box" id="otp2" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 2)" onkeydown="otpBoxKeydown(event, 2)">
-            <input type="text" class="otp-box" id="otp3" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 3)" onkeydown="otpBoxKeydown(event, 3)">
-            <input type="text" class="otp-box" id="otp4" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 4)" onkeydown="otpBoxKeydown(event, 4)">
-            <input type="text" class="otp-box" id="otp5" maxlength="1" inputmode="numeric" pattern="[0-9]"
-              style="width:52px; height:60px; text-align:center; font-size:1.6rem; font-weight:800; color:#fff; background:rgba(10,24,56,0.9); border:2px solid rgba(254,215,102,0.3); border-radius:10px; outline:none; transition:border 0.2s, box-shadow 0.2s;"
-              oninput="otpBoxInput(this, 5)" onkeydown="otpBoxKeydown(event, 5)">
-          </div>
-
-          <!-- Verify Button -->
-          <div style="display:flex; justify-content:center; margin-bottom:1.2rem;">
-            <button type="button" id="btnVerifyOTP" class="btn btn-gold btn-lg"
-              style="padding:0.8rem 3rem; font-size:1rem;" onclick="handleVerifyOTP()">
-              <i class="fa-solid fa-shield-check"></i> Verify OTP
-            </button>
-          </div>
-
-          <!-- Resend & Change -->
-          <div
-            style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; padding-top:1rem; border-top:1px solid rgba(254,215,102,0.15);">
-            <div id="otpResendArea">
-              <span id="otpResendTimer" style="color:var(--text-muted); font-size:0.85rem;">
-                <i class="fa-solid fa-clock"></i> Resend OTP in <strong id="otpCountdown"
-                  style="color:var(--gold-bright);">30</strong>s
-              </span>
-              <button type="button" id="btnResendOTP" class="btn btn-outline-gold btn-sm" style="display:none;"
-                onclick="handleResendOTP()">
-                <i class="fa-solid fa-rotate-right"></i> Resend OTP
+            <div id="unifiedPlayerOtpArea" style="display:none; margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Enter 6-digit OTP Code *
+              </label>
+              <input type="text" id="unifiedPlayerOtpCode" class="form-control" placeholder="Enter OTP (e.g. 123456)" maxlength="6" style="width:100%; height:42px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.2rem;">
+              <button type="button" id="btnSendPlayerOtp" class="btn btn-gold btn-block" onclick="handleUnifiedPlayerSendOTP(event)">
+                <i class="fa-solid fa-paper-plane"></i> Send OTP to Email
+              </button>
+              <button type="button" id="btnVerifyPlayerOtp" class="btn btn-gold btn-block" style="display:none;" onclick="handleUnifiedPlayerVerify(event)">
+                <i class="fa-solid fa-shield-check"></i> Verify & Sign In
               </button>
             </div>
-            <button type="button" class="btn btn-outline-gold btn-sm" onclick="backToPlayerLoginStep1()">
-              <i class="fa-solid fa-arrow-left"></i> Change Name / Email
-            </button>
-          </div>
+          </form>
+        </div>
+
+        <!-- ROLE 2: TEAM / COACH -->
+        <div id="loginFormTeam" class="unified-role-form" style="display:none;">
+          <form onsubmit="handleUnifiedTeamSendOTP(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Coach Name or Email *
+              </label>
+              <input type="text" id="unifiedTeamInput" class="form-control" placeholder="e.g. Coach Ramesh or coach@strikerscc.org" required style="width:100%; height:42px;">
+            </div>
+            <div id="unifiedTeamOtpArea" style="display:none; margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Enter 6-digit OTP Code *
+              </label>
+              <input type="text" id="unifiedTeamOtpCode" class="form-control" placeholder="Enter OTP (e.g. 123456)" maxlength="6" style="width:100%; height:42px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.2rem;">
+              <button type="button" id="btnSendTeamOtp" class="btn btn-gold btn-block" onclick="handleUnifiedTeamSendOTP(event)">
+                <i class="fa-solid fa-paper-plane"></i> Send Coach OTP
+              </button>
+              <button type="button" id="btnVerifyTeamOtp" class="btn btn-gold btn-block" style="display:none;" onclick="handleUnifiedTeamVerify(event)">
+                <i class="fa-solid fa-shield-check"></i> Verify & Sign In
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ROLE 3: SCORER -->
+        <div id="loginFormScorer" class="unified-role-form" style="display:none;">
+          <form onsubmit="handleUnifiedScorerSendOTP(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Scorer Email ID *
+              </label>
+              <input type="email" id="unifiedScorerInput" class="form-control" placeholder="e.g. sundararajan@cfvd.org" required style="width:100%; height:42px;">
+            </div>
+            <div id="unifiedScorerOtpArea" style="display:none; margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Enter Scorer OTP / PIN (Default: 1234) *
+              </label>
+              <input type="text" id="unifiedScorerOtpCode" class="form-control" placeholder="Enter code (1234)" maxlength="6" style="width:100%; height:42px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.2rem;">
+              <button type="button" id="btnSendScorerOtp" class="btn btn-gold btn-block" onclick="handleUnifiedScorerSendOTP(event)">
+                <i class="fa-solid fa-paper-plane"></i> Request Scorer OTP
+              </button>
+              <button type="button" id="btnVerifyScorerOtp" class="btn btn-gold btn-block" style="display:none;" onclick="handleUnifiedScorerVerify(event)">
+                <i class="fa-solid fa-satellite-dish"></i> Enter Live Scoring Console
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ROLE 4: CONTENT STAFF -->
+        <div id="loginFormContent" class="unified-role-form" style="display:none;">
+          <form onsubmit="handleUnifiedContentSendOTP(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Content Specialist Email *
+              </label>
+              <input type="email" id="unifiedContentInput" class="form-control" placeholder="e.g. content@cfvd.org" required style="width:100%; height:42px;">
+            </div>
+            <div id="unifiedContentOtpArea" style="display:none; margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Enter OTP Code *
+              </label>
+              <input type="text" id="unifiedContentOtpCode" class="form-control" placeholder="Enter OTP (e.g. 123456)" maxlength="6" style="width:100%; height:42px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.2rem;">
+              <button type="button" id="btnSendContentOtp" class="btn btn-gold btn-block" onclick="handleUnifiedContentSendOTP(event)">
+                <i class="fa-solid fa-paper-plane"></i> Send Content OTP
+              </button>
+              <button type="button" id="btnVerifyContentOtp" class="btn btn-gold btn-block" style="display:none;" onclick="handleUnifiedContentVerify(event)">
+                <i class="fa-solid fa-pen-nib"></i> Sign In as Content Creator
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ROLE 5: ADMINISTRATOR -->
+        <div id="loginFormAdmin" class="unified-role-form" style="display:none;">
+          <form onsubmit="handleUnifiedAdminLogin(event)">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Administrator Email *
+              </label>
+              <input type="email" id="unifiedAdminInput" class="form-control" value="cricketfederation21@gmail.com" required style="width:100%; height:42px;">
+            </div>
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.85rem;">
+                Admin Password / OTP Code *
+              </label>
+              <input type="password" id="unifiedAdminPassCode" class="form-control" placeholder="Enter password (e.g. #cricketfederation. or 1234)" required style="width:100%; height:42px;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.2rem;">
+              <button type="submit" class="btn btn-gold btn-block">
+                <i class="fa-solid fa-screwdriver-wrench"></i> Sign In to Apex Console
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Below All Roles: "Don't have an account? Register" Prompt -->
+        <div style="text-align:center; margin-top:2rem; padding-top:1.2rem; border-top:1px solid rgba(212,175,55,0.25);">
+          <span style="color:var(--text-light); font-size:0.92rem;">Don't have an account? </span>
+          <a href="/register" onclick="navigateToRegistrationWithActiveRole(event)" style="color:var(--gold-bright); font-weight:800; font-size:0.95rem; text-decoration:underline;">Register</a>
         </div>
 
       </div>
@@ -2691,8 +2656,8 @@
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
             <span class="current">Team Login</span>
           </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          <button class="btn btn-outline-gold btn-sm" onclick="goBackOrHome(event)">
+            <i class="fa-solid fa-arrow-left"></i> Back
           </button>
         </div>
         <h1 class="page-main-title">
@@ -2715,8 +2680,7 @@
               Team &amp; Club Sign In
             </h4>
             <p style="color:var(--text-muted); font-size:0.88rem; line-height:1.45; margin:0;">
-              Enter your registered <strong>Team ID</strong> (e.g. <code>TEAM-VRD-1001</code>) or <strong>Coach Email
-                ID</strong>.
+              Enter your registered <strong>Coach Full Name</strong> and <strong>Coach Email ID</strong>.
             </p>
           </div>
         </div>
@@ -2725,29 +2689,41 @@
 
         <form id="pageTeamLoginForm" onsubmit="handleTeamLoginSubmit(event)" style="margin-top:1.2rem;">
           <div class="form-group" style="margin-bottom:1.2rem;">
-            <label for="teamLoginId"
+            <label for="teamLoginName"
               style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-shield-halved"></i> Team ID or Coach Email <span class="required"
-                style="color:#ef4444;">*</span>
+              <i class="fa-solid fa-user-tie"></i> Coach Full Name <span class="required" style="color:#ef4444;">*</span>
             </label>
-            <input type="text" id="teamLoginId" class="form-control"
-              placeholder="e.g. TEAM-VRD-1001 or rajendran@strikerscc.org" required style="width:100%; height:44px;">
+            <input type="text" id="teamLoginName" class="form-control"
+              placeholder="e.g. S. Rajesh or S. Murugan" required style="width:100%; height:44px;">
           </div>
 
-          <div class="form-group" style="margin-bottom:1.5rem;">
-            <label for="teamLoginPasskey"
+          <div class="form-group" style="margin-bottom:1.2rem;">
+            <label for="teamLoginEmail"
               style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
-              <i class="fa-solid fa-key"></i> Team Passkey (Default: Team@2026) <span class="required"
-                style="color:#ef4444;">*</span>
+              <i class="fa-solid fa-envelope"></i> Coach Email ID <span class="required" style="color:#ef4444;">*</span>
             </label>
-            <input type="password" id="teamLoginPasskey" class="form-control" value="Team@2026" required
-              style="width:100%; height:44px;">
+            <input type="email" id="teamLoginEmail" class="form-control"
+              placeholder="e.g. coach@strikerscc.org" required style="width:100%; height:44px;">
+          </div>
+
+          <!-- OTP Input Area revealed upon OTP dispatch -->
+          <div id="teamLoginOtpArea" style="display:none; margin-bottom:1.5rem; background:rgba(212,175,55,0.06); border:1px solid var(--gold-border); padding:1.2rem; border-radius:8px;">
+            <label for="teamLoginOtp"
+              style="display:block; font-weight:700; color:var(--gold-bright); margin-bottom:0.4rem; font-size:0.88rem;">
+              <i class="fa-solid fa-key"></i> 6-Digit OTP Verification Code <span class="required" style="color:#ef4444;">*</span>
+            </label>
+            <input type="text" id="teamLoginOtp" class="form-control" placeholder="Enter 6-digit OTP received via email" maxlength="6"
+              style="width:100%; height:44px; font-size:1.1rem; letter-spacing:2px; font-weight:700; text-align:center;">
+            <div id="teamDevOtpNotice" style="display:none; margin-top:0.5rem; font-size:0.82rem; color:#93c5fd;"></div>
           </div>
 
           <div style="display:flex; gap:0.8rem; justify-content:flex-end;">
             <button type="button" class="btn btn-outline-danger" onclick="navigateToRoute('/', event)">Cancel</button>
-            <button type="submit" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> Login to Team Dashboard
+            <button type="button" id="btnRequestTeamOtp" class="btn btn-gold btn-lg" onclick="handleRequestTeamOtp()" style="padding:0.75rem 2rem;">
+              <i class="fa-solid fa-paper-plane"></i> Send OTP Verification
+            </button>
+            <button type="submit" id="btnVerifyTeamOtp" class="btn btn-gold btn-lg" style="display:none; padding:0.75rem 2rem;">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Verify OTP &amp; Login
             </button>
           </div>
         </form>
@@ -2760,19 +2736,19 @@
           </div>
           <div
             style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0.8rem; font-size:0.82rem;">
-            <div class="test-profile-chip" onclick="prefillTeamLogin('TEAM-VRD-1001')"
+            <div class="test-profile-chip" onclick="prefillTeamLogin('S. Rajesh', 'coach@strikerscc.org')"
               style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(34,197,94,0.4);"
               title="Click to prefill">
               <span class="badge green" style="font-size:0.7rem; padding:0.15rem 0.4rem;">APPROVED</span>
               <div style="font-weight:700; color:#fff; margin-top:3px;">Virudhunagar Strikers CC</div>
-              <div style="color:#93c5fd;">ID: TEAM-VRD-1001 • 15 Players</div>
+              <div style="color:#93c5fd;">Coach: S. Rajesh • coach@strikerscc.org</div>
             </div>
-            <div class="test-profile-chip" onclick="prefillTeamLogin('TEAM-VRD-1002')"
+            <div class="test-profile-chip" onclick="prefillTeamLogin('K. Rajan', 'rajan@sivakasicc.org')"
               style="cursor:pointer; background:rgba(10,24,56,0.85); padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(34,197,94,0.4);"
               title="Click to prefill">
               <span class="badge green" style="font-size:0.7rem; padding:0.15rem 0.4rem;">APPROVED</span>
               <div style="font-weight:700; color:#fff; margin-top:3px;">Sivakasi Super Kings</div>
-              <div style="color:#93c5fd;">ID: TEAM-VRD-1002 • 15 Players</div>
+              <div style="color:#93c5fd;">Coach: K. Rajan • rajan@sivakasicc.org</div>
             </div>
           </div>
         </div>
@@ -2817,8 +2793,30 @@
         <!-- Team Hero Bar rendered dynamically -->
         <div id="teamDashboardHero"></div>
 
-        <!-- Squad Roster Section -->
-        <div style="margin-top:2.2rem;">
+        <!-- Team Dashboard Navigation Tabs -->
+        <div class="admin-tabs-bar" style="margin-top:1.8rem; margin-bottom:1.5rem;">
+          <button class="admin-tab-item active" id="tabBtnTeamSquad" onclick="switchTeamDashboardTab('squad')">
+            <i class="fa-solid fa-users"></i> Squad (15 Players)
+          </button>
+          <button class="admin-tab-item" id="tabBtnTeamProfile" onclick="switchTeamDashboardTab('profile')">
+            <i class="fa-solid fa-id-card"></i> Team Profile
+          </button>
+          <button class="admin-tab-item" id="tabBtnTeamMatches" onclick="switchTeamDashboardTab('matches')">
+            <i class="fa-solid fa-calendar-days"></i> Match Fixtures
+          </button>
+          <button class="admin-tab-item" id="tabBtnTeamStats" onclick="switchTeamDashboardTab('stats')">
+            <i class="fa-solid fa-chart-column"></i> Statistics
+          </button>
+          <button class="admin-tab-item" id="tabBtnTeamNotifications" onclick="switchTeamDashboardTab('notifications')">
+            <i class="fa-solid fa-bell"></i> Notifications <span id="teamNotifBadge" class="badge red" style="display:none; margin-left:4px; font-size:0.7rem; padding:0.1rem 0.4rem;">0</span>
+          </button>
+        </div>
+
+        <!-- Notification Banner if profile updated / message -->
+        <div id="teamDashboardAlert" class="alert-box" style="display:none; margin-bottom:1.5rem;"></div>
+
+        <!-- PANE 1: SQUAD ROSTER (15 Players) -->
+        <div class="team-dash-pane" id="teamPaneSquad" style="display:block;">
           <div
             style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
             <div>
@@ -2849,22 +2847,180 @@
                 </tr>
               </thead>
               <tbody id="teamDashboardSquadTableBody">
-                <!-- Populated dynamically by script.js -->
+                <!-- Populated dynamically by script.js from GET /api/team/squad -->
               </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Upcoming Team Fixtures -->
-        <div style="margin-top:2.5rem;">
-          <h3 style="color:var(--gold-bright); font-size:1.3rem; margin:0 0 1rem 0;">
-            <i class="fa-solid fa-calendar-days text-gold"></i> Upcoming Team Fixtures &amp; Schedule
-          </h3>
-          <div id="teamDashboardFixturesContainer"
-            style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
-            <!-- Populated dynamically -->
+        <!-- PANE 2: TEAM PROFILE -->
+        <div class="team-dash-pane" id="teamPaneProfile" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+            <div>
+              <h3 style="color:var(--gold-bright); font-size:1.3rem; margin:0;">
+                <i class="fa-solid fa-id-card text-gold"></i> Certified Team Profile &amp; Management
+              </h3>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0.2rem 0 0 0;">
+                Official club presentation and registered leadership attributes
+              </p>
+            </div>
+          </div>
+
+          <form id="teamProfileUpdateForm" onsubmit="handleTeamProfileUpdate(event)">
+            <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1.2rem;">
+              <!-- Locked identity fields -->
+              <div class="form-group">
+                <label style="font-weight:700; color:var(--text-muted); font-size:0.88rem;">
+                  <i class="fa-solid fa-lock"></i> Team Name (Certified)
+                </label>
+                <input type="text" id="teamProfTeamName" class="form-control" disabled readonly
+                  style="width:100%; height:44px; opacity:0.75; cursor:not-allowed; background:rgba(0,0,0,0.3);">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; color:var(--text-muted); font-size:0.88rem;">
+                  <i class="fa-solid fa-lock"></i> Team ID (Permanent Anchor)
+                </label>
+                <input type="text" id="teamProfTeamId" class="form-control" disabled readonly
+                  style="width:100%; height:44px; opacity:0.75; cursor:not-allowed; background:rgba(0,0,0,0.3);">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; color:var(--text-muted); font-size:0.88rem;">
+                  <i class="fa-solid fa-lock"></i> Head Coach Email (Identity Anchor)
+                </label>
+                <input type="email" id="teamProfCoachEmail" class="form-control" disabled readonly
+                  style="width:100%; height:44px; opacity:0.75; cursor:not-allowed; background:rgba(0,0,0,0.3);">
+              </div>
+              <div class="form-group">
+                <label style="font-weight:700; color:var(--text-muted); font-size:0.88rem;">
+                  <i class="fa-solid fa-lock"></i> Approval Status &amp; Division
+                </label>
+                <input type="text" id="teamProfStatusDivision" class="form-control" disabled readonly
+                  style="width:100%; height:44px; opacity:0.75; cursor:not-allowed; background:rgba(0,0,0,0.3);">
+              </div>
+
+              <!-- Permitted editable fields -->
+              <div class="form-group">
+                <label for="teamProfCaptain" style="font-weight:700; color:var(--gold-bright); font-size:0.88rem;">
+                  <i class="fa-solid fa-user-tie"></i> Squad Captain
+                </label>
+                <input type="text" id="teamProfCaptain" class="form-control" placeholder="e.g. R. Saravanan" style="width:100%; height:44px;">
+              </div>
+              <div class="form-group">
+                <label for="teamProfViceCaptain" style="font-weight:700; color:var(--gold-bright); font-size:0.88rem;">
+                  <i class="fa-solid fa-user-shield"></i> Squad Vice-Captain
+                </label>
+                <input type="text" id="teamProfViceCaptain" class="form-control" placeholder="e.g. M. Karthi" style="width:100%; height:44px;">
+              </div>
+              <div class="form-group">
+                <label for="teamProfCoachPhone" style="font-weight:700; color:var(--gold-bright); font-size:0.88rem;">
+                  <i class="fa-solid fa-phone"></i> Coach Contact Phone
+                </label>
+                <input type="text" id="teamProfCoachPhone" class="form-control" placeholder="e.g. +91 94431 23456" style="width:100%; height:44px;">
+              </div>
+              <div class="form-group">
+                <label for="teamProfCertification" style="font-weight:700; color:var(--gold-bright); font-size:0.88rem;">
+                  <i class="fa-solid fa-certificate"></i> Coach Certification Level
+                </label>
+                <input type="text" id="teamProfCertification" class="form-control" placeholder="e.g. BCCI / TNCA Level 2 Certified" style="width:100%; height:44px;">
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="teamProfHomeGround" style="font-weight:700; color:var(--gold-bright); font-size:0.88rem;">
+                  <i class="fa-solid fa-location-dot"></i> Official Home Ground / Practice Facility
+                </label>
+                <input type="text" id="teamProfHomeGround" class="form-control" placeholder="e.g. Kamarajar Stadium Sports Complex, Virudhunagar" style="width:100%; height:44px;">
+              </div>
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; justify-content:flex-end; gap:0.8rem;">
+              <button type="submit" id="btnSaveTeamProfile" class="btn btn-gold btn-lg" style="padding:0.75rem 2rem;">
+                <i class="fa-solid fa-floppy-disk"></i> Update Team Profile
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- PANE 3: MATCH FIXTURES -->
+        <div class="team-dash-pane" id="teamPaneMatches" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+            <div>
+              <h3 style="color:var(--gold-bright); font-size:1.3rem; margin:0;">
+                <i class="fa-solid fa-calendar-days text-gold"></i> Upcoming &amp; Recent Team Fixtures
+              </h3>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0.2rem 0 0 0;">
+                Official District League matches, schedules, venues, and live/completed scorecards
+              </p>
+            </div>
+          </div>
+          <div id="teamDashboardFixturesContainer" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1rem;">
+            <!-- Populated dynamically by script.js from GET /api/team/matches -->
           </div>
         </div>
+
+        <!-- PANE 4: STATISTICS -->
+        <div class="team-dash-pane" id="teamPaneStats" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+            <div>
+              <h3 style="color:var(--gold-bright); font-size:1.3rem; margin:0;">
+                <i class="fa-solid fa-chart-column text-gold"></i> Match-Derived Team &amp; Player Statistics
+              </h3>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0.2rem 0 0 0;">
+                Real calculations derived from match scoring records in MongoDB
+              </p>
+            </div>
+          </div>
+
+          <!-- Team Metric Highlights Bar -->
+          <div id="teamStatsSummaryGrid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.8rem; margin-bottom:2rem;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Squad Player Performance Table -->
+          <h4 style="color:var(--gold-bright); font-size:1.1rem; margin:0 0 0.8rem 0;">
+            <i class="fa-solid fa-medal text-gold"></i> 15-Member Squad Player Records
+          </h4>
+          <div class="team-roster-table-wrapper">
+            <table class="team-roster-table">
+              <thead>
+                <tr>
+                  <th>Player Name</th>
+                  <th>Role</th>
+                  <th style="text-align:center;">Mat</th>
+                  <th style="text-align:center;">Runs</th>
+                  <th style="text-align:center;">HS</th>
+                  <th style="text-align:center;">Avg</th>
+                  <th style="text-align:center;">SR</th>
+                  <th style="text-align:center;">Wkts</th>
+                  <th style="text-align:center;">Econ</th>
+                  <th style="text-align:center;">Catches</th>
+                </tr>
+              </thead>
+              <tbody id="teamPlayerStatsTableBody">
+                <!-- Rendered dynamically from GET /api/team/players/statistics -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PANE 5: NOTIFICATIONS -->
+        <div class="team-dash-pane" id="teamPaneNotifications" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem;">
+            <div>
+              <h3 style="color:var(--gold-bright); font-size:1.3rem; margin:0;">
+                <i class="fa-solid fa-bell text-gold"></i> Official Association Bulletins &amp; Notices
+              </h3>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0.2rem 0 0 0;">
+                Official notifications, tournament fixtures, and compliance circulars
+              </p>
+            </div>
+            <button class="btn btn-outline-gold btn-sm" onclick="syncTeamNotificationsFromBackend()">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+          <div id="teamNotificationsList" style="display:flex; flex-direction:column; gap:0.8rem;">
+            <!-- Populated dynamically from GET /api/team/notifications -->
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2883,8 +3039,8 @@
             <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
             <span class="current">Admin Login</span>
           </div>
-          <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-            <i class="fa-solid fa-arrow-left"></i> Back to Home
+          <button class="btn btn-outline-gold btn-sm" onclick="goBackOrHome(event)">
+            <i class="fa-solid fa-arrow-left"></i> Back
           </button>
         </div>
         <h1 class="page-main-title">
@@ -2957,29 +3113,50 @@
         </div>
       </div>
     </div>
-  </div>>
+  </div>
 
   <!-- ======================================================================= -->
   <!-- PAGE 9: ADMIN DASHBOARD (DEDICATED FULL PAGE / ROUTE)                   -->
   <!-- ======================================================================= -->
   <div id="page-admin-dashboard" class="app-page" style="display:none;">
-    <div class="container page-content-wrapper" style="margin-top: 2rem;">
-      <div class="page-card-container">
-        <div class="page-header-nav-row" style="margin-bottom: 1.5rem;">
-          <div class="page-breadcrumbs">
-            <a href="/" onclick="navigateToRoute('/', event)"><i class="fa-solid fa-house"></i> Home</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <a href="/admin-login" onclick="navigateToRoute('/admin-login', event)">Admin</a>
-            <span class="sep"><i class="fa-solid fa-chevron-right"></i></span>
-            <span class="current">Admin Dashboard</span>
+    <!-- Dedicated Admin Top Console Header -->
+    <header class="admin-dedicated-header">
+      <div class="admin-header-container">
+        <div class="admin-header-brand">
+          <img src="assets/logo_transparent.png?v=crop_v2" alt="CFVD Crest" class="admin-brand-logo">
+          <div>
+            <div class="admin-brand-title">CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</div>
+            <div class="admin-brand-sub">Official Administrative Management &amp; Approvals Console</div>
           </div>
-          <div style="display:flex; gap:0.6rem; align-items:center;">
-            <button class="btn btn-outline-gold btn-sm" onclick="navigateToRoute('/', event)">
-              <i class="fa-solid fa-arrow-left"></i> Back to Home
-            </button>
-            <button class="btn btn-outline-danger btn-sm" onclick="handleAdminLogout()">
-              <i class="fa-solid fa-right-from-bracket"></i> Logout
-            </button>
+        </div>
+        <div class="admin-header-actions">
+          <div class="admin-user-badge">
+            <span class="admin-online-dot"></span>
+            <span id="adminDedicatedUserDisplay">admin@cfvd.org</span>
+          </div>
+          <button class="btn btn-outline-danger btn-sm" onclick="handleAdminLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="container page-content-wrapper" style="margin-top: 1.5rem; margin-bottom: 3rem;">
+      <div class="page-card-container">
+        <!-- Dedicated Admin Console Top Title Banner (No Home / Public links) -->
+        <div class="admin-console-top-banner">
+          <div class="admin-console-title-group">
+            <div class="admin-status-indicator">
+              <span class="pulse-dot-green"></span>
+              <span class="admin-badge-role">ADMIN CONSOLE</span>
+            </div>
+            <h2 class="admin-console-title">Administrator Approvals &amp; Management Dashboard</h2>
+            <p class="admin-console-subtitle">Virudhunagar District Cricket Governing Body • Official Review &amp; Verification Portal</p>
+          </div>
+          <div class="admin-console-meta">
+            <span class="admin-chip" id="adminMongoDbStatusChip" style="border-color:rgba(16,185,129,0.5); color:#4ade80;"><i class="fa-solid fa-database"></i> MongoDB: Connected</span>
+            <span class="admin-chip"><i class="fa-solid fa-server"></i> System: Online</span>
+            <span class="admin-chip"><i class="fa-solid fa-shield-halved"></i> Authorized Console</span>
           </div>
         </div>
         <!-- Notification Message Banner for Admin Actions -->
@@ -2997,6 +3174,10 @@
           <button class="admin-tab-item" id="tabBtnAdminScorers" onclick="switchAdminTab('scorers')">
             <i class="fa-solid fa-satellite-dish"></i> Scorer Management <span id="adminPendingScorersCountBadge"
               class="badge red" style="margin-left:0.3rem;">0</span>
+          </button>
+          <button class="admin-tab-item" id="tabBtnAdminContent" onclick="switchAdminTab('content')">
+            <i class="fa-solid fa-newspaper"></i> News &amp; Content <span id="adminTotalArticlesCountBadge"
+              class="badge gold" style="margin-left:0.3rem;">3</span>
           </button>
           <button class="admin-tab-item" onclick="handleAdminLogout()"
             style="margin-left:auto; border-color:rgba(239,68,68,0.4); color:#fca5a5;">
@@ -3081,28 +3262,40 @@
               <div class="admin-summary-title">Rejected Scorers</div>
               <p class="admin-summary-desc">Uncertified or revoked scorer applications</p>
             </div>
+
+            <!-- 7. Published News & Notices -->
+            <div class="admin-summary-card card-approved" onclick="switchAdminTab('content')"
+              title="Click to manage News & Content">
+              <div class="admin-summary-card-header">
+                <div class="admin-summary-icon icon-approved"><i class="fa-solid fa-newspaper"></i></div>
+                <div class="admin-summary-count count-approved" id="summaryTotalNews">3</div>
+              </div>
+              <div class="admin-summary-title">Published News &amp; Notices</div>
+              <p class="admin-summary-desc">Tournament announcements, trial circulars &amp; match reports</p>
+            </div>
           </div>
 
-
-
           <!-- Quick Action Banner -->
-          <div
-            style="background:rgba(10,24,56,0.7); border:1px solid var(--gold-border); border-radius:10px; padding:1.2rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <div class="admin-quick-action-banner"
+            style="border:1px solid #cbd5e1; border-radius:12px; padding:1.2rem 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
             <div>
-              <h4 style="color:#fff; margin:0 0 0.2rem 0; font-size:1.05rem;">
+              <h4 style="color:#0f172a; margin:0 0 0.2rem 0; font-size:1.05rem;">
                 <i class="fa-solid fa-user-gear text-gold"></i> Authenticated Admin Session: <span
-                  id="adminSessionEmailDisplay" style="color:var(--gold-bright);">admin@cfvd.org</span>
+                  id="adminSessionEmailDisplay" style="color:var(--gold-bright); font-weight:800;">admin@cfvd.org</span>
               </h4>
-              <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">
-                All approvals and rejections update the database immediately and persist across sessions.
+              <p style="color:#64748b; font-size:0.82rem; margin:0;">
+                All approvals, rejections, and news publications update the database immediately and persist across sessions.
               </p>
             </div>
-            <div style="display:flex; gap:0.6rem;">
+            <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
               <button class="btn btn-outline-gold btn-sm" onclick="switchAdminTab('teams')">
                 <i class="fa-solid fa-users"></i> Review Teams
               </button>
-              <button class="btn btn-gold btn-sm" onclick="switchAdminTab('scorers')">
+              <button class="btn btn-outline-gold btn-sm" onclick="switchAdminTab('scorers')">
                 <i class="fa-solid fa-satellite-dish"></i> Review Scorers
+              </button>
+              <button class="btn btn-gold btn-sm" onclick="switchAdminTab('content')">
+                <i class="fa-solid fa-newspaper"></i> Manage News &amp; Content
               </button>
             </div>
           </div>
@@ -3358,9 +3551,136 @@
             <!-- Populated dynamically by script.js -->
           </div>
         </div>
+
+        <!-- SECTION 4: NEWS & CONTENT MANAGEMENT TAB -->
+        <div id="adminViewContent" style="display:none;">
+          <!-- Top Info Card -->
+          <div class="admin-content-top-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; background:linear-gradient(135deg, rgba(10,20,50,0.95) 0%, rgba(20,40,80,0.9) 100%); border:1px solid rgba(254,215,102,0.45); border-radius:16px; padding:1.5rem; box-shadow:0 0 20px rgba(234,179,8,0.1);">
+            <div>
+              <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.4rem;">
+                <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#eab308,#f59e0b); display:flex; align-items:center; justify-content:center;">
+                  <i class="fa-solid fa-newspaper" style="color:#000; font-size:1rem;"></i>
+                </div>
+                <h3 style="color:#fff; margin:0; font-family:var(--font-header); font-size:1.25rem;">
+                  Official News, Circulars &amp; Media Management
+                </h3>
+              </div>
+              <p style="color:var(--text-muted); font-size:0.85rem; margin:0;">
+                Create, publish, and delete official tournament announcements, press releases, match reports, and circulars shown across the portal.
+              </p>
+            </div>
+            <div>
+              <button class="btn btn-gold btn-sm" onclick="document.getElementById('adminNewsFormBox').scrollIntoView({behavior:'smooth'})">
+                <i class="fa-solid fa-plus-circle"></i> Create New Article / Notice
+              </button>
+            </div>
+          </div>
+
+          <!-- Content Creation & Management Grid -->
+          <div style="display:grid; grid-template-columns: 1fr; gap:2rem;">
+            <!-- 1. Publication Form Box -->
+            <div id="adminNewsFormBox" class="admin-news-box" style="border:1.5px solid rgba(212, 175, 55, 0.35); border-radius:14px; padding:1.6rem; box-shadow:0 6px 24px rgba(15, 23, 42, 0.06);">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.8rem;">
+                <h4 style="color:#0f172a; margin:0; font-family:var(--font-header); font-size:1.1rem; font-weight:800;">
+                  <i class="fa-solid fa-pen-to-square text-gold"></i> Publish Official Article or Notice
+                </h4>
+                <span class="badge gold" style="font-weight:700;">DIRECT ADMIN DISPATCH</span>
+              </div>
+
+              <div id="adminNewsAlert" class="alert-box" style="display:none; margin-bottom:1rem;"></div>
+
+              <form id="adminPublishNewsForm" onsubmit="handleAdminPublishNews(event)">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1rem; margin-bottom:1rem;">
+                  <div class="form-group">
+                    <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                      Article / Notice Title *
+                    </label>
+                    <input type="text" id="admNewsTitle" class="form-control" required placeholder="e.g. Under-19 District Selection Trials Announced" style="width:100%; height:42px; padding:0 0.8rem;">
+                  </div>
+
+                  <div class="form-group">
+                    <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                      Category *
+                    </label>
+                    <select id="admNewsCategory" class="form-control" style="width:100%; height:42px; padding:0 0.8rem;">
+                      <option value="ANNOUNCEMENT">Announcement / Circular</option>
+                      <option value="SELECTION_TRIALS">Selection Trials</option>
+                      <option value="TOURNAMENT">Tournament News</option>
+                      <option value="MATCH_REPORT">Match Report</option>
+                      <option value="PRESS_RELEASE">Official Press Release</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                      Author / Department
+                    </label>
+                    <input type="text" id="admNewsAuthor" class="form-control" value="CFVD Secretariat" placeholder="e.g. Honorary Secretary / Media Team" style="width:100%; height:42px; padding:0 0.8rem;">
+                  </div>
+
+                  <div class="form-group">
+                    <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                      Cover Image Theme
+                    </label>
+                    <select id="admNewsImage" class="form-control" style="width:100%; height:42px; padding:0 0.8rem;">
+                      <option value="assets/batsman.jpg">Batsman / Match Action (assets/batsman.jpg)</option>
+                      <option value="assets/champions.jpg">Champions Trophy / Awards (assets/champions.jpg)</option>
+                      <option value="assets/stadium.jpg">Stadium Pavilion &amp; Grounds (assets/stadium.jpg)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:1rem;">
+                  <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                    Summary / Excerpt (Displayed on News Cards) *
+                  </label>
+                  <input type="text" id="admNewsSummary" class="form-control" required placeholder="Short summary highlighting key dates, eligibility, or match scores..." style="width:100%; height:42px; padding:0 0.8rem;">
+                </div>
+
+                <div class="form-group" style="margin-bottom:1.4rem;">
+                  <label style="display:block; font-weight:700; color:#1e293b; font-size:0.85rem; margin-bottom:0.35rem;">
+                    Full Article Content / Official Circular Text *
+                  </label>
+                  <textarea id="admNewsContent" class="form-control" rows="5" required placeholder="Enter the complete notification, rules, match details, or circular instructions..." style="width:100%; padding:0.8rem; line-height:1.5; font-family:sans-serif;"></textarea>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:0.8rem;">
+                  <button type="reset" class="btn btn-outline-gold btn-sm">Clear Form</button>
+                  <button type="submit" id="btnAdminPublishSubmit" class="btn btn-gold btn-sm">
+                    <i class="fa-solid fa-paper-plane"></i> Publish to Portal &amp; Notices
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 2. Published Articles Listing -->
+            <div class="admin-news-list-box" style="border:1.5px solid rgba(212, 175, 55, 0.35); border-radius:14px; padding:1.6rem; box-shadow:0 6px 24px rgba(15, 23, 42, 0.06);">
+              <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.2rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.8rem;">
+                <div>
+                  <h4 style="color:#0f172a; margin:0; font-family:var(--font-header); font-size:1.1rem; font-weight:800;">
+                    <i class="fa-solid fa-list-check text-gold"></i> Active Published Articles &amp; Notices
+                  </h4>
+                  <p style="color:#64748b; font-size:0.82rem; margin:0.2rem 0 0 0;">
+                    Real-time list of circulars currently stored in MongoDB and live in the public Media &amp; Notices section.
+                  </p>
+                </div>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                  <button class="btn btn-sm btn-outline-gold" onclick="syncAdminNewsFromBackend()">
+                    <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                  </button>
+                </div>
+              </div>
+
+              <!-- Dynamic container for news items -->
+              <div id="adminContentArticlesList" style="display:flex; flex-direction:column; gap:1rem;">
+                <!-- Populated dynamically by script.js -->
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>>
+  </div>
 
   <!-- ======================================================================= -->
   <!-- PAGE 10: SCORER LOGIN (DEDICATED FULL PAGE / ROUTE)                     -->

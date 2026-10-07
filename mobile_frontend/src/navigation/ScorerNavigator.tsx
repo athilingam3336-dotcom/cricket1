@@ -28,11 +28,12 @@ export const useScorerNavigation = () => useContext(ScorerNavigationContext);
 
 interface Props {
   onExit: () => void;
+  initialParams?: any;
 }
 
-export default function ScorerNavigator({ onExit }: Props) {
-  const [currentScreen, setCurrentScreen] = useState<ScreenName>('Auth');
-  const [params, setParams] = useState<any>(null);
+export default function ScorerNavigator({ onExit, initialParams }: Props) {
+  const [currentScreen, setCurrentScreen] = useState<ScreenName>(initialParams?.initialScreen || 'Dashboard');
+  const [params, setParams] = useState<any>(initialParams || null);
 
   const navigate = (screen: ScreenName, screenParams?: any) => {
     setCurrentScreen(screen);

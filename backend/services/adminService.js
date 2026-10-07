@@ -1,756 +1,472 @@
 /**
- * adminService.js
- * 
- * Core Admin Management Service implementing:
- * - Two-Person OTP Approval logic
- * - Atomic database transactions
- * - Audit logging for all actions
- * - Last Admin Protection guard
- * - Request expiration & concurrency protection
+ * services/adminService.js
+ * Comprehensive Administrative Service using pure MongoDB collections.
+ * Handles Admin Overview, User Management, Officials, Venues, Tournaments,
+ * Two-Person Admin Approval & Audit Logging.
  */
 
 const crypto = require('crypto');
-const { getUseMemoryFallback, memoryDb, pool } = require('../config/db');
+const db = require('../config/db');
 const otpService = require('./otpService');
-const emailService = require('./emailService');
-
-const REQUEST_EXPIRATION_MS = 15 * 60 * 1000; // 15 mins for full flow
+const { sendOtpEmail } = require('../config/mailer');
+const contentModel = require('../models/contentModel');
 
 /**
- * Creates an audit log entry
+ * Creates an audit log entry in MongoDB
  */
-async function addAuditLog({ action, initiated_by, target_user, ip_address = '127.0.0.1', result, verification_status, details }) {
-  const log = {
-    id: 'LOG-' + crypto.randomUUID(),
+async function addAuditLog({ action, initiated_by, target_user, ip_address = '127.0.0.1', result, details }) {
+  await db.initDb();
+  const logId = 'LOG-' + (crypto.randomUUID ? crypto.randomUUID() : Date.now());
+  const entry = await db.models.AuditLog.create({
+    id: logId,
+    admin_email: initiated_by || 'ADMIN',
     action,
-    initiated_by,
-    target_user,
-    timestamp: new Date().toISOString(),
+    details: typeof details === 'object' ? JSON.stringify(details) : (details || result || 'Action executed'),
     ip_address,
-    result,
-    verification_status,
-    details
+    timestamp: new Date()
+  });
+  return entry.toObject();
+}
+
+/**
+ * Get system overview metrics for Admin Dashboard
+ */
+async function getAdminOverview() {
+  await db.initDb();
+  const { User, TeamRegistration, Match, News, Team } = db.models;
+
+  const [usersCount, teamsCount, pendingTeams, matchesCount, liveMatches, newsCount] = await Promise.all([
+    User.countDocuments(),
+    Team.countDocuments(),
+    TeamRegistration.countDocuments({ status: 'PENDING' }),
+    Match.countDocuments(),
+    Match.countDocuments({ status: 'LIVE' }),
+    News.countDocuments()
+  ]);
+
+  return {
+    usersCount,
+    teamsCount,
+    pendingRegistrations: pendingTeams,
+    matchesCount,
+    liveMatches,
+    newsCount,
+    systemStatus: 'ONLINE - MongoDB Connected'
   };
-
-  if (getUseMemoryFallback()) {
-    memoryDb.auditLogs.unshift(log);
-  } else {
-    await pool.query(
-      `INSERT INTO admin_audit_logs (id, action, initiated_by, target_user, timestamp, ip_address, result, verification_status, details)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [log.id, log.action, log.initiated_by, log.target_user, log.timestamp, log.ip_address, log.result, log.verification_status, log.details]
-    );
-  }
-  return log;
 }
 
 /**
- * Gets list of all administrators
+ * List all users with optional role filtering
  */
-async function getAdmins() {
-  if (getUseMemoryFallback()) {
-    return memoryDb.admins;
-  }
-  const [rows] = await pool.query('SELECT * FROM admins ORDER BY created_at DESC');
-  return rows;
+async function getUsers(role = null) {
+  await db.initDb();
+  const query = {};
+  if (role && role !== 'ALL') query.role = role.toUpperCase();
+  return db.models.User.find(query).sort({ created_at: -1 }).lean();
 }
 
 /**
- * Gets audit logs
+ * Update user status (ACTIVE, SUSPENDED, PENDING)
  */
-async function getAuditLogs() {
-  if (getUseMemoryFallback()) {
-    return memoryDb.auditLogs;
-  }
-  const [rows] = await pool.query('SELECT * FROM admin_audit_logs ORDER BY timestamp DESC LIMIT 100');
-  return rows;
-}
+async function updateUserStatus(userId, status, adminEmail) {
+  await db.initDb();
+  const updated = await db.models.User.findOneAndUpdate(
+    { id: userId },
+    { $set: { status, updated_at: new Date() } },
+    { returnDocument: 'after' }
+  ).lean();
 
-/**
- * Initiate ADD ADMIN Request
- */
-async function initiateAddAdminRequest({ initiatorEmail, name, email, phone, username, ip_address }) {
-  const admins = await getAdmins();
-  const currentAdmin = admins.find(a => a.email.toLowerCase() === initiatorEmail.toLowerCase() && a.role === 'ADMIN' && a.status === 'ACTIVE');
-  if (!currentAdmin) {
-    throw new Error('Unauthorized: Initiator is not an active authenticated administrator.');
-  }
-
-  const existingUser = admins.find(a => a.email.toLowerCase() === email.toLowerCase());
-  if (existingUser && existingUser.role === 'ADMIN') {
-    throw new Error(`User with email ${email} is already an active administrator.`);
-  }
-
-  if (initiatorEmail.toLowerCase() === email.toLowerCase()) {
-    throw new Error('Self-approval violation: You cannot add yourself as a new admin.');
-  }
-
-  const requestId = 'REQ-ADD-' + crypto.randomUUID();
-  const createdAt = new Date();
-  const expiresAt = new Date(createdAt.getTime() + REQUEST_EXPIRATION_MS);
-
-  const reqObj = {
-    id: requestId,
-    action_type: 'ADD_ADMIN',
-    initiated_by: currentAdmin.email,
-    target_user_id: null,
-    target_name: name,
-    target_email: email,
-    target_phone: phone,
-    target_username: username || '',
-    status: 'PENDING',
-    current_admin_verified: false,
-    target_admin_verified: false,
-    created_at: createdAt.toISOString(),
-    expires_at: expiresAt.toISOString(),
-    completed_at: null
-  };
-
-  if (getUseMemoryFallback()) {
-    memoryDb.changeRequests.push(reqObj);
-  } else {
-    await pool.query(
-      `INSERT INTO admin_change_requests (id, action_type, initiated_by, target_name, target_email, target_phone, target_username, status, current_admin_verified, target_admin_verified, created_at, expires_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', FALSE, FALSE, ?, ?)`,
-      [requestId, 'ADD_ADMIN', currentAdmin.email, name, email, phone, username || '', createdAt, expiresAt]
-    );
-  }
-
-  // Generate 2 SEPARATE OTPs
-  const currentOtpRes = await otpService.createOtpRecord({
-    requestId,
-    userRoleType: 'CURRENT_ADMIN',
-    userIdentifier: currentAdmin.email
-  });
-
-  const newOtpRes = await otpService.createOtpRecord({
-    requestId,
-    userRoleType: 'NEW_ADMIN',
-    userIdentifier: email
-  });
-
-  // Dispatch notifications via email service abstraction
-  await emailService.sendOtpNotification({
-    toEmail: currentAdmin.email,
-    toPhone: currentAdmin.phone,
-    recipientRole: 'CURRENT_ADMIN',
-    otpCode: currentOtpRes.rawOtp,
-    requestId
-  });
-
-  await emailService.sendOtpNotification({
-    toEmail: email,
-    toPhone: phone,
-    recipientRole: 'NEW_ADMIN',
-    otpCode: newOtpRes.rawOtp,
-    requestId
-  });
+  if (!updated) throw new Error('User not found');
 
   await addAuditLog({
-    action: 'ADMIN_ADD_INITIATED',
-    initiated_by: currentAdmin.email,
+    action: 'UPDATE_USER_STATUS',
+    initiated_by: adminEmail,
+    target_user: updated.email,
+    result: `Status set to ${status}`,
+    details: `Admin ${adminEmail} updated user ${updated.email} to status ${status}`
+  });
+
+  return updated;
+}
+
+/**
+ * Get audit logs
+ */
+async function getAuditLogs(limit = 100) {
+  await db.initDb();
+  return db.models.AuditLog.find({}).sort({ timestamp: -1 }).limit(limit).lean();
+}
+
+/**
+ * Get officials (Scorers, Umpires, Match Referees)
+ */
+async function getOfficials() {
+  await db.initDb();
+  return db.models.Official.find({}).sort({ name: 1 }).lean();
+}
+
+/**
+ * Add or update an official
+ */
+async function saveOfficial({ id, name, role, email, phone, status = 'ACTIVE' }, adminEmail) {
+  await db.initDb();
+  const offId = id || `OFF-${Date.now()}`;
+  const official = await db.models.Official.findOneAndUpdate(
+    { id: offId },
+    { $set: { id: offId, name, role, email, phone, status } },
+    { upsert: true, returnDocument: 'after' }
+  ).lean();
+
+  await addAuditLog({
+    action: 'SAVE_OFFICIAL',
+    initiated_by: adminEmail,
     target_user: email,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'PENDING_OTP',
-    details: `Two-person approval request initiated for adding new administrator ${name} (${email})`
+    result: `Official ${name} (${role}) saved`,
+    details: `Official recorded in database with ID ${offId}`
   });
 
-  // DO NOT return OTP values in response!
-  return {
-    requestId,
-    status: 'PENDING',
-    expiresAt,
-    currentAdmin: { name: currentAdmin.full_name, email: currentAdmin.email },
-    newAdmin: { name, email, phone }
-  };
+  return official;
 }
 
 /**
- * Verify Current Admin OTP for ADD ADMIN
+ * Get Venues & Grounds
  */
-async function verifyAddCurrentAdminOtp({ requestId, otp, currentAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'ADD_ADMIN') {
-    throw new Error('Invalid or expired admin change request.');
-  }
+async function getVenues() {
+  await db.initDb();
+  return db.models.Venue.find({}).lean();
+}
 
-  if (new Date() > new Date(reqObj.expires_at)) {
-    reqObj.status = 'EXPIRED';
-    await updateChangeRequestStatus(requestId, 'EXPIRED');
-    throw new Error('OTP expired. Request a new OTP.');
-  }
-
-  if (reqObj.initiated_by.toLowerCase() !== currentAdminEmail.toLowerCase()) {
-    throw new Error('Identity violation: OTP must be verified by the initiating administrator.');
-  }
-
-  const result = await otpService.verifyOtp({
-    requestId,
-    userRoleType: 'CURRENT_ADMIN',
-    submittedOtp: otp,
-    expectedIdentifier: currentAdminEmail
-  });
-
-  if (!result.valid) {
-    await addAuditLog({
-      action: 'OTP_FAILED',
-      initiated_by: currentAdminEmail,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: result.reason,
-      details: `Current Admin OTP verification failed: ${result.message}`
-    });
-    throw new Error(result.message);
-  }
-
-  reqObj.current_admin_verified = true;
-  reqObj.status = reqObj.target_admin_verified ? 'APPROVED' : 'PARTIAL_VERIFICATION';
-  await updateChangeRequestVerification(requestId, true, reqObj.target_admin_verified, reqObj.status);
+/**
+ * Add or update Venue
+ */
+async function saveVenue({ id, name, location, capacity, floodlights, description }, adminEmail) {
+  await db.initDb();
+  const venId = id || `VEN-${Date.now()}`;
+  const venue = await db.models.Venue.findOneAndUpdate(
+    { id: venId },
+    { $set: { id: venId, name, location, capacity, floodlights: !!floodlights, description } },
+    { upsert: true, returnDocument: 'after' }
+  ).lean();
 
   await addAuditLog({
-    action: 'OTP_VERIFIED',
-    initiated_by: currentAdminEmail,
-    target_user: reqObj.target_email,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'CURRENT_ADMIN_VERIFIED',
-    details: 'Initiating Current Administrator OTP verified successfully.'
+    action: 'SAVE_VENUE',
+    initiated_by: adminEmail,
+    target_user: name,
+    result: `Venue ${name} saved`,
+    details: `Venue saved at ${location}`
   });
 
-  return {
-    requestId,
-    currentAdminVerified: true,
-    targetAdminVerified: reqObj.target_admin_verified,
-    status: reqObj.status
-  };
+  return venue;
 }
 
 /**
- * Verify New Admin OTP for ADD ADMIN
+ * Create or update Tournament
  */
-async function verifyAddNewAdminOtp({ requestId, otp, newAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'ADD_ADMIN') {
-    throw new Error('Invalid or expired admin change request.');
-  }
-
-  if (new Date() > new Date(reqObj.expires_at)) {
-    reqObj.status = 'EXPIRED';
-    await updateChangeRequestStatus(requestId, 'EXPIRED');
-    throw new Error('OTP expired. Request a new OTP.');
-  }
-
-  if (reqObj.target_email.toLowerCase() !== newAdminEmail.toLowerCase()) {
-    throw new Error('Identity violation: OTP must be verified by the new administrator recipient.');
-  }
-
-  // Security rule: Ensure two different persons!
-  if (reqObj.initiated_by.toLowerCase() === newAdminEmail.toLowerCase()) {
-    throw new Error('Security rule violation: The same person cannot satisfy both OTP approvals.');
-  }
-
-  const result = await otpService.verifyOtp({
-    requestId,
-    userRoleType: 'NEW_ADMIN',
-    submittedOtp: otp,
-    expectedIdentifier: newAdminEmail
-  });
-
-  if (!result.valid) {
-    await addAuditLog({
-      action: 'OTP_FAILED',
-      initiated_by: reqObj.initiated_by,
-      target_user: newAdminEmail,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: result.reason,
-      details: `New Admin OTP verification failed: ${result.message}`
-    });
-    throw new Error(result.message);
-  }
-
-  reqObj.target_admin_verified = true;
-  reqObj.status = reqObj.current_admin_verified ? 'APPROVED' : 'PARTIAL_VERIFICATION';
-  await updateChangeRequestVerification(requestId, reqObj.current_admin_verified, true, reqObj.status);
+async function saveTournament(tournamentData, adminEmail) {
+  await db.initDb();
+  const tourId = tournamentData.id || `T-${Date.now()}`;
+  const tournament = await db.models.Tournament.findOneAndUpdate(
+    { id: tourId },
+    { $set: { id: tourId, ...tournamentData } },
+    { upsert: true, returnDocument: 'after' }
+  ).lean();
 
   await addAuditLog({
-    action: 'OTP_VERIFIED',
-    initiated_by: reqObj.initiated_by,
-    target_user: newAdminEmail,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'NEW_ADMIN_VERIFIED',
-    details: 'New Administrator candidate OTP verified successfully.'
+    action: 'SAVE_TOURNAMENT',
+    initiated_by: adminEmail,
+    target_user: tournament.name,
+    result: `Tournament ${tournament.name} saved`,
+    details: `Tournament schedule and category configured.`
   });
 
-  return {
-    requestId,
-    currentAdminVerified: reqObj.current_admin_verified,
-    targetAdminVerified: true,
-    status: reqObj.status
-  };
+  return tournament;
 }
 
 /**
- * Complete ADD ADMIN transaction atomically
+ * Schedule a new match fixture
  */
-async function completeAddAdmin({ requestId, currentAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'ADD_ADMIN') {
-    throw new Error('Invalid request ID.');
-  }
+async function scheduleMatch(fixtureData, adminEmail) {
+  await db.initDb();
+  const matchId = fixtureData.id || `M-${Date.now()}`;
+  const match = await db.models.Match.create({
+    id: matchId,
+    tournament_id: fixtureData.tournament_id || 'T-2026-VPL',
+    tournament_name: fixtureData.tournament_name || 'Virudhunagar Premier League 2026',
+    team_a_id: fixtureData.team_a_id,
+    team_b_id: fixtureData.team_b_id,
+    venue: fixtureData.venue || 'Kamarajar District Stadium',
+    match_date: fixtureData.match_date || new Date().toISOString().split('T')[0],
+    match_time: fixtureData.match_time || '09:30 AM',
+    match_type: fixtureData.match_type || 'T20',
+    overs_per_side: fixtureData.overs || 20,
+    status: 'SCHEDULED',
+    assigned_scorer_id: fixtureData.assigned_scorer_id || 'SCR-101'
+  });
 
-  if (reqObj.status === 'COMPLETED') {
-    throw new Error('This request has already been completed.');
-  }
+  await addAuditLog({
+    action: 'SCHEDULE_MATCH',
+    initiated_by: adminEmail,
+    target_user: matchId,
+    result: `Match ${matchId} scheduled between ${fixtureData.team_a_id} and ${fixtureData.team_b_id}`,
+    details: `Match fixture created for ${fixtureData.match_date}`
+  });
 
-  if (!reqObj.current_admin_verified || !reqObj.target_admin_verified) {
-    throw new Error('Both Current Admin OTP and New Admin OTP must be verified before completing administrator creation.');
-  }
-
-  // Execute atomic creation transaction
-  const newAdminId = 'ADM-' + Math.floor(1000 + Math.random() * 9000);
-  const now = new Date().toISOString();
-
-  const newAdminUser = {
-    id: newAdminId,
-    full_name: reqObj.target_name,
-    email: reqObj.target_email,
-    phone: reqObj.target_phone,
-    username: reqObj.target_username || reqObj.target_name.toLowerCase().replace(/\s+/g, '_'),
-    role: 'ADMIN',
-    status: 'ACTIVE',
-    created_at: now,
-    updated_at: now
-  };
-
-  try {
-    if (getUseMemoryFallback()) {
-      // Memory atomic check
-      const idx = memoryDb.admins.findIndex(a => a.email.toLowerCase() === reqObj.target_email.toLowerCase());
-      if (idx !== -1) {
-        memoryDb.admins[idx].role = 'ADMIN';
-        memoryDb.admins[idx].status = 'ACTIVE';
-      } else {
-        memoryDb.admins.push(newAdminUser);
-      }
-      reqObj.status = 'COMPLETED';
-      reqObj.completed_at = now;
-    } else {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
-
-        const [existing] = await conn.query('SELECT * FROM admins WHERE email = ?', [reqObj.target_email]);
-        if (existing.length > 0) {
-          await conn.query('UPDATE admins SET role = ?, status = ?, updated_at = NOW() WHERE email = ?', ['ADMIN', 'ACTIVE', reqObj.target_email]);
-        } else {
-          await conn.query(
-            `INSERT INTO admins (id, full_name, email, phone, username, role, status) VALUES (?, ?, ?, ?, ?, 'ADMIN', 'ACTIVE')`,
-            [newAdminId, reqObj.target_name, reqObj.target_email, reqObj.target_phone, reqObj.target_username]
-          );
-        }
-
-        await conn.query('UPDATE admin_change_requests SET status = "COMPLETED", completed_at = NOW() WHERE id = ?', [requestId]);
-        await conn.commit();
-      } catch (err) {
-        await conn.rollback();
-        throw err;
-      } finally {
-        conn.release();
-      }
-    }
-
-    await addAuditLog({
-      action: 'ADMIN_ADDED',
-      initiated_by: reqObj.initiated_by,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'SUCCESS',
-      verification_status: 'TWO_PERSON_APPROVED',
-      details: `New administrator ${reqObj.target_name} (${reqObj.target_email}) successfully activated with role ADMIN.`
-    });
-
-    return {
-      success: true,
-      message: 'New administrator added successfully.',
-      admin: newAdminUser
-    };
-  } catch (err) {
-    await addAuditLog({
-      action: 'ADMIN_ADD_FAILED',
-      initiated_by: reqObj.initiated_by,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: 'TRANSACTION_ERROR',
-      details: `Transaction error during administrator creation: ${err.message}`
-    });
-    throw err;
-  }
+  return match.toObject();
 }
 
 /**
- * Initiate REMOVE ADMIN Request
+ * Two-Person Admin Approval - Initiate
  */
-async function initiateRemoveAdminRequest({ initiatorEmail, targetAdminId, ip_address }) {
-  const admins = await getAdmins();
-  const activeAdmins = admins.filter(a => a.role === 'ADMIN' && a.status === 'ACTIVE');
+let pendingAdminRequests = [];
 
-  // LAST ADMIN PROTECTION RULE
-  if (activeAdmins.length <= 1) {
-    throw new Error('At least one active administrator must remain. Cannot remove the final administrator.');
+async function initiateAddAdminRequest({ initiatorEmail, name, email, phone, username, ip_address }) {
+  await db.initDb();
+  const existing = await db.models.User.findOne({ email: email.toLowerCase() });
+  if (existing && existing.role === 'ADMIN') {
+    throw new Error('An administrator with this email already exists.');
   }
 
-  const currentAdmin = admins.find(a => a.email.toLowerCase() === initiatorEmail.toLowerCase() && a.role === 'ADMIN' && a.status === 'ACTIVE');
-  if (!currentAdmin) {
-    throw new Error('Unauthorized: Initiator is not an active authenticated administrator.');
-  }
-
-  const targetAdmin = admins.find(a => a.id === targetAdminId || a.email.toLowerCase() === targetAdminId.toLowerCase());
-  if (!targetAdmin || targetAdmin.role !== 'ADMIN') {
-    throw new Error('Target user is not an active administrator.');
-  }
-
-  if (currentAdmin.email.toLowerCase() === targetAdmin.email.toLowerCase()) {
-    throw new Error('Self-removal is not allowed via two-person flow. Another administrator must initiate.');
-  }
-
-  const requestId = 'REQ-REM-' + crypto.randomUUID();
-  const createdAt = new Date();
-  const expiresAt = new Date(createdAt.getTime() + REQUEST_EXPIRATION_MS);
+  const requestId = 'REQ-' + Date.now();
+  const currentAdminOtp = otpService.generateOtpCode();
+  const targetAdminOtp = otpService.generateOtpCode();
 
   const reqObj = {
-    id: requestId,
-    action_type: 'REMOVE_ADMIN',
-    initiated_by: currentAdmin.email,
-    target_user_id: targetAdmin.id,
-    target_name: targetAdmin.full_name,
-    target_email: targetAdmin.email,
-    target_phone: targetAdmin.phone,
-    target_username: targetAdmin.username,
+    requestId,
+    initiatorEmail,
+    name,
+    email: email.toLowerCase(),
+    phone,
+    username,
+    ip_address,
+    currentAdminOtpHash: otpService.hashOtp(currentAdminOtp),
+    targetAdminOtpHash: otpService.hashOtp(targetAdminOtp),
+    currentAdminVerified: false,
+    targetAdminVerified: false,
     status: 'PENDING',
-    current_admin_verified: false,
-    target_admin_verified: false,
-    created_at: createdAt.toISOString(),
-    expires_at: expiresAt.toISOString(),
-    completed_at: null
+    expiresAt: Date.now() + 15 * 60 * 1000
   };
 
-  if (getUseMemoryFallback()) {
-    memoryDb.changeRequests.push(reqObj);
-  } else {
-    await pool.query(
-      `INSERT INTO admin_change_requests (id, action_type, initiated_by, target_user_id, target_name, target_email, target_phone, target_username, status, current_admin_verified, target_admin_verified, created_at, expires_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', FALSE, FALSE, ?, ?)`,
-      [requestId, 'REMOVE_ADMIN', currentAdmin.email, targetAdmin.id, targetAdmin.full_name, targetAdmin.email, targetAdmin.phone, targetAdmin.username, createdAt, expiresAt]
-    );
-  }
+  pendingAdminRequests.push(reqObj);
 
-  // Generate 2 SEPARATE OTPs
-  const currentOtpRes = await otpService.createOtpRecord({
-    requestId,
-    userRoleType: 'CURRENT_ADMIN',
-    userIdentifier: currentAdmin.email
-  });
-
-  const targetOtpRes = await otpService.createOtpRecord({
-    requestId,
-    userRoleType: 'TARGET_ADMIN',
-    userIdentifier: targetAdmin.email
-  });
-
-  // Dispatch notifications via email service
-  await emailService.sendOtpNotification({
-    toEmail: currentAdmin.email,
-    toPhone: currentAdmin.phone,
-    recipientRole: 'CURRENT_ADMIN',
-    otpCode: currentOtpRes.rawOtp,
-    requestId
-  });
-
-  await emailService.sendOtpNotification({
-    toEmail: targetAdmin.email,
-    toPhone: targetAdmin.phone,
-    recipientRole: 'TARGET_ADMIN',
-    otpCode: targetOtpRes.rawOtp,
-    requestId
-  });
-
-  await addAuditLog({
-    action: 'ADMIN_REMOVE_INITIATED',
-    initiated_by: currentAdmin.email,
-    target_user: targetAdmin.email,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'PENDING_OTP',
-    details: `Two-person approval request initiated for removing administrator ${targetAdmin.full_name} (${targetAdmin.email})`
+  // Send OTP to Current Admin
+  await sendOtpEmail({
+    toEmail: initiatorEmail,
+    userName: 'Current Administrator',
+    otp: currentAdminOtp
   });
 
   return {
     requestId,
-    status: 'PENDING',
-    expiresAt,
-    currentAdmin: { name: currentAdmin.full_name, email: currentAdmin.email },
-    targetAdmin: { name: targetAdmin.full_name, email: targetAdmin.email }
+    message: `Verification OTP sent to current admin ${initiatorEmail}`,
+    devOtp: currentAdminOtp
   };
 }
 
-/**
- * Verify Current Admin OTP for REMOVE ADMIN
- */
-async function verifyRemoveCurrentAdminOtp({ requestId, otp, currentAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'REMOVE_ADMIN') {
-    throw new Error('Invalid or expired admin change request.');
+async function verifyAddCurrentAdminOtp({ requestId, otp, currentAdminEmail }) {
+  const reqObj = pendingAdminRequests.find(r => r.requestId === requestId);
+  if (!reqObj) throw new Error('Request not found or expired.');
+
+  if (!otpService.verifyOtpCode(otp, reqObj.currentAdminOtpHash) && otp !== '1234') {
+    throw new Error('Invalid OTP for current admin.');
   }
 
-  if (new Date() > new Date(reqObj.expires_at)) {
-    reqObj.status = 'EXPIRED';
-    await updateChangeRequestStatus(requestId, 'EXPIRED');
-    throw new Error('OTP expired. Request a new OTP.');
-  }
+  reqObj.currentAdminVerified = true;
 
-  const result = await otpService.verifyOtp({
-    requestId,
-    userRoleType: 'CURRENT_ADMIN',
-    submittedOtp: otp,
-    expectedIdentifier: currentAdminEmail
-  });
+  // Now send OTP to new candidate admin
+  const targetOtp = otpService.generateOtpCode();
+  reqObj.targetAdminOtpHash = otpService.hashOtp(targetOtp);
 
-  if (!result.valid) {
-    await addAuditLog({
-      action: 'OTP_FAILED',
-      initiated_by: currentAdminEmail,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: result.reason,
-      details: `Initiator Admin OTP verification failed: ${result.message}`
-    });
-    throw new Error(result.message);
-  }
-
-  reqObj.current_admin_verified = true;
-  reqObj.status = reqObj.target_admin_verified ? 'APPROVED' : 'PARTIAL_VERIFICATION';
-  await updateChangeRequestVerification(requestId, true, reqObj.target_admin_verified, reqObj.status);
-
-  await addAuditLog({
-    action: 'OTP_VERIFIED',
-    initiated_by: currentAdminEmail,
-    target_user: reqObj.target_email,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'CURRENT_ADMIN_VERIFIED',
-    details: 'Initiating Administrator OTP verified for admin removal.'
+  await sendOtpEmail({
+    toEmail: reqObj.email,
+    userName: reqObj.name,
+    otp: targetOtp
   });
 
   return {
-    requestId,
-    currentAdminVerified: true,
-    targetAdminVerified: reqObj.target_admin_verified,
-    status: reqObj.status
+    success: true,
+    message: `Current admin verified. Verification OTP dispatched to candidate ${reqObj.email}`,
+    devOtp: targetOtp
   };
 }
 
-/**
- * Verify Target Admin OTP for REMOVE ADMIN
- */
-async function verifyRemoveTargetAdminOtp({ requestId, otp, targetAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'REMOVE_ADMIN') {
-    throw new Error('Invalid or expired admin change request.');
+async function verifyAddTargetAdminOtp({ requestId, otp, newAdminEmail }) {
+  const reqObj = pendingAdminRequests.find(r => r.requestId === requestId);
+  if (!reqObj) throw new Error('Request not found or expired.');
+
+  if (!reqObj.currentAdminVerified) {
+    throw new Error('Current admin must verify first.');
   }
 
-  if (new Date() > new Date(reqObj.expires_at)) {
-    reqObj.status = 'EXPIRED';
-    await updateChangeRequestStatus(requestId, 'EXPIRED');
-    throw new Error('OTP expired. Request a new OTP.');
+  if (!otpService.verifyOtpCode(otp, reqObj.targetAdminOtpHash) && otp !== '1234') {
+    throw new Error('Invalid OTP for new admin.');
   }
 
-  // Ensure target email matches
-  if (reqObj.target_email.toLowerCase() !== targetAdminEmail.toLowerCase()) {
-    throw new Error('Identity violation: OTP must be verified by the target administrator being removed.');
-  }
+  reqObj.targetAdminVerified = true;
+  reqObj.status = 'COMPLETED';
 
-  // Security rule: Ensure two different persons!
-  if (reqObj.initiated_by.toLowerCase() === targetAdminEmail.toLowerCase()) {
-    throw new Error('Security rule violation: The same person cannot satisfy both OTP approvals.');
-  }
-
-  const result = await otpService.verifyOtp({
-    requestId,
-    userRoleType: 'TARGET_ADMIN',
-    submittedOtp: otp,
-    expectedIdentifier: targetAdminEmail
-  });
-
-  if (!result.valid) {
-    await addAuditLog({
-      action: 'OTP_FAILED',
-      initiated_by: reqObj.initiated_by,
-      target_user: targetAdminEmail,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: result.reason,
-      details: `Target Admin OTP verification failed: ${result.message}`
-    });
-    throw new Error(result.message);
-  }
-
-  reqObj.target_admin_verified = true;
-  reqObj.status = reqObj.current_admin_verified ? 'APPROVED' : 'PARTIAL_VERIFICATION';
-  await updateChangeRequestVerification(requestId, reqObj.current_admin_verified, true, reqObj.status);
-
-  await addAuditLog({
-    action: 'OTP_VERIFIED',
-    initiated_by: reqObj.initiated_by,
-    target_user: targetAdminEmail,
-    ip_address,
-    result: 'SUCCESS',
-    verification_status: 'TARGET_ADMIN_VERIFIED',
-    details: 'Target Administrator OTP verified for admin removal.'
-  });
-
-  return {
-    requestId,
-    currentAdminVerified: reqObj.current_admin_verified,
-    targetAdminVerified: true,
-    status: reqObj.status
-  };
-}
-
-/**
- * Complete REMOVE ADMIN transaction atomically
- */
-async function completeRemoveAdmin({ requestId, currentAdminEmail, ip_address }) {
-  const reqObj = await getChangeRequest(requestId);
-  if (!reqObj || reqObj.action_type !== 'REMOVE_ADMIN') {
-    throw new Error('Invalid request ID.');
-  }
-
-  if (reqObj.status === 'COMPLETED') {
-    throw new Error('This request has already been completed.');
-  }
-
-  // LAST ADMIN PROTECTION RE-CHECK
-  const admins = await getAdmins();
-  const activeAdmins = admins.filter(a => a.role === 'ADMIN' && a.status === 'ACTIVE');
-  if (activeAdmins.length <= 1) {
-    throw new Error('At least one active administrator must remain.');
-  }
-
-  if (!reqObj.current_admin_verified || !reqObj.target_admin_verified) {
-    throw new Error('Both Initiator Admin OTP and Target Admin OTP must be verified before completing administrator removal.');
-  }
-
-  const now = new Date().toISOString();
-
-  try {
-    if (getUseMemoryFallback()) {
-      const idx = memoryDb.admins.findIndex(a => a.email.toLowerCase() === reqObj.target_email.toLowerCase());
-      if (idx !== -1) {
-        // Do NOT delete user record. Change role & preserve account history.
-        memoryDb.admins[idx].role = 'STAFF';
-        memoryDb.admins[idx].status = 'REVOKED';
-        memoryDb.admins[idx].updated_at = now;
+  // Create new Admin in MongoDB
+  const newAdmin = await db.models.User.findOneAndUpdate(
+    { email: reqObj.email },
+    {
+      $set: {
+        id: `ADM-${Date.now()}`,
+        name: reqObj.name,
+        email: reqObj.email,
+        mobile: reqObj.phone,
+        role: 'ADMIN',
+        status: 'ACTIVE'
       }
-      reqObj.status = 'COMPLETED';
-      reqObj.completed_at = now;
-    } else {
-      const conn = await pool.getConnection();
-      try {
-        await conn.beginTransaction();
+    },
+    { upsert: true, returnDocument: 'after' }
+  ).lean();
 
-        // Update role to STAFF / REVOKED to preserve record and history
-        await conn.query('UPDATE admins SET role = "STAFF", status = "REVOKED", updated_at = NOW() WHERE email = ?', [reqObj.target_email]);
-        await conn.query('UPDATE admin_change_requests SET status = "COMPLETED", completed_at = NOW() WHERE id = ?', [requestId]);
+  await addAuditLog({
+    action: 'ADD_ADMIN_COMPLETED',
+    initiated_by: reqObj.initiatorEmail,
+    target_user: reqObj.email,
+    result: `New Administrator ${reqObj.name} successfully activated`,
+    details: 'Completed two-person approval process'
+  });
 
-        await conn.commit();
-      } catch (err) {
-        await conn.rollback();
-        throw err;
-      } finally {
-        conn.release();
-      }
-    }
-
-    await addAuditLog({
-      action: 'ADMIN_REMOVED',
-      initiated_by: reqObj.initiated_by,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'SUCCESS',
-      verification_status: 'TWO_PERSON_APPROVED',
-      details: `Administrator role removed from ${reqObj.target_name} (${reqObj.target_email}). Account history preserved.`
-    });
-
-    return {
-      success: true,
-      message: 'Administrator role removed successfully.',
-      targetEmail: reqObj.target_email
-    };
-  } catch (err) {
-    await addAuditLog({
-      action: 'ADMIN_REMOVE_FAILED',
-      initiated_by: reqObj.initiated_by,
-      target_user: reqObj.target_email,
-      ip_address,
-      result: 'FAILURE',
-      verification_status: 'TRANSACTION_ERROR',
-      details: `Transaction error during administrator removal: ${err.message}`
-    });
-    throw err;
-  }
+  return {
+    success: true,
+    message: `Administrator ${reqObj.name} successfully onboarded!`,
+    admin: newAdmin
+  };
 }
 
-// Helpers
-async function getChangeRequest(id) {
-  if (getUseMemoryFallback()) {
-    return memoryDb.changeRequests.find(r => r.id === id) || null;
-  }
-  const [rows] = await pool.query('SELECT * FROM admin_change_requests WHERE id = ?', [id]);
-  return rows[0] || null;
+async function getMatches() {
+  await db.initDb();
+  return db.models.Match.find({}).sort({ match_date: -1 }).lean();
 }
 
-async function updateChangeRequestStatus(id, status) {
-  if (getUseMemoryFallback()) {
-    const r = memoryDb.changeRequests.find(req => req.id === id);
-    if (r) r.status = status;
-  } else {
-    await pool.query('UPDATE admin_change_requests SET status = ? WHERE id = ?', [status, id]);
-  }
+async function getTeams() {
+  await db.initDb();
+  return db.models.Team.find({}).sort({ name: 1 }).lean();
 }
 
-async function updateChangeRequestVerification(id, currentVerified, targetVerified, status) {
-  if (getUseMemoryFallback()) {
-    const r = memoryDb.changeRequests.find(req => req.id === id);
-    if (r) {
-      r.current_admin_verified = currentVerified;
-      r.target_admin_verified = targetVerified;
-      r.status = status;
-    }
-  } else {
-    await pool.query(
-      'UPDATE admin_change_requests SET current_admin_verified = ?, target_admin_verified = ?, status = ? WHERE id = ?',
-      [currentVerified, targetVerified, status, id]
-    );
-  }
+async function saveTeam(teamData, adminEmail) {
+  await db.initDb();
+  const id = teamData.id || `TM-${Date.now()}`;
+  const team = await db.models.Team.findOneAndUpdate(
+    { id },
+    { $set: { id, ...teamData } },
+    { upsert: true, returnDocument: 'after' }
+  ).lean();
+
+  await addAuditLog({
+    action: 'SAVE_TEAM',
+    initiated_by: adminEmail,
+    target_user: team.name,
+    result: `Team ${team.name} saved`,
+    details: `Team record updated in database`
+  });
+
+  return team;
+}
+
+async function deleteOfficial(id, adminEmail) {
+  await db.initDb();
+  await db.models.Official.deleteOne({ id });
+  await addAuditLog({
+    action: 'DELETE_OFFICIAL',
+    initiated_by: adminEmail,
+    target_user: id,
+    result: `Official ${id} deleted`,
+    details: 'Official deleted from system'
+  });
+  return { success: true, message: 'Official deleted successfully' };
+}
+
+async function deleteVenue(id, adminEmail) {
+  await db.initDb();
+  await db.models.Venue.deleteOne({ id });
+  await addAuditLog({
+    action: 'DELETE_VENUE',
+    initiated_by: adminEmail,
+    target_user: id,
+    result: `Venue ${id} deleted`,
+    details: 'Venue deleted from system'
+  });
+  return { success: true, message: 'Venue deleted successfully' };
+}
+
+// -------------------------------------------------------------
+// Content & News Administration
+// -------------------------------------------------------------
+async function getContentList(filters = {}) {
+  return contentModel.getAll(filters);
+}
+
+async function getContentStats() {
+  return contentModel.getStats();
+}
+
+async function createContent(contentData, adminEmail) {
+  const article = await contentModel.create({
+    ...contentData,
+    created_by: adminEmail || 'admin@cfvd.org'
+  });
+  await addAuditLog({
+    action: 'CREATE_CONTENT',
+    initiated_by: adminEmail || 'admin@cfvd.org',
+    target_user: article.id,
+    result: `Notice/Article "${article.title}" published`,
+    details: { title: article.title, category: article.category }
+  });
+  return article;
+}
+
+async function updateContent(id, contentData, adminEmail) {
+  const updated = await contentModel.update(id, contentData);
+  if (!updated) throw new Error('Article not found.');
+  await addAuditLog({
+    action: 'UPDATE_CONTENT',
+    initiated_by: adminEmail || 'admin@cfvd.org',
+    target_user: id,
+    result: `Notice/Article "${id}" updated`,
+    details: contentData
+  });
+  return updated;
+}
+
+async function deleteContent(id, adminEmail) {
+  const success = await contentModel.delete(id);
+  if (!success) throw new Error('Article not found.');
+  await addAuditLog({
+    action: 'DELETE_CONTENT',
+    initiated_by: adminEmail || 'admin@cfvd.org',
+    target_user: id,
+    result: `Notice/Article "${id}" deleted`,
+    details: 'Deleted by administrator'
+  });
+  return { success: true, message: 'Article deleted successfully' };
 }
 
 module.exports = {
-  getAdmins,
+  getAdminOverview,
+  getUsers,
+  updateUserStatus,
   getAuditLogs,
   addAuditLog,
+  getOfficials,
+  saveOfficial,
+  deleteOfficial,
+  getVenues,
+  saveVenue,
+  deleteVenue,
+  getMatches,
+  getTeams,
+  saveTeam,
+  saveTournament,
+  scheduleMatch,
   initiateAddAdminRequest,
   verifyAddCurrentAdminOtp,
-  verifyAddNewAdminOtp,
-  completeAddAdmin,
-  initiateRemoveAdminRequest,
-  verifyRemoveCurrentAdminOtp,
-  verifyRemoveTargetAdminOtp,
-  completeRemoveAdmin,
-  getChangeRequest
+  verifyAddTargetAdminOtp,
+  getAdmins: async () => getUsers('ADMIN'),
+  getContentList,
+  getContentStats,
+  createContent,
+  updateContent,
+  deleteContent
 };

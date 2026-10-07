@@ -35,8 +35,8 @@ async function runAllTests() {
   console.log('🏏 RUNNING CRICKET SCORER AUTOMATED TEST SUITE');
   console.log('==================================================\n');
 
-  // Reset default seed for pristine test state
-  db.memoryStore.initDefaultSeed();
+  // Initialize MongoDB for test suite
+  await db.initDb();
 
   console.log('--- 1. AUTHENTICATION & AUTHORIZATION ---');
   let authToken = null;
@@ -55,11 +55,11 @@ async function runAllTests() {
     assert.strictEqual(reqRes.success, true);
     assert(!reqRes.otp, 'OTP must NOT be returned in API response');
 
-    // Fetch user from MySQL to get the generated OTP hash
+    // Fetch user from MongoDB to get the generated OTP hash
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', ['ramesh@gmail.com']);
     assert(rows && rows.length > 0, 'User must exist');
-    assert(rows[0].otp_hash, 'otp_hash must be set in MySQL');
-    assert(rows[0].otp_expires_at, 'otp_expires_at must be set in MySQL');
+    assert(rows[0].otp_hash, 'otp_hash must be set in MongoDB');
+    assert(rows[0].otp_expires_at, 'otp_expires_at must be set in MongoDB');
 
     // Simulate known OTP verification by storing deterministic hash
     const knownOtp = '582910';
@@ -120,7 +120,7 @@ async function runAllTests() {
     const oldOtp = '111111';
     const newOtp = '222222';
     const newHash = otpService.hashOtp(newOtp);
-    // User requests new OTP, overwriting old OTP in MySQL
+    // User requests new OTP, overwriting old OTP in MongoDB
     await userModel.updateOtp(rows[0].id, {
       otp_hash: newHash,
       otp_expires_at: new Date(Date.now() + 5 * 60 * 1000)
@@ -383,7 +383,7 @@ async function runAllTests() {
   });
 
   console.log('\n--- 9. FULL SCORECARD VERIFICATION ---');
-  await test('GET /api/scorer/matches/:matchId/scorecard returns complete MySQL data', async () => {
+  await test('GET /api/scorer/matches/:matchId/scorecard returns complete MongoDB data', async () => {
     const scorecard = await scorerService.getFullScorecard('M003');
     assert.strictEqual(scorecard.matchId, 'M003');
     assert(scorecard.tournament.includes('VPL') || scorecard.tournament.includes('Virudhunagar'), 'Tournament check');

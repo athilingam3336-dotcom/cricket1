@@ -1,111 +1,314 @@
 /**
- * adminRoutes.js
- * 
- * Express routes for Secure Admin Management with Two-Person OTP Approval.
+ * routes/adminRoutes.js
+ * Comprehensive Administrative & Association Management APIs
  */
 
 const express = require('express');
 const router = express.Router();
 const adminService = require('../services/adminService');
+const authService = require('../services/authService');
 const { requireAdminAuth } = require('../middleware/authMiddleware');
 
-// Enforce ADMIN role middleware across all endpoints
+// Enforce ADMIN role across all administrative management routes
 router.use(requireAdminAuth);
 
 /**
- * GET /api/admin/admins
- * List all administrators
+ * GET /api/admin/overview
+ * Dashboard metrics summary
  */
-router.get('/admins', async (req, res) => {
+router.get('/overview', async (req, res) => {
   try {
-    const admins = await adminService.getAdmins();
-    res.json({ success: true, admins });
+    const overview = await adminService.getAdminOverview();
+    res.json({ success: true, data: overview });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/users
+ * Manage players, team officials, scorers, content staff, admins
+ */
+router.get('/users', async (req, res) => {
+  try {
+    const { role } = req.query;
+    const users = await adminService.getUsers(role);
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PATCH /api/admin/users/:id/status
+ * Activate or suspend user
+ */
+router.patch('/users/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const user = await adminService.updateUserStatus(req.params.id, status, adminEmail);
+    res.json({ success: true, message: `User status set to ${status}`, user });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/officials & POST /api/admin/officials
+ * Officials Management (scorers, umpires, match officials)
+ */
+router.get('/officials', async (req, res) => {
+  try {
+    const officials = await adminService.getOfficials();
+    res.json({ success: true, officials });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/officials', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const official = await adminService.saveOfficial(req.body, adminEmail);
+    res.json({ success: true, message: 'Official saved successfully', official });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/officials/:id', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const result = await adminService.deleteOfficial(req.params.id, adminEmail);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/venues & POST /api/admin/venues
+ * Venue & Ground Management
+ */
+router.get('/venues', async (req, res) => {
+  try {
+    const venues = await adminService.getVenues();
+    res.json({ success: true, venues });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/venues', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const venue = await adminService.saveVenue(req.body, adminEmail);
+    res.json({ success: true, message: 'Venue saved successfully', venue });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+router.delete('/venues/:id', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const result = await adminService.deleteVenue(req.params.id, adminEmail);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/teams/pending
+ * View pending teams awaiting approval with all 15 players
+ */
+router.get('/teams/pending', async (req, res) => {
+  try {
+    const teamRegistrationModel = require('../models/teamRegistrationModel');
+    const pendingTeams = await teamRegistrationModel.getAll('PENDING');
+    res.json({ success: true, count: pendingTeams.length, teams: pendingTeams });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/teams & POST /api/admin/teams
+ */
+router.get('/teams', async (req, res) => {
+  try {
+    const status = req.query.status || null;
+    const teamRegistrationModel = require('../models/teamRegistrationModel');
+    const teams = await teamRegistrationModel.getAll(status);
+    res.json({ success: true, count: teams.length, teams });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/teams/:id
+ * View team details, coach, and all 15 players
+ */
+router.get('/teams/:id', async (req, res) => {
+  try {
+    const teamRegistrationModel = require('../models/teamRegistrationModel');
+    const team = await teamRegistrationModel.findById(req.params.id);
+    if (!team) {
+      return res.status(404).json({ success: false, message: `Team '${req.params.id}' not found.` });
+    }
+    res.json({ success: true, team });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PUT /api/admin/teams/:id/approve & POST /api/admin/teams/:id/approve
+ */
+const handleApproveTeam = async (req, res) => {
+  try {
+    const adminId = req.adminUser?.email || 'ADMIN';
+    const result = await authService.approveRegistration(req.params.id, 'TEAM', adminId);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+router.put('/teams/:id/approve', handleApproveTeam);
+router.post('/teams/:id/approve', handleApproveTeam);
+
+/**
+ * PUT /api/admin/teams/:id/reject & POST /api/admin/teams/:id/reject
+ */
+const handleRejectTeam = async (req, res) => {
+  try {
+    const adminId = req.adminUser?.email || 'ADMIN';
+    const reason = req.body.reason || 'Criteria not met';
+    const result = await authService.rejectRegistration(req.params.id, 'TEAM', reason, adminId);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+router.put('/teams/:id/reject', handleRejectTeam);
+router.post('/teams/:id/reject', handleRejectTeam);
+
+router.post('/teams', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const team = await adminService.saveTeam(req.body, adminEmail);
+    res.json({ success: true, message: 'Team saved successfully', team });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/admin/tournaments
+ * Create or update tournament
+ */
+router.post('/tournaments', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const tournament = await adminService.saveTournament(req.body, adminEmail);
+    res.json({ success: true, message: 'Tournament saved', tournament });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/matches & POST /api/admin/matches/schedule
+ * Schedule match fixture
+ */
+router.get('/matches', async (req, res) => {
+  try {
+    const matches = await adminService.getMatches();
+    res.json({ success: true, matches });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/matches/schedule', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const match = await adminService.scheduleMatch(req.body, adminEmail);
+    res.json({ success: true, message: 'Match scheduled successfully', match });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
 /**
  * GET /api/admin/audit-logs
- * List audit logs
  */
 router.get('/audit-logs', async (req, res) => {
   try {
     const logs = await adminService.getAuditLogs();
     res.json({ success: true, logs });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 /**
- * POST /api/admin/admins/add/request
- * Initiate ADD ADMIN request
+ * Two-Person Admin Approval
  */
+router.get('/admins', async (req, res) => {
+  try {
+    const admins = await adminService.getAdmins();
+    res.json({ success: true, admins });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/admins/add/request', async (req, res) => {
   try {
     const { name, email, phone, username } = req.body;
     if (!name || !email || !phone) {
       return res.status(400).json({ error: 'Full Name, Email, and Phone are required.' });
     }
-
     const result = await adminService.initiateAddAdminRequest({
       initiatorEmail: req.adminUser.email,
       name,
       email,
       phone,
       username,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
+      ip_address: req.ip || '127.0.0.1'
     });
-
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/add/verify-current
- * Verify Current Admin OTP for ADD ADMIN
- */
 router.post('/admins/add/verify-current', async (req, res) => {
   try {
     const { requestId, otp } = req.body;
-    if (!requestId || !otp) {
-      return res.status(400).json({ error: 'requestId and otp are required.' });
-    }
-
     const result = await adminService.verifyAddCurrentAdminOtp({
       requestId,
       otp,
-      currentAdminEmail: req.adminUser.email,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
+      currentAdminEmail: req.adminUser.email
     });
-
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/add/verify-target
- * Verify New Admin Candidate OTP for ADD ADMIN
- */
 router.post('/admins/add/verify-target', async (req, res) => {
   try {
     const { requestId, otp, newAdminEmail } = req.body;
-    if (!requestId || !otp || !newAdminEmail) {
-      return res.status(400).json({ error: 'requestId, otp, and newAdminEmail are required.' });
-    }
-
-    const result = await adminService.verifyAddNewAdminOtp({
+    const result = await adminService.verifyAddTargetAdminOtp({
       requestId,
       otp,
-      newAdminEmail,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
+      newAdminEmail
     });
-
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -113,119 +316,62 @@ router.post('/admins/add/verify-target', async (req, res) => {
 });
 
 /**
- * POST /api/admin/admins/add/complete
- * Atomically complete ADD ADMIN creation
+ * --------------------------------------------------------------------------
+ * Content, News & Notices Management (Admin Only)
+ * --------------------------------------------------------------------------
  */
-router.post('/admins/add/complete', async (req, res) => {
+
+// GET /api/admin/content - List all news & notices
+router.get('/content', async (req, res) => {
   try {
-    const { requestId } = req.body;
-    if (!requestId) {
-      return res.status(400).json({ error: 'requestId is required.' });
-    }
-
-    const result = await adminService.completeAddAdmin({
-      requestId,
-      currentAdminEmail: req.adminUser.email,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-    });
-
-    res.json({ success: true, ...result });
+    const { category, status, search, limit } = req.query;
+    const articles = await adminService.getContentList({ category, status, search, limit });
+    res.json({ success: true, count: articles.length, data: articles });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/remove/request
- * Initiate REMOVE ADMIN request
- */
-router.post('/admins/remove/request', async (req, res) => {
+// GET /api/admin/content/stats - Content counts by category & status
+router.get('/content/stats', async (req, res) => {
   try {
-    const { targetAdminId } = req.body;
-    if (!targetAdminId) {
-      return res.status(400).json({ error: 'targetAdminId is required.' });
-    }
-
-    const result = await adminService.initiateRemoveAdminRequest({
-      initiatorEmail: req.adminUser.email,
-      targetAdminId,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-    });
-
-    res.json({ success: true, ...result });
+    const stats = await adminService.getContentStats();
+    res.json({ success: true, stats });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/remove/verify-current
- * Verify Initiator Admin OTP for REMOVE ADMIN
- */
-router.post('/admins/remove/verify-current', async (req, res) => {
+// POST /api/admin/content - Create news/notice
+router.post('/content', async (req, res) => {
   try {
-    const { requestId, otp } = req.body;
-    if (!requestId || !otp) {
-      return res.status(400).json({ error: 'requestId and otp are required.' });
-    }
-
-    const result = await adminService.verifyRemoveCurrentAdminOtp({
-      requestId,
-      otp,
-      currentAdminEmail: req.adminUser.email,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-    });
-
-    res.json({ success: true, ...result });
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const article = await adminService.createContent(req.body, adminEmail);
+    res.status(201).json({ success: true, message: 'Article published successfully', data: article });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/remove/verify-target
- * Verify Target Admin OTP for REMOVE ADMIN
- */
-router.post('/admins/remove/verify-target', async (req, res) => {
+// PUT /api/admin/content/:id - Edit news/notice
+router.put('/content/:id', async (req, res) => {
   try {
-    const { requestId, otp, targetAdminEmail } = req.body;
-    if (!requestId || !otp || !targetAdminEmail) {
-      return res.status(400).json({ error: 'requestId, otp, and targetAdminEmail are required.' });
-    }
-
-    const result = await adminService.verifyRemoveTargetAdminOtp({
-      requestId,
-      otp,
-      targetAdminEmail,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-    });
-
-    res.json({ success: true, ...result });
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const updated = await adminService.updateContent(req.params.id, req.body, adminEmail);
+    res.json({ success: true, message: 'Article updated successfully', data: updated });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 
-/**
- * POST /api/admin/admins/remove/complete
- * Atomically complete REMOVE ADMIN operation
- */
-router.post('/admins/remove/complete', async (req, res) => {
+// DELETE /api/admin/content/:id - Delete news/notice
+router.delete('/content/:id', async (req, res) => {
   try {
-    const { requestId } = req.body;
-    if (!requestId) {
-      return res.status(400).json({ error: 'requestId is required.' });
-    }
-
-    const result = await adminService.completeRemoveAdmin({
-      requestId,
-      currentAdminEmail: req.adminUser.email,
-      ip_address: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-    });
-
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const result = await adminService.deleteContent(req.params.id, adminEmail);
     res.json({ success: true, ...result });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 });
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal, Platform } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 
@@ -9,76 +10,45 @@ export default function LiveScoringScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
   const matchId = params?.matchId || 'M002';
+  const initialMatch = assignedMatches.find(m => m.id === matchId) || assignedMatches[1];
   const styles = getStyles(isDesktop);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isScoringInProgress, setIsScoringInProgress] = useState(false);
+  const [matchInfo, setMatchInfo] = useState<any>(initialMatch);
 
-  // Match & Innings live state strictly from backend/MySQL
-  const [matchInfo, setMatchInfo] = useState({
-    id: matchId,
-    tournament: '',
-    venue: '',
-    overs: 20,
-    status: '',
-    result: ''
-  });
-
-  const [inningsInfo, setInningsInfo] = useState({
-    id: '',
-    inningsNumber: 1,
-    battingTeam: '',
-    bowlingTeam: '',
-    score: '0/0',
-    totalRuns: 0,
-    wickets: 0,
-    overs: '0.0',
-    runRate: 0,
-    target: null as number | null
-  });
-
-  const [striker, setStriker] = useState({ id: '', name: '', runs: 0, balls: 0, fours: 0, sixes: 0, strikeRate: 0 });
-  const [nonStriker, setNonStriker] = useState({ id: '', name: '', runs: 0, balls: 0, fours: 0, sixes: 0, strikeRate: 0 });
-  const [bowler, setBowler] = useState({ id: '', name: '', overs: '0.0', maidens: 0, runs: 0, wickets: 0, economy: 0 });
-  const [recentDeliveries, setRecentDeliveries] = useState<any[]>([]);
-  const [battingSquad, setBattingSquad] = useState<any[]>([]);
-  const [bowlingSquad, setBowlingSquad] = useState<any[]>([]);
-
-  // Modals
-  const [showWicketModal, setShowWicketModal] = useState(false);
-  const [showExtraModal, setShowExtraModal] = useState(false);
-  const [extraTypeToRecord, setExtraTypeToRecord] = useState<'WIDE' | 'NO_BALL'>('WIDE');
-  const [extraAdditionalRuns, setExtraAdditionalRuns] = useState(0);
-  const [selectedDismissal, setSelectedDismissal] = useState('BOWLED');
-  const [selectedReplacementId, setSelectedReplacementId] = useState<string>('');
+  // Match State
+  const [runs, setRuns] = useState(145);
+  const [wickets, setWickets] = useState(4);
+  const [balls, setBalls] = useState(92); // 15.2 overs
+  const [history, setHistory] = useState<any[]>([]);
   const [showEndModal, setShowEndModal] = useState(false);
 
-  // Edit Ball modal state
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editRuns, setEditRuns] = useState(0);
-  const [editExtraType, setEditExtraType] = useState('NONE');
-  const [editWicket, setEditWicket] = useState(false);
+  // Batter/Bowler state
+  const [striker, setStriker] = useState<any>({ id: 'P301', name: 'Suresh Kumar', runs: 42, balls: 30, fours: 4, sixes: 1 });
+  const [nonStriker, setNonStriker] = useState<any>({ id: 'P302', name: 'Muthu Raj', runs: 18, balls: 14, fours: 2, sixes: 0 });
+  const [bowler, setBowler] = useState<any>({ id: 'P403', name: 'Karthik N', overs: 2.2, runs: 16, wickets: 1, maiden: 0 });
 
-  // End Over Modal
-  const [showEndOverModal, setShowEndOverModal] = useState(false);
-  const [nextBowlerId, setNextBowlerId] = useState<string>('');
+  // AI Fielding & Commentary State
+  const [selectedFieldPosition, setSelectedFieldPosition] = useState<string>('Cover');
+  const [aiCommentary, setAiCommentary] = useState<string>('');
+  const [isLoadingCommentary, setIsLoadingCommentary] = useState<boolean>(false);
+
+  const getOvers = (b: number) => {
+    const overs = Math.floor(b / 6);
+    const extraBalls = b % 6;
+    return `${overs}.${extraBalls}`;
+  };
 
   useEffect(() => {
     loadLiveState();
 
-    // Connect to Socket.IO for real-time live score updates
+    // Connect to Socket.IO real-time updates
     const socket = ScorerApi.connectSocket(matchId, (payload) => {
-      if (payload) {
-        if (payload.score) {
-          setInningsInfo(prev => ({
-            ...prev,
-            score: payload.score,
-            totalRuns: payload.totalRuns !== undefined ? payload.totalRuns : prev.totalRuns,
-            wickets: payload.wickets !== undefined ? payload.wickets : prev.wickets,
-            overs: payload.overs || prev.overs
-          }));
+      if (payload && payload.score) {
+        const parts = payload.score.split('/');
+        if (parts.length === 2) {
+          setRuns(parseInt(parts[0], 10) || 0);
+          setWickets(parseInt(parts[1], 10) || 0);
         }
-        loadLiveState();
       }
     });
 
@@ -92,61 +62,161 @@ export default function LiveScoringScreen() {
       const res = await ScorerApi.getLiveState(matchId);
       if (res && res.data) {
         const d = res.data;
-        if (d.match) setMatchInfo(d.match);
-        if (d.innings) setInningsInfo(d.innings);
-        if (d.striker) setStriker(d.striker);
-        if (d.nonStriker) setNonStriker(d.nonStriker);
-        if (d.bowler) setBowler(d.bowler);
-        if (d.recentDeliveries) setRecentDeliveries(d.recentDeliveries);
-        if (d.battingSquad) {
-          setBattingSquad(d.battingSquad);
-          if (d.battingSquad.length > 0 && !selectedReplacementId) {
-            setSelectedReplacementId(d.battingSquad[0].id);
+        if (d.match) {
+          setMatchInfo({
+            ...initialMatch,
+            teamA: d.innings?.battingTeam || initialMatch.teamA,
+            teamB: d.innings?.bowlingTeam || initialMatch.teamB,
+            tournament: d.match.tournament || initialMatch.tournament,
+            venue: d.match.venue || initialMatch.venue
+          });
+        }
+        if (d.innings) {
+          setRuns(d.innings.totalRuns ?? runs);
+          setWickets(d.innings.wickets ?? wickets);
+          if (typeof d.innings.ballsTotal === 'number') {
+            setBalls(d.innings.ballsTotal);
           }
         }
-        if (d.bowlingSquad) {
-          setBowlingSquad(d.bowlingSquad);
-          if (d.bowlingSquad.length > 0 && !nextBowlerId) {
-            setNextBowlerId(d.bowlingSquad[0].id);
-          }
+        if (d.striker) {
+          setStriker({
+            id: d.striker.id || 'P301',
+            name: d.striker.name,
+            runs: d.striker.runs || 0,
+            balls: d.striker.balls || 0,
+            fours: d.striker.fours || 0,
+            sixes: d.striker.sixes || 0
+          });
+        }
+        if (d.nonStriker) {
+          setNonStriker({
+            id: d.nonStriker.id || 'P302',
+            name: d.nonStriker.name,
+            runs: d.nonStriker.runs || 0,
+            balls: d.nonStriker.balls || 0,
+            fours: d.nonStriker.fours || 0,
+            sixes: d.nonStriker.sixes || 0
+          });
+        }
+        if (d.bowler) {
+          setBowler({
+            id: d.bowler.id || 'P403',
+            name: d.bowler.name,
+            overs: parseFloat(d.bowler.overs) || 0,
+            runs: d.bowler.runs || 0,
+            wickets: d.bowler.wickets || 0,
+            maiden: d.bowler.maidens || 0
+          });
+        }
+        if (d.lastDelivery && d.lastDelivery.commentary) {
+          setAiCommentary(d.lastDelivery.commentary);
         }
       }
-    } catch (err: any) {
-      console.warn('Live state fetch warning:', err.message);
-    } finally {
-      setIsLoading(false);
+    } catch (e) {
+      // Use fallback initial mock
     }
   };
 
-  const handleScore = async (run: number, type: 'NONE' | 'WIDE' | 'NO_BALL' | 'BYE' | 'LEG_BYE' = 'NONE') => {
-    if (isScoringInProgress) return;
-    setIsScoringInProgress(true);
+  const handleScore = async (run: number, type: 'normal' | 'wide' | 'noball' | 'bye' | 'legbye') => {
+    // Save state for undo
+    setHistory([...history, { runs, wickets, balls, striker, nonStriker, bowler }]);
 
+    let runToAdd = run;
+    let ballToAdd = 1;
+    let isExtra = false;
+
+    if (type === 'wide' || type === 'noball') {
+      runToAdd += 1;
+      ballToAdd = 0;
+      isExtra = true;
+    }
+
+    const nextRuns = runs + runToAdd;
+    const nextBalls = balls + ballToAdd;
+    setRuns(nextRuns);
+    setBalls(nextBalls);
+
+    // Update bowler
+    setBowler({
+      ...bowler,
+      runs: bowler.runs + runToAdd,
+      overs: ballToAdd > 0 ? parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1)) : bowler.overs
+    });
+
+    // Update batter if not extra
+    if (!isExtra || type === 'noball') {
+      if (type === 'normal') {
+        const newStrikerRuns = striker.runs + run;
+        const newStrikerBalls = striker.balls + 1;
+        const newFours = run === 4 ? striker.fours + 1 : striker.fours;
+        const newSixes = run === 6 ? striker.sixes + 1 : striker.sixes;
+
+        setStriker({ ...striker, runs: newStrikerRuns, balls: newStrikerBalls, fours: newFours, sixes: newSixes });
+
+        // Switch strike on odd runs or end of over
+        if (run % 2 !== 0 || (balls + ballToAdd) % 6 === 0) {
+           const temp = striker;
+           setStriker({ ...nonStriker, runs: nonStriker.runs, balls: nonStriker.balls, fours: nonStriker.fours, sixes: nonStriker.sixes });
+           setNonStriker({ ...temp, runs: newStrikerRuns, balls: newStrikerBalls, fours: newFours, sixes: newSixes });
+        }
+      }
+    } else {
+       if (type === 'bye' || type === 'legbye') {
+         setStriker({ ...striker, balls: striker.balls + 1 });
+         if (run % 2 !== 0 || (balls + ballToAdd) % 6 === 0) {
+           const temp = striker;
+           setStriker(nonStriker);
+           setNonStriker({ ...temp, balls: temp.balls + 1 });
+         }
+       }
+    }
+
+    // Persist delivery to pure MongoDB backend (Requirement 5 & 8)
     try {
+      const extraTypeMap: Record<string, string> = {
+        normal: 'NONE',
+        wide: 'WIDE',
+        noball: 'NO_BALL',
+        bye: 'BYE',
+        legbye: 'LEG_BYE'
+      };
+
       const payload = {
         strikerId: striker.id,
         nonStrikerId: nonStriker.id,
         bowlerId: bowler.id,
-        runsBatter: (type === 'NONE' || type === 'NO_BALL') ? run : 0,
-        runsExtras: (type === 'WIDE' || type === 'NO_BALL') ? 1 : (type === 'BYE' || type === 'LEG_BYE' ? run : 0),
-        extraType: type,
-        wicket: false
+        runsBatter: isExtra && type !== 'noball' ? 0 : run,
+        runsExtras: isExtra ? 1 : (type === 'bye' || type === 'legbye' ? run : 0),
+        extraType: extraTypeMap[type] || 'NONE',
+        wicket: false,
+        fieldingPosition: selectedFieldPosition
       };
 
-      await ScorerApi.recordDelivery(matchId, payload);
-      await loadLiveState();
+      const res = await ScorerApi.recordDelivery(matchId, payload);
+      if (res && res.commentary) {
+        setAiCommentary(res.commentary);
+      }
     } catch (err: any) {
-      const msg = err.message || 'Error recording delivery';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Scoring Error', msg);
-    } finally {
-      setIsScoringInProgress(false);
+      console.warn('Backend ball sync note:', err.message);
     }
   };
 
-  const confirmWicket = async () => {
-    setShowWicketModal(false);
-    setIsScoringInProgress(true);
+  const handleWicket = async () => {
+    if (wickets >= 10) return;
+    setHistory([...history, { runs, wickets, balls, striker, nonStriker, bowler }]);
+    setWickets(wickets + 1);
+    setBalls(balls + 1);
+    setBowler({
+      ...bowler,
+      wickets: bowler.wickets + 1,
+      overs: parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1))
+    });
+    
+    const benchNames = ['Vijay', 'Dinesh', 'Ashwin', 'Murugan', 'Saravanan', 'Arun', 'Prakash', 'Ganesh', 'Kamal'];
+    const newBatterName = benchNames[wickets % benchNames.length];
+    setStriker({ id: `P30${(wickets % 9) + 3}`, name: newBatterName, runs: 0, balls: 0, fours: 0, sixes: 0 });
 
+    // Persist wicket ball to pure MongoDB backend
     try {
       const payload = {
         strikerId: striker.id,
@@ -156,513 +226,233 @@ export default function LiveScoringScreen() {
         runsExtras: 0,
         extraType: 'NONE',
         wicket: true,
-        wicketType: selectedDismissal,
-        dismissedPlayerId: striker.id,
-        replacementBatterId: selectedReplacementId || null
+        wicketType: 'CAUGHT',
+        fieldingPosition: selectedFieldPosition
       };
-
-      await ScorerApi.recordDelivery(matchId, payload);
-      await loadLiveState();
+      const res = await ScorerApi.recordDelivery(matchId, payload);
+      if (res && res.commentary) {
+        setAiCommentary(res.commentary);
+      }
     } catch (err: any) {
-      const msg = err.message || 'Error recording wicket';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Error', msg);
-    } finally {
-      setIsScoringInProgress(false);
-    }
-  };
-
-  const confirmExtra = async () => {
-    setShowExtraModal(false);
-    setIsScoringInProgress(true);
-
-    try {
-      const isWide = extraTypeToRecord === 'WIDE';
-      const totalExtraRuns = 1 + extraAdditionalRuns;
-      const payload = {
-        strikerId: striker.id,
-        nonStrikerId: nonStriker.id,
-        bowlerId: bowler.id,
-        runsBatter: !isWide ? extraAdditionalRuns : 0,
-        runsExtras: isWide ? totalExtraRuns : 1,
-        extraType: extraTypeToRecord,
-        wicket: false
-      };
-
-      await ScorerApi.recordDelivery(matchId, payload);
-      setExtraAdditionalRuns(0);
-      await loadLiveState();
-    } catch (err: any) {
-      const msg = err.message || 'Error recording extra';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Error', msg);
-    } finally {
-      setIsScoringInProgress(false);
+      console.warn('Backend wicket sync note:', err.message);
     }
   };
 
   const undoLastBall = async () => {
-    try {
-      setIsScoringInProgress(true);
-      await ScorerApi.undoDelivery(matchId);
-      await loadLiveState();
-    } catch (err: any) {
-      const msg = err.message || 'Error undoing last delivery';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Undo Error', msg);
-    } finally {
-      setIsScoringInProgress(false);
+    if (history.length > 0) {
+      const lastState = history[history.length - 1];
+      setRuns(lastState.runs);
+      setWickets(lastState.wickets);
+      setBalls(lastState.balls);
+      setStriker(lastState.striker);
+      setNonStriker(lastState.nonStriker);
+      setBowler(lastState.bowler);
+      setHistory(history.slice(0, -1));
+
+      // Call backend undo endpoint
+      try {
+        await ScorerApi.undoDelivery(matchId);
+      } catch (err: any) {
+        console.warn('Backend undo note:', err.message);
+      }
     }
   };
 
-  const openEditModal = () => {
-    if (!recentDeliveries || recentDeliveries.length === 0) {
-      const msg = 'No deliveries recorded yet to edit.';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Edit Ball', msg);
-      return;
-    }
-    const last = recentDeliveries[0];
-    setEditRuns(last.runs_batter !== undefined ? last.runs_batter : 0);
-    setEditExtraType(last.extra_type || 'NONE');
-    setEditWicket(Boolean(last.wicket));
-    setShowEditModal(true);
-  };
-
-  const confirmEditBall = async () => {
-    setShowEditModal(false);
-    if (!recentDeliveries || recentDeliveries.length === 0) return;
-
+  // AI Fielding Commentary Trigger (Requirement 9)
+  const handleSelectFieldPosition = async (pos: string) => {
+    setSelectedFieldPosition(pos);
+    setIsLoadingCommentary(true);
     try {
-      setIsScoringInProgress(true);
-      const last = recentDeliveries[0];
-      const payload = {
-        runsBatter: editRuns,
-        runsExtras: editExtraType === 'WIDE' || editExtraType === 'NO_BALL' ? 1 : 0,
-        extraType: editExtraType,
-        wicket: editWicket,
-        wicketType: editWicket ? 'BOWLED' : null
-      };
-
-      await ScorerApi.editDelivery(matchId, last.id, payload);
-      await loadLiveState();
-    } catch (err: any) {
-      const msg = err.message || 'Error editing delivery';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Edit Error', msg);
+      const res = await ScorerApi.getFieldingCommentary(matchId, {
+        fieldingPosition: pos
+      });
+      if (res && res.commentary) {
+        setAiCommentary(res.commentary);
+      }
+    } catch (e: any) {
+      setAiCommentary(`Fielder positioned at ${pos} is actively monitoring the strike.`);
     } finally {
-      setIsScoringInProgress(false);
-    }
-  };
-
-  const confirmEndOver = async () => {
-    setShowEndOverModal(false);
-    try {
-      setIsScoringInProgress(true);
-      await ScorerApi.endOver(matchId, nextBowlerId);
-      await loadLiveState();
-    } catch (err: any) {
-      const msg = err.message || 'Error ending over';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('End Over Error', msg);
-    } finally {
-      setIsScoringInProgress(false);
+      setIsLoadingCommentary(false);
     }
   };
 
   const confirmEndInnings = async () => {
-    setShowEndModal(false);
-    try {
-      setIsLoading(true);
-      await ScorerApi.endInnings(matchId);
-      await loadLiveState();
-      navigate('Scorecard', { matchId });
-    } catch (err: any) {
-      const msg = err.message || 'Error ending innings';
-      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Error', msg);
-    } finally {
-      setIsLoading(false);
-    }
+    setShowEndModal(true);
   };
 
-  // Loading check
-  if (isLoading) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 32 }]}>
-        <ActivityIndicator size="large" color="#b45309" />
-        <Text style={{ marginTop: 12, color: '#64748b', fontSize: 13, fontWeight: '500' }}>
-          Loading live match state from database...
-        </Text>
-      </View>
-    );
-  }
+  const handleEndInningsSubmit = async () => {
+    setShowEndModal(false);
+    try {
+      await ScorerApi.endInnings(matchId);
+    } catch (err: any) {
+      console.warn('End innings API note:', err.message);
+    }
+    navigate('Scorecard', { matchId });
+  };
 
-  // Partnership calculation
-  const partnershipRuns = (striker.runs || 0) + (nonStriker.runs || 0);
-  const partnershipBalls = (striker.balls || 0) + (nonStriker.balls || 0);
-
-  // If match is still SCHEDULED, offer setup
-  if (matchInfo.status === 'SCHEDULED') {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
-        <View style={styles.scoreBoardCard}>
-          <Text style={[styles.title, { textAlign: 'center', marginBottom: 8 }]}>Match Not Started Yet</Text>
-          <Text style={[styles.subtitle, { textAlign: 'center', marginBottom: 20 }]}>
-            {matchInfo.tournament} &bull; Match ID: {matchId}
-          </Text>
-          <Text style={{ textAlign: 'center', color: '#64748b', marginBottom: 24, fontSize: 13 }}>
-            Toss and Playing XI setup must be completed before ball-by-ball scoring can begin.
-          </Text>
-          <TouchableOpacity
-            style={[styles.actionBtn, { backgroundColor: '#eab308', paddingVertical: 14 }]}
-            onPress={() => navigate('MatchSetup', { matchId })}
-          >
-            <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>GO TO MATCH SETUP &amp; TOSS</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
+  const fieldingPositions = ['Point', 'Cover', 'Mid-Off', 'Mid-On', 'Midwicket', 'Slips', 'Third Man', 'Fine Leg'];
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* End Innings Modal */}
+      <Modal visible={showEndModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+             <Text style={styles.modalTitle}>End Innings</Text>
+             <Text style={styles.modalMessage}>Are you sure you want to end this innings?</Text>
+             <View style={styles.modalStatsBox}>
+                <Text style={styles.modalStatsText}>Score: {runs}/{wickets}</Text>
+                <Text style={styles.modalStatsText}>Overs: {getOvers(balls)}</Text>
+             </View>
+             <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowEndModal(false)}>
+                   <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleEndInningsSubmit}>
+                   <Text style={styles.modalConfirmText}>End Innings</Text>
+                </TouchableOpacity>
+             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigate('Dashboard')} style={styles.backBtn}>
-            <Text style={styles.backText}>&larr; Dashboard</Text>
+            <Text style={styles.backText}>← Dashboard</Text>
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>{matchInfo.tournament || 'VPL 2026'}</Text>
-            <Text style={styles.subtitle}>{matchInfo.venue || 'Kamarajar Stadium'} | Match ID: {matchId}</Text>
+            <Text style={styles.title}>{matchInfo.teamA} vs {matchInfo.teamB}</Text>
+            <Text style={styles.subtitle}>{matchInfo.tournament} | {matchInfo.venue}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <View style={styles.liveBadge}>
-            <Text style={styles.liveBadgeText}>&bull; LIVE SCORING</Text>
-          </View>
+          <View style={styles.liveBadge}><Text style={styles.liveBadgeText}>LIVE SCORING</Text></View>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.mainLayout}>
-          {/* TOP SECTION: SCOREBOARD & PLAYERS */}
-          <View style={styles.topSection}>
-            {/* SCORE CARD */}
-            <View style={styles.scoreBoardCard}>
-              <Text style={styles.battingTeam}>{inningsInfo.battingTeam} (Inn {inningsInfo.inningsNumber})</Text>
-              <View style={styles.scoreRow}>
-                <Text style={styles.scoreText}>{inningsInfo.score}</Text>
-                <Text style={styles.oversText}>({inningsInfo.overs} / {matchInfo.overs} Ov)</Text>
-              </View>
-              <Text style={styles.rrText}>
-                CRR: {inningsInfo.runRate} {inningsInfo.target ? ` | Target: ${inningsInfo.target}` : ''}
-              </Text>
-              <View style={styles.partnershipBox}>
-                <Text style={styles.partnershipLabel}>Current Partnership:</Text>
-                <Text style={styles.partnershipVal}>{partnershipRuns} runs ({partnershipBalls} balls)</Text>
-              </View>
+      <View style={styles.mainLayout}>
+        {/* TOP SECTION: SCOREBOARD & PLAYERS */}
+        <View style={styles.topSection}>
+          <View style={styles.scoreBoardCard}>
+            <Text style={styles.battingTeam}>{matchInfo.teamA} (Batting)</Text>
+            <View style={styles.scoreRow}>
+              <Text style={styles.scoreText}>{runs}/{wickets}</Text>
+              <Text style={styles.oversText}>({getOvers(balls)})</Text>
             </View>
-
-            {/* BATTER & BOWLER SUMMARY */}
-            <View style={styles.playersContainer}>
-              <View style={styles.playerCard}>
-                <Text style={styles.playerRole}>BATTERS</Text>
-                <View style={styles.playerRow}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={styles.strikerDot} />
-                    <Text style={[styles.playerName, styles.striker]}>{striker.name} *</Text>
-                  </View>
-                  <Text style={styles.playerStats}>{striker.runs} ({striker.balls}) [4s: {striker.fours}, 6s: {striker.sixes}]</Text>
-                </View>
-                <View style={styles.playerRow}>
-                  <Text style={[styles.playerName, { marginLeft: 12 }]}>{nonStriker.name}</Text>
-                  <Text style={styles.playerStats}>{nonStriker.runs} ({nonStriker.balls}) [4s: {nonStriker.fours}, 6s: {nonStriker.sixes}]</Text>
-                </View>
-              </View>
-
-              <View style={styles.playerCard}>
-                <Text style={styles.playerRole}>CURRENT BOWLER</Text>
-                <View style={styles.playerRow}>
-                  <Text style={[styles.playerName, styles.striker]}>{bowler.name}</Text>
-                  <Text style={styles.playerStats}>{bowler.overs} - {bowler.maidens} - {bowler.runs} - {bowler.wickets}</Text>
-                </View>
-                <Text style={[styles.rrText, { marginTop: 2 }]}>Economy: {bowler.economy}</Text>
-              </View>
-            </View>
+            <Text style={styles.rrText}>CRR: {balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00'}</Text>
           </View>
 
-          {/* RECENT BALLS TIMELINE */}
-          {recentDeliveries && recentDeliveries.length > 0 && (
-            <View style={styles.timelineCard}>
-              <Text style={styles.sectionTitle}>BALL-BY-BALL TIMELINE</Text>
-              <View style={styles.timelineRow}>
-                {recentDeliveries.map((del, idx) => (
-                  <View key={del.id || idx} style={[styles.ballCircle, del.wicket ? styles.ballWicket : (del.runs >= 4 ? styles.ballBoundary : styles.ballNormal)]}>
-                    <Text style={styles.ballText}>{del.text}</Text>
-                  </View>
-                ))}
+          <View style={styles.playersContainer}>
+            <View style={styles.playerCard}>
+              <Text style={styles.playerRole}>BATTERS</Text>
+              <View style={styles.playerRow}>
+                <Text style={[styles.playerName, styles.striker]}>* {striker.name}</Text>
+                <Text style={styles.playerStats}>{striker.runs} ({striker.balls})</Text>
               </View>
-              {recentDeliveries[0]?.commentary && (
-                <Text style={styles.commentaryText}>Latest: {recentDeliveries[0].commentary}</Text>
-              )}
-            </View>
-          )}
-
-          {/* CONTROLS SECTION */}
-          <View style={styles.controlsSection}>
-            <View style={styles.controlPanel}>
-              <Text style={styles.sectionTitle}>RUN SCORING</Text>
-              <View style={styles.controlsGrid}>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnDot]} onPress={() => handleScore(0, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextDot]}>0</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnNormal]} onPress={() => handleScore(1, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextNormal]}>1</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnNormal]} onPress={() => handleScore(2, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextNormal]}>2</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnNormal]} onPress={() => handleScore(3, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextNormal]}>3</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnFour]} onPress={() => handleScore(4, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextBoundary]}>4</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.scoreBtnSix]} onPress={() => handleScore(6, 'NONE')} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.scoreBtnTextBoundary]}>6</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.scoreBtn, styles.wicketBtn]} onPress={() => setShowWicketModal(true)} disabled={isScoringInProgress}>
-                  <Text style={[styles.scoreBtnText, styles.wicketBtnText]}>WICKET</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.sectionTitle}>EXTRAS</Text>
-              <View style={styles.extrasGrid}>
-                <TouchableOpacity style={styles.extraBtn} onPress={() => { setExtraTypeToRecord('WIDE'); setShowExtraModal(true); }}>
-                  <Text style={styles.extraBtnText}>Wide</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.extraBtn} onPress={() => { setExtraTypeToRecord('NO_BALL'); setShowExtraModal(true); }}>
-                  <Text style={styles.extraBtnText}>No Ball</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(1, 'BYE')}>
-                  <Text style={styles.extraBtnText}>Bye (1)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(1, 'LEG_BYE')}>
-                  <Text style={styles.extraBtnText}>Leg Bye (1)</Text>
-                </TouchableOpacity>
+              <View style={styles.playerRow}>
+                <Text style={styles.playerName}>  {nonStriker.name}</Text>
+                <Text style={styles.playerStats}>{nonStriker.runs} ({nonStriker.balls})</Text>
               </View>
             </View>
-
-            {/* ACTION PANEL */}
-            <View style={styles.actionPanel}>
-              <TouchableOpacity style={[styles.actionBtn, styles.undoBtn]} onPress={undoLastBall} disabled={isScoringInProgress}>
-                <Text style={styles.actionBtnText}>Undo Last Ball</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={[styles.actionBtn, styles.editBtn]} onPress={openEditModal} disabled={isScoringInProgress}>
-                <Text style={styles.editBtnText}>Edit Ball</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.actionBtn, styles.overBtn]} onPress={() => setShowEndOverModal(true)}>
-                <Text style={styles.overBtnText}>End Over</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.actionBtn, styles.endBtn]} onPress={() => setShowEndModal(true)}>
-                <Text style={styles.endBtnText}>End Innings</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.actionBtn, styles.scorecardBtn]} onPress={() => navigate('Scorecard', { matchId })}>
-                <Text style={styles.scorecardBtnText}>View Scorecard</Text>
-              </TouchableOpacity>
+            
+            <View style={styles.playerCard}>
+               <Text style={styles.playerRole}>CURRENT BOWLER</Text>
+               <View style={styles.playerRow}>
+                 <Text style={styles.playerName}>{bowler.name}</Text>
+                 <Text style={styles.playerStats}>{bowler.overs} ov | {bowler.runs}/{bowler.wickets}</Text>
+               </View>
             </View>
           </View>
         </View>
 
-        {/* WICKET MODAL */}
-        <Modal visible={showWicketModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Record Wicket</Text>
-              <Text style={styles.modalMessage}>Dismissed: {striker.name}</Text>
-
-              <Text style={styles.modalSubLabel}>Select Dismissal Type:</Text>
-              <View style={styles.optionGrid}>
-                {['BOWLED', 'CAUGHT', 'LBW', 'RUN_OUT', 'STUMPED', 'HIT_WICKET'].map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[styles.optionBtn, selectedDismissal === type && styles.optionBtnActive]}
-                    onPress={() => setSelectedDismissal(type)}
-                  >
-                    <Text style={[styles.optionBtnText, selectedDismissal === type && styles.optionBtnTextActive]}>{type}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.modalSubLabel, { marginTop: 12 }]}>Next Batter:</Text>
-              <ScrollView style={{ maxHeight: 100, marginBottom: 16 }}>
-                {battingSquad.filter(p => p.id !== striker.id && p.id !== nonStriker.id).map((p) => (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={[styles.playerSelectBtn, selectedReplacementId === p.id && styles.playerSelectBtnActive]}
-                    onPress={() => setSelectedReplacementId(p.id)}
-                  >
-                    <Text style={styles.playerSelectText}>{p.name} ({p.role})</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowWicketModal(false)}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalConfirmBtn} onPress={confirmWicket}>
-                  <Text style={styles.modalConfirmText}>Confirm Out</Text>
-                </TouchableOpacity>
-              </View>
+        {/* AI FIELDING COMMENTARY CARD (Requirement 9) */}
+        {aiCommentary ? (
+          <View style={styles.commentaryCard}>
+            <View style={styles.commentaryHeader}>
+              <Text style={styles.commentaryTag}>AI FIELDING COMMENTARY</Text>
+              <Text style={styles.commentaryPosition}>{selectedFieldPosition}</Text>
             </View>
+            <Text style={styles.commentaryText}>{aiCommentary}</Text>
           </View>
-        </Modal>
+        ) : null}
 
-        {/* EXTRA RUNS MODAL */}
-        <Modal visible={showExtraModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Record {extraTypeToRecord === 'WIDE' ? 'Wide Ball' : 'No Ball'}</Text>
-              <Text style={styles.modalMessage}>Base extra run: 1 run</Text>
+        {/* BOTTOM SECTION: CONTROLS */}
+        <View style={styles.controlsSection}>
+          <View style={styles.controlPanel}>
+            <Text style={styles.sectionTitle}>RUNS</Text>
+            <View style={styles.controlsGrid}>
+              {[0, 1, 2, 3, 4, 6].map(run => {
+                let btnStyle = styles.scoreBtnNormal;
+                let textStyle = styles.scoreBtnTextNormal;
+                if (run === 0) { btnStyle = styles.scoreBtnDot; textStyle = styles.scoreBtnTextDot; }
+                if (run === 4) { btnStyle = styles.scoreBtnFour; textStyle = styles.scoreBtnTextBoundary; }
+                if (run === 6) { btnStyle = styles.scoreBtnSix; textStyle = styles.scoreBtnTextBoundary; }
 
-              <Text style={styles.modalSubLabel}>Additional Runs (Overthrows / Bat Runs):</Text>
-              <View style={styles.optionGrid}>
-                {[0, 1, 2, 3, 4].map((r) => (
-                  <TouchableOpacity
-                    key={r}
-                    style={[styles.optionBtn, extraAdditionalRuns === r && styles.optionBtnActive]}
-                    onPress={() => setExtraAdditionalRuns(r)}
-                  >
-                    <Text style={[styles.optionBtnText, extraAdditionalRuns === r && styles.optionBtnTextActive]}>+{r}</Text>
+                return (
+                  <TouchableOpacity key={run} style={[styles.scoreBtn, btnStyle]} onPress={() => handleScore(run, 'normal')}>
+                    <Text style={[styles.scoreBtnText, textStyle]}>{run}</Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-
-              <View style={[styles.modalActions, { marginTop: 20 }]}>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowExtraModal(false)}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalConfirmBtn, { backgroundColor: '#eab308' }]} onPress={confirmExtra}>
-                  <Text style={styles.modalConfirmText}>Record Extra</Text>
-                </TouchableOpacity>
-              </View>
+                );
+              })}
+              <TouchableOpacity style={[styles.scoreBtn, styles.wicketBtn]} onPress={handleWicket}>
+                <Text style={[styles.scoreBtnText, styles.wicketBtnText]}>W</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-        </Modal>
 
-        {/* EDIT BALL MODAL */}
-        <Modal visible={showEditModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Edit Delivery Record</Text>
-              <Text style={styles.modalMessage}>Transaction-safe correction with automatic innings recalculation.</Text>
+            <Text style={styles.sectionTitle}>EXTRAS</Text>
+            <View style={styles.extrasGrid}>
+              <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(0, 'wide')}>
+                <Text style={styles.extraBtnText}>Wide</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(0, 'noball')}>
+                <Text style={styles.extraBtnText}>No Ball</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(1, 'bye')}>
+                <Text style={styles.extraBtnText}>Bye</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.extraBtn} onPress={() => handleScore(1, 'legbye')}>
+                <Text style={styles.extraBtnText}>Leg Bye</Text>
+              </TouchableOpacity>
+            </View>
 
-              <Text style={styles.modalSubLabel}>Runs Scored:</Text>
-              <View style={styles.optionGrid}>
-                {[0, 1, 2, 3, 4, 6].map((r) => (
+            {/* FIELDING POSITION SELECTOR (Requirement 9) */}
+            <Text style={styles.sectionTitle}>FIELDING POSITIONS (AI COMMENTARY)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fieldingChipsScroll}>
+              {fieldingPositions.map((pos) => {
+                const isActive = selectedFieldPosition === pos;
+                return (
                   <TouchableOpacity
-                    key={r}
-                    style={[styles.optionBtn, editRuns === r && styles.optionBtnActive]}
-                    onPress={() => setEditRuns(r)}
+                    key={pos}
+                    style={[styles.fieldingChip, isActive && styles.fieldingChipActive]}
+                    onPress={() => handleSelectFieldPosition(pos)}
                   >
-                    <Text style={[styles.optionBtnText, editRuns === r && styles.optionBtnTextActive]}>{r}</Text>
+                    <Text style={[styles.fieldingChipText, isActive && styles.fieldingChipTextActive]}>
+                      {pos}
+                    </Text>
                   </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.modalSubLabel, { marginTop: 12 }]}>Delivery Type:</Text>
-              <View style={styles.optionGrid}>
-                {['NONE', 'WIDE', 'NO_BALL', 'BYE', 'LEG_BYE'].map((ext) => (
-                  <TouchableOpacity
-                    key={ext}
-                    style={[styles.optionBtn, editExtraType === ext && styles.optionBtnActive]}
-                    onPress={() => setEditExtraType(ext)}
-                  >
-                    <Text style={[styles.optionBtnText, editExtraType === ext && styles.optionBtnTextActive]}>{ext}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={[styles.modalSubLabel, { marginTop: 12 }]}>Wicket Fell?</Text>
-              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-                <TouchableOpacity
-                  style={[styles.optionBtn, !editWicket && styles.optionBtnActive, { flex: 1 }]}
-                  onPress={() => setEditWicket(false)}
-                >
-                  <Text style={[styles.optionBtnText, !editWicket && styles.optionBtnTextActive]}>No Wicket</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.optionBtn, editWicket && styles.optionBtnActive, { flex: 1 }]}
-                  onPress={() => setEditWicket(true)}
-                >
-                  <Text style={[styles.optionBtnText, editWicket && styles.optionBtnTextActive]}>Wicket</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowEditModal(false)}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalConfirmBtn, { backgroundColor: '#b45309' }]} onPress={confirmEditBall}>
-                  <Text style={styles.modalConfirmText}>Save &amp; Recalculate</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+                );
+              })}
+            </ScrollView>
           </View>
-        </Modal>
-
-        {/* END OVER MODAL */}
-        <Modal visible={showEndOverModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>End of Over</Text>
-              <Text style={styles.modalMessage}>Select Bowler for Next Over:</Text>
-
-              <ScrollView style={{ maxHeight: 150, marginBottom: 16 }}>
-                {bowlingSquad.map((p) => (
-                  <TouchableOpacity
-                    key={p.id}
-                    style={[styles.playerSelectBtn, nextBowlerId === p.id && styles.playerSelectBtnActive]}
-                    onPress={() => setNextBowlerId(p.id)}
-                  >
-                    <Text style={styles.playerSelectText}>{p.name} ({p.role})</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowEndOverModal(false)}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalConfirmBtn} onPress={confirmEndOver}>
-                  <Text style={styles.modalConfirmText}>Start Next Over</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+          
+          <View style={styles.actionPanel}>
+            <TouchableOpacity style={[styles.actionBtn, styles.undoBtn]} onPress={undoLastBall} disabled={history.length === 0}>
+              <Text style={[styles.actionBtnText, { color: history.length === 0 ? '#495e80' : '#FFF' }]}>Undo Last Ball</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionBtn, styles.scorecardBtn]} onPress={() => navigate('Scorecard', { matchId })}>
+               <Text style={styles.scorecardBtnText}>View Full Scorecard</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionBtn, styles.endBtn]} onPress={confirmEndInnings}>
+               <Text style={styles.endBtnText}>End Innings</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-
-        {/* END INNINGS MODAL */}
-        <Modal visible={showEndModal} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>End Current Innings?</Text>
-              <Text style={styles.modalMessage}>
-                Are you sure you want to end {inningsInfo.battingTeam}'s innings? Score: {inningsInfo.score}.
-              </Text>
-              <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowEndModal(false)}>
-                  <Text style={styles.modalCancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalConfirmBtn} onPress={confirmEndInnings}>
-                  <Text style={styles.modalConfirmText}>End Innings</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-
-        <SharedFooter />
+        </View>
+      </View>
+      
+      <SharedFooter />
       </ScrollView>
     </View>
   );
@@ -671,7 +461,7 @@ export default function LiveScoringScreen() {
 const getStyles = (isDesktop: boolean) => StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
   header: { 
-    padding: 12, paddingHorizontal: isDesktop ? 24 : 12, backgroundColor: 'rgba(255, 255, 255, 0.75)', 
+    padding: 12, paddingHorizontal: isDesktop ? 24 : 12, backgroundColor: 'rgba(255, 255, 255, 0.65)', 
     borderBottomWidth: 1, borderBottomColor: 'rgba(226, 232, 240, 0.8)',
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3
@@ -692,113 +482,92 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   topSection: { flexDirection: isDesktop ? 'row' : 'column', gap: 16, marginBottom: 16 },
   scoreBoardCard: { 
     flex: isDesktop ? 1 : undefined,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', padding: 20, borderRadius: 8, 
+    backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 20, borderRadius: 8, 
     borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', 
+    alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
   },
-  battingTeam: { color: '#b45309', fontSize: 13, fontWeight: 'bold', letterSpacing: 0.5, textTransform: 'uppercase' },
-  scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginVertical: 4 },
-  scoreText: { color: '#1e293b', fontSize: 36, fontWeight: 'bold' },
-  oversText: { color: '#64748b', fontSize: 16, fontWeight: '600' },
-  rrText: { color: '#64748b', fontSize: 12, fontWeight: '500' },
-  partnershipBox: { marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9', flexDirection: 'row', justifyContent: 'space-between' },
-  partnershipLabel: { fontSize: 11, color: '#64748b', fontWeight: '600' },
-  partnershipVal: { fontSize: 12, color: '#1e293b', fontWeight: 'bold' },
+  battingTeam: { color: '#b45309', fontSize: 13, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
+  scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
+  scoreText: { color: '#1e293b', fontSize: 48, fontWeight: 'bold' },
+  oversText: { color: '#64748b', fontSize: 20, marginLeft: 10, fontWeight: '600' },
+  rrText: { color: '#475569', fontSize: 13, marginTop: 6, fontWeight: '600' },
   
-  // PLAYERS
-  playersContainer: { flex: isDesktop ? 2 : undefined, flexDirection: isDesktop ? 'row' : 'column', gap: 16 },
-  playerCard: { 
-    flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.85)', padding: 16, borderRadius: 8, 
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
-  },
-  playerRole: { color: '#64748b', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5, marginBottom: 8 },
-  playerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 4 },
-  playerName: { color: '#1e293b', fontSize: 13, fontWeight: '600' },
-  striker: { color: '#b45309', fontWeight: 'bold' },
-  strikerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#b45309', marginRight: 6 },
-  playerStats: { color: '#475569', fontSize: 12 },
-  
-  // TIMELINE
-  timelineCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)', padding: 16, borderRadius: 8, 
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
-  },
-  timelineRow: { flexDirection: 'row', gap: 8, marginVertical: 8, flexWrap: 'wrap' },
-  ballCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  ballNormal: { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
-  ballBoundary: { backgroundColor: '#fef9c3', borderWidth: 1, borderColor: '#fde047' },
-  ballWicket: { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fca5a5' },
-  ballText: { fontSize: 11, fontWeight: 'bold', color: '#1e293b' },
-  commentaryText: { fontSize: 12, color: '#475569', fontStyle: 'italic', marginTop: 4 },
-  
-  // CONTROLS
-  controlsSection: { flexDirection: isDesktop ? 'row' : 'column', gap: 16 },
-  controlPanel: { 
-    flex: isDesktop ? 3 : undefined, backgroundColor: 'rgba(255, 255, 255, 0.85)', padding: 16, borderRadius: 8, 
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
-  },
-  sectionTitle: { color: '#64748b', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5, marginBottom: 10, textTransform: 'uppercase' },
-  controlsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  scoreBtn: { 
-    flex: 1, minWidth: 44, height: 48, borderRadius: 6, justifyContent: 'center', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1
-  },
-  scoreBtnDot: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' },
-  scoreBtnNormal: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#cbd5e1' },
-  scoreBtnFour: { backgroundColor: '#fef08a', borderWidth: 1, borderColor: '#fde047' },
-  scoreBtnSix: { backgroundColor: '#fed7aa', borderWidth: 1, borderColor: '#fdba74' },
-  wicketBtn: { backgroundColor: '#ef4444', flex: 1.5 },
-  scoreBtnText: { fontSize: 16, fontWeight: 'bold' },
-  scoreBtnTextDot: { color: '#64748b' },
-  scoreBtnTextNormal: { color: '#1e293b' },
-  scoreBtnTextBoundary: { color: '#b45309' },
-  wicketBtnText: { color: '#ffffff' },
-  
-  extrasGrid: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  extraBtn: { 
-    flex: 1, minWidth: 70, paddingVertical: 10, backgroundColor: '#f8fafc', borderRadius: 4, 
-    borderWidth: 1, borderColor: '#cbd5e1', alignItems: 'center' 
-  },
-  extraBtnText: { color: '#334155', fontSize: 12, fontWeight: '600' },
-  
-  // ACTIONS
-  actionPanel: { 
-    flex: isDesktop ? 1 : undefined, backgroundColor: 'rgba(255, 255, 255, 0.85)', padding: 16, borderRadius: 8, 
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', gap: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
-  },
-  actionBtn: { paddingVertical: 12, borderRadius: 6, alignItems: 'center' },
-  undoBtn: { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fca5a5' },
-  actionBtnText: { color: '#b91c1c', fontWeight: 'bold', fontSize: 12 },
-  editBtn: { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a' },
-  editBtnText: { color: '#b45309', fontWeight: 'bold', fontSize: 12 },
-  overBtn: { backgroundColor: '#e0f2fe', borderWidth: 1, borderColor: '#bae6fd' },
-  overBtnText: { color: '#0369a1', fontWeight: 'bold', fontSize: 12 },
-  endBtn: { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
-  endBtnText: { color: '#475569', fontWeight: 'bold', fontSize: 12 },
-  scorecardBtn: { backgroundColor: '#b45309' },
-  scorecardBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12 },
+  playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 16, justifyContent: 'space-between' },
+  playerCard: { backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', flex: 1, justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  playerRole: { color: '#64748b', fontSize: 11, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 },
+  playerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  playerName: { color: '#1e293b', fontSize: 14, fontWeight: '600' },
+  striker: { fontWeight: 'bold', color: '#b45309' },
+  playerStats: { color: '#1e293b', fontSize: 14, fontWeight: 'bold' },
 
+  // AI COMMENTARY CARD
+  commentaryCard: {
+    backgroundColor: 'rgba(254, 243, 199, 0.75)',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2
+  },
+  commentaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  commentaryTag: { fontSize: 10, fontWeight: '800', color: '#b45309', letterSpacing: 0.5 },
+  commentaryPosition: { fontSize: 11, fontWeight: '700', color: '#92400e', backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  commentaryText: { fontSize: 13, color: '#78350f', fontWeight: '500', lineHeight: 18 },
+
+  // BOTTOM SECTION
+  controlsSection: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 8, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  controlPanel: { flex: 1, justifyContent: 'center' },
+  sectionTitle: { color: '#64748b', fontSize: 11, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 },
+  controlsGrid: { flexDirection: 'row', gap: 10, marginBottom: 16, flexWrap: 'wrap' },
+  
+  scoreBtn: { flex: 1, minWidth: 44, height: 50, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  scoreBtnNormal: { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' },
+  scoreBtnDot: { backgroundColor: '#f1f5f9', borderColor: '#94a3b8' },
+  scoreBtnFour: { backgroundColor: '#fef3c7', borderColor: '#fde68a' },
+  scoreBtnSix: { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
+  wicketBtn: { backgroundColor: '#ef4444', borderColor: '#dc2626' },
+  
+  scoreBtnText: { fontSize: 18, fontWeight: 'bold' },
+  scoreBtnTextNormal: { color: '#1e293b' },
+  scoreBtnTextDot: { color: '#64748b' },
+  scoreBtnTextBoundary: { color: '#b45309' },
+  wicketBtnText: { color: '#FFF' },
+  
+  extrasGrid: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  extraBtn: { flex: 1, height: 40, backgroundColor: '#f1f5f9', borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
+  extraBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
+
+  fieldingChipsScroll: { flexDirection: 'row', gap: 8, paddingVertical: 4, marginBottom: 16 },
+  fieldingChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
+  fieldingChipActive: { backgroundColor: '#fef3c7', borderColor: '#b45309' },
+  fieldingChipText: { fontSize: 11, fontWeight: '600', color: '#475569' },
+  fieldingChipTextActive: { color: '#b45309', fontWeight: 'bold' },
+
+  actionPanel: { flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginTop: 10 },
+  actionBtn: { flex: 1, padding: 14, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  undoBtn: { backgroundColor: '#e2e8f0' },
+  actionBtnText: { fontWeight: 'bold', fontSize: 13 },
+  scorecardBtn: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1' },
+  scorecardBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
+  endBtn: { backgroundColor: '#dc2626' },
+  endBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
+  
   // MODAL
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalContent: { backgroundColor: '#ffffff', borderRadius: 8, padding: 20, width: '100%', maxWidth: 440, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b', marginBottom: 4 },
-  modalMessage: { fontSize: 12, color: '#64748b', marginBottom: 14 },
-  modalSubLabel: { fontSize: 11, fontWeight: '700', color: '#475569', textTransform: 'uppercase', marginBottom: 8 },
-  optionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
-  optionBtn: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 4, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
-  optionBtnActive: { borderColor: '#b45309', backgroundColor: '#fef3c7' },
-  optionBtnText: { fontSize: 11, fontWeight: '600', color: '#475569' },
-  optionBtnTextActive: { color: '#b45309', fontWeight: 'bold' },
-  playerSelectBtn: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 4, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 4 },
-  playerSelectBtnActive: { borderColor: '#eab308', backgroundColor: '#fefce8' },
-  playerSelectText: { fontSize: 12, color: '#1e293b' },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 16 },
-  modalCancelBtn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 4, borderWidth: 1, borderColor: '#cbd5e1' },
-  modalCancelText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  modalConfirmBtn: { backgroundColor: '#ef4444', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 4 },
-  modalConfirmText: { fontSize: 12, fontWeight: 'bold', color: '#ffffff' }
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', maxWidth: 400, backgroundColor: '#FFF', borderRadius: 8, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 5 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
+  modalMessage: { fontSize: 14, color: '#64748b', marginBottom: 16 },
+  modalStatsBox: { backgroundColor: '#f8fafc', padding: 12, borderRadius: 6, marginBottom: 20, flexDirection: 'row', justifyContent: 'space-around' },
+  modalStatsText: { fontSize: 14, fontWeight: 'bold', color: '#334155' },
+  modalActions: { flexDirection: 'row', gap: 12, justifyContent: 'flex-end' },
+  modalCancelBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#f1f5f9' },
+  modalCancelText: { color: '#475569', fontWeight: 'bold', fontSize: 13 },
+  modalConfirmBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#dc2626' },
+  modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 }
 });

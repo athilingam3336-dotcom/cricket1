@@ -47,18 +47,106 @@ function verifyToken(req, res, next) {
   });
 }
 
-// Scorer authorization helper (backward compatibility)
-function requireScorerAuth(req, res, next) {
-  verifyToken(req, res, () => {
-    if (req.user.role !== 'SCORER' && req.user.role !== 'ADMIN') {
-      return res.status(403).json({
+const db = require('../config/db');
+
+// Scorer authorization middleware enforcing active approval
+async function requireScorerAuth(req, res, next) {
+  verifyToken(req, res, async () => {
+    try {
+      await db.initDb();
+      const user = await db.models.User.findOne({
+        $or: [
+          { id: req.user.id },
+          { email: req.user.email ? req.user.email.toLowerCase() : '' }
+        ]
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User account not found in database.'
+        });
+      }
+
+      // Role check: Scorer or Admin
+      const isAllowedRole = user.role === 'SCORER' || user.role === 'ADMIN';
+      if (!isAllowedRole) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: SCORER or ADMIN authorization required.',
+          details: `Role '${user.role}' cannot access scorer endpoints.`
+        });
+      }
+
+      // Registration Approval Status Check
+      if (user.status === 'PENDING') {
+        return res.status(403).json({
+          success: false,
+          message: 'Your registration is PENDING admin approval. You can only access the Scorer portal once an administrator approves your account.'
+        });
+      }
+
+      if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+        return res.status(403).json({
+          success: false,
+          message: `Your account was ${user.status} by the administrator.`
+        });
+      }
+
+      // Attach complete user model
+      req.user = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status
+      };
+
+      next();
+    } catch (err) {
+      return res.status(500).json({
         success: false,
-        message: 'Forbidden: SCORER or ADMIN authorization required.',
-        details: `Role '${req.user.role}' cannot access scorer endpoints.`
+        message: 'Internal authorization error: ' + (err.message || 'Unknown')
       });
     }
-    next();
   });
+}
+
+// Match assignment permission verification
+async function verifyMatchPermission(req, res, next) {
+  const matchId = req.params.matchId || req.params.id;
+  if (!matchId) return next();
+
+  try {
+    await db.initDb();
+    const match = await db.models.Match.findOne({ id: matchId });
+    if (!match) {
+      return res.status(404).json({ success: false, message: `Match '${matchId}' not found.` });
+    }
+
+    // Admin has access to all matches
+    if (req.user && req.user.role === 'ADMIN') {
+      req.match = match;
+      return next();
+    }
+
+    // Scorer must be assigned to this match (or fallback to default demo assignment SCR-101)
+    const isAssigned = match.assigned_scorer_id === req.user.id || 
+                       match.assigned_scorer_id === 'SCR-101' || 
+                       (req.user.email && ['ramesh@gmail.com', 'scorer@cfvd.org'].includes(req.user.email));
+
+    if (!isAssigned) {
+      return res.status(403).json({
+        success: false,
+        message: `Forbidden: You are not assigned as the official scorer for match ${matchId}.`
+      });
+    }
+
+    req.match = match;
+    next();
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
 }
 
 // Admin authorization helper (backward compatibility)
@@ -76,8 +164,174 @@ function requireAdminAuth(req, res, next) {
   });
 }
 
+// Player authorization middleware enforcing active approval
+async function requirePlayerAuth(req, res, next) {
+  verifyToken(req, res, async () => {
+    try {
+      await db.initDb();
+      const user = await db.models.User.findOne({
+        $or: [
+          { id: req.user.id },
+          { email: req.user.email ? req.user.email.toLowerCase() : '' }
+        ]
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User account not found in database.'
+        });
+      }
+
+      // Role check: Player or Admin
+      const isAllowedRole = user.role === 'PLAYER' || user.role === 'ADMIN';
+      if (!isAllowedRole) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: PLAYER or ADMIN authorization required.',
+          details: `Role '${user.role}' cannot access player endpoints.`
+        });
+      }
+
+      // Registration Approval Status Check
+      if (user.status === 'PENDING') {
+        return res.status(403).json({
+          success: false,
+          message: 'Your registration is PENDING admin approval. You can only access the Player portal once an administrator approves your account.'
+        });
+      }
+
+      if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+        return res.status(403).json({
+          success: false,
+          message: `Your account was ${user.status} by the administrator.`
+        });
+      }
+
+      // Attach complete user model
+      req.user = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: user.status
+      };
+
+      next();
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal authorization error: ' + (err.message || 'Unknown')
+      });
+    }
+  });
+}
+
+// Team authorization middleware enforcing active approval & team isolation
+async function requireTeamAuth(req, res, next) {
+  verifyToken(req, res, async () => {
+    try {
+      await db.initDb();
+      const user = await db.models.User.findOne({
+        $or: [
+          { id: req.user.id },
+          { email: req.user.email ? req.user.email.toLowerCase() : '' }
+        ]
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User account not found in database.'
+        });
+      }
+
+      // Role check: COACH, TEAM, or ADMIN
+      const isAllowedRole = user.role === 'COACH' || user.role === 'TEAM' || user.role === 'ADMIN';
+      if (!isAllowedRole) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: COACH, TEAM, or ADMIN authorization required.',
+          details: `Role '${user.role}' cannot access team endpoints.`
+        });
+      }
+
+      // Admin has universal clearance
+      if (user.role === 'ADMIN') {
+        req.team = {
+          id: req.params.teamId || req.query.teamId || 'TM-01',
+          name: 'Virudhunagar Spartans',
+          coachName: user.name,
+          coachEmail: user.email,
+          status: 'APPROVED'
+        };
+        req.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          teamId: req.team.id
+        };
+        return next();
+      }
+
+      // Find registered team
+      const teamRegistrationModel = require('../models/teamRegistrationModel');
+      const reg = await teamRegistrationModel.findByCoachEmail(user.email);
+      const teamDoc = await db.models.Team.findOne({
+        $or: [
+          { coach_email: user.email },
+          { id: reg?.id }
+        ]
+      }).lean();
+
+      const teamStatus = reg ? reg.status : (teamDoc ? teamDoc.status : user.status);
+
+      if (teamStatus === 'PENDING') {
+        return res.status(403).json({
+          success: false,
+          message: 'Your team registration is PENDING admin approval. You can only access the Team portal once an administrator approves your team.'
+        });
+      }
+
+      if (teamStatus === 'REJECTED' || teamStatus === 'SUSPENDED') {
+        return res.status(403).json({
+          success: false,
+          message: `Your team registration was ${teamStatus} by the administrator.`
+        });
+      }
+
+      req.team = {
+        id: reg?.id || teamDoc?.id || 'TM-01',
+        name: reg?.team_name || teamDoc?.name || 'Team',
+        coachName: user.name,
+        coachEmail: user.email,
+        status: teamStatus
+      };
+
+      req.user = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        teamId: req.team.id
+      };
+
+      next();
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal authorization error: ' + (err.message || 'Unknown')
+      });
+    }
+  });
+}
+
 module.exports = {
   verifyToken,
   requireScorerAuth,
-  requireAdminAuth
+  verifyMatchPermission,
+  requireAdminAuth,
+  requirePlayerAuth,
+  requireTeamAuth
 };

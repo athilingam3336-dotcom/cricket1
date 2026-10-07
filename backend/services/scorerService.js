@@ -1,54 +1,52 @@
-﻿/**
+/**
  * services/scorerService.js
- * Scorer Dashboard, Assigned Matches & Scorecard Data Service
+ * Scorer Dashboard, Assigned Matches, Live State, Scorecard & AI Fielding Commentary
+ * Pure MongoDB Implementation using Mongoose Models
  */
 
 const db = require('../config/db');
 
 class ScorerService {
   /**
-   * Calculates dashboard summary counts from MySQL
+   * Calculates dashboard summary counts from MongoDB
    */
-  async getDashboardStats(scorerId = 'SCR-101') {
-    // 1. Fetch all match IDs assigned to this scorer
-    const [assignments] = await db.query(
-      'SELECT match_id, status FROM scorer_assignments WHERE scorer_id = ?',
-      [scorerId]
-    );
+  async getDashboardStats(scorerId = 'SCR-101', userEmail = null) {
+    await db.initDb();
 
-    const matchIds = (assignments || []).map(a => a.match_id);
+    // Query matches assigned to this scorer (or all matches if admin/dev)
+    const query = {
+      $or: [
+        { assigned_scorer_id: scorerId },
+        { assigned_scorer_id: 'SCR-101' },
+        { assigned_scorer_id: null }
+      ]
+    };
+
+    const allMatches = await db.models.Match.find(query).sort({ match_date: -1 }).lean();
+    const teams = await db.models.Team.find({}).lean();
+    const teamMap = {};
+    (teams || []).forEach(t => { teamMap[t.id] = t; });
 
     let liveCount = 0;
     let upcomingCount = 0;
     let completedCount = 0;
-    let assignedCount = matchIds.length;
 
-    const [allMatches] = await db.query('SELECT * FROM matches');
-    const assignedMatches = (allMatches || []).filter(m => matchIds.includes(m.id));
+    const formattedMatches = await Promise.all(allMatches.map(async (m) => {
+      const statusUpper = (m.status || 'SCHEDULED').toUpperCase();
+      if (statusUpper === 'LIVE') liveCount++;
+      else if (statusUpper === 'SCHEDULED') upcomingCount++;
+      else if (statusUpper === 'COMPLETED') completedCount++;
 
-    assignedMatches.forEach(m => {
-      if (m.status === 'LIVE') liveCount++;
-      else if (m.status === 'SCHEDULED') upcomingCount++;
-      else if (m.status === 'COMPLETED') completedCount++;
-    });
-
-    // Fetch team names to attach to assigned matches
-    const [teams] = await db.query('SELECT * FROM teams');
-    const teamMap = {};
-    (teams || []).forEach(t => { teamMap[t.id] = t; });
-
-    // Format match list
-    const formattedMatches = await Promise.all(assignedMatches.map(async (m) => {
       const teamA = teamMap[m.team_a_id] || { name: 'Team A' };
       const teamB = teamMap[m.team_b_id] || { name: 'Team B' };
 
-      // Fetch score if live or completed
+      // Fetch latest innings scores
       let scoreA = null;
       let scoreB = null;
 
-      const [innRows] = await db.query('SELECT * FROM innings WHERE match_id = ? ORDER BY innings_number ASC', [m.id]);
-      if (innRows && innRows.length > 0) {
-        innRows.forEach(inn => {
+      const inns = await db.models.Innings.find({ match_id: m.id }).sort({ innings_number: 1 }).lean();
+      if (inns && inns.length > 0) {
+        inns.forEach(inn => {
           const scoreStr = `${inn.total_runs}/${inn.wickets} (${inn.overs}.${inn.balls} Ov)`;
           if (inn.batting_team_id === m.team_a_id) scoreA = scoreStr;
           else scoreB = scoreStr;
@@ -57,16 +55,16 @@ class ScorerService {
 
       return {
         id: m.id,
-        tournament: 'VPL 2026',
+        tournament: m.tournament_name || 'VPL 2026',
         teamA: teamA.name,
         teamB: teamB.name,
-        date: `${m.scheduled_date || '2026-10-15'} ${m.scheduled_time || '10:00 AM'}`,
-        venue: m.venue_name || 'Kamarajar Stadium',
-        format: 'T20',
-        status: m.status === 'LIVE' ? 'Live' : (m.status === 'COMPLETED' ? 'Completed' : 'Upcoming'),
+        date: `${m.match_date || '2026-10-06'} ${m.match_time || '09:30 AM'}`,
+        venue: m.venue || 'Kamarajar Stadium, Virudhunagar',
+        format: m.match_type || 'T20',
+        status: statusUpper === 'LIVE' ? 'Live' : (statusUpper === 'COMPLETED' ? 'Completed' : 'Upcoming'),
         scoreA,
-        scoreB: scoreB || (m.status === 'LIVE' ? 'Yet to bat' : null),
-        result: m.result_text
+        scoreB: scoreB || (statusUpper === 'LIVE' ? 'Yet to bat' : null),
+        result: m.result_summary
       };
     }));
 
@@ -74,21 +72,21 @@ class ScorerService {
       liveMatches: liveCount,
       upcomingMatches: upcomingCount,
       completedMatches: completedCount,
-      assignedMatches: assignedCount,
+      assignedMatches: formattedMatches.length,
       matches: formattedMatches
     };
   }
 
   /**
-   * Returns live match scoring state
+   * Returns live match scoring state from MongoDB
    */
   async getLiveMatchState(matchId) {
-    const [matchRows] = await db.query('SELECT * FROM matches WHERE id = ?', [matchId]);
-    const match = matchRows && matchRows[0];
-    if (!match) throw { status: 404, message: 'Match not found' };
+    await db.initDb();
 
-    // Fetch Teams
-    const [teams] = await db.query('SELECT * FROM teams');
+    const match = await db.models.Match.findOne({ id: matchId }).lean();
+    if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
+
+    const teams = await db.models.Team.find({}).lean();
     const teamMap = {};
     (teams || []).forEach(t => { teamMap[t.id] = t; });
 
@@ -96,56 +94,56 @@ class ScorerService {
     const teamB = teamMap[match.team_b_id] || { id: match.team_b_id, name: 'Team B' };
 
     // Active Innings
-    const [innRows] = await db.query('SELECT * FROM innings WHERE match_id = ? AND status = ?', [matchId, 'LIVE']);
-    let currentInnings = innRows && innRows[0];
-
-    // Fallback if innings is not yet marked LIVE (e.g. initial setup)
+    let currentInnings = await db.models.Innings.findOne({ match_id: matchId, is_completed: false }).sort({ innings_number: -1 }).lean();
     if (!currentInnings) {
-      const [allInns] = await db.query('SELECT * FROM innings WHERE match_id = ? ORDER BY innings_number DESC LIMIT 1', [matchId]);
-      currentInnings = allInns && allInns[0];
+      currentInnings = await db.models.Innings.findOne({ match_id: matchId }).sort({ innings_number: -1 }).lean();
     }
 
     if (!currentInnings) {
-      // Create initial innings 1 if absent
-      currentInnings = {
+      // Auto-create initial innings 1 if missing
+      const battingTeamId = match.toss_decision === 'BAT' ? (match.toss_winner_id || match.team_a_id) : (match.toss_winner_id === match.team_a_id ? match.team_b_id : match.team_a_id);
+      const bowlingTeamId = battingTeamId === match.team_a_id ? match.team_b_id : match.team_a_id;
+
+      const newInn = await db.models.Innings.create({
         id: `INN-${matchId}-1`,
         match_id: matchId,
         innings_number: 1,
-        batting_team_id: match.toss_decision === 'BAT' ? (match.toss_winner || match.team_a_id) : (match.toss_winner === match.team_a_id ? match.team_b_id : match.team_a_id),
-        bowling_team_id: match.toss_decision === 'BAT' ? (match.toss_winner === match.team_a_id ? match.team_b_id : match.team_a_id) : (match.toss_winner || match.team_a_id),
+        batting_team_id: battingTeamId,
+        bowling_team_id: bowlingTeamId,
         total_runs: 0,
         wickets: 0,
         overs: 0,
         balls: 0,
-        status: 'LIVE'
-      };
-      await db.query(
-        'INSERT INTO innings (id, match_id, innings_number, batting_team_id, bowling_team_id, total_runs, wickets, overs, balls, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [currentInnings.id, matchId, 1, currentInnings.batting_team_id, currentInnings.bowling_team_id, 0, 0, 0, 0, 'LIVE']
-      );
+        is_completed: false,
+        extras: { wides: 0, no_balls: 0, byes: 0, leg_byes: 0, total: 0 }
+      });
+      currentInnings = newInn.toObject();
     }
 
     const battingTeam = teamMap[currentInnings.batting_team_id] || teamA;
     const bowlingTeam = teamMap[currentInnings.bowling_team_id] || teamB;
 
     // Batters in this innings
-    const [batters] = await db.query('SELECT * FROM innings_batters WHERE innings_id = ?', [currentInnings.id]);
-    const [players] = await db.query('SELECT * FROM players');
+    const batters = await db.models.InningsBatter.find({ innings_id: currentInnings.id }).lean();
+    const players = await db.models.Player.find({}).lean();
     const playerMap = {};
     (players || []).forEach(p => { playerMap[p.id] = p; });
 
-    // Identify current striker & non-striker
+    // Active striker & non-striker
     const notOutBatters = (batters || []).filter(b => !b.is_out);
-    let striker = notOutBatters.find(b => b.is_striker) || notOutBatters[0];
-    let nonStriker = notOutBatters.find(b => b.id !== (striker && striker.id)) || notOutBatters[1];
+    let striker = notOutBatters[0];
+    let nonStriker = notOutBatters[1];
 
-    // If no batters present yet, pick from batting team squad
+    const battingSquad = (players || []).filter(p => p.team_id === currentInnings.batting_team_id);
+    const bowlingSquad = (players || []).filter(p => p.team_id === currentInnings.bowling_team_id);
+
     if (!striker) {
-      const battingSquad = (players || []).filter(p => p.team_id === currentInnings.batting_team_id);
       striker = {
         player_id: battingSquad[0] ? battingSquad[0].id : 'P301',
         runs: 0, balls: 0, fours: 0, sixes: 0, strike_rate: 0
       };
+    }
+    if (!nonStriker) {
       nonStriker = {
         player_id: battingSquad[1] ? battingSquad[1].id : 'P302',
         runs: 0, balls: 0, fours: 0, sixes: 0, strike_rate: 0
@@ -153,28 +151,22 @@ class ScorerService {
     }
 
     // Bowlers in this innings
-    const [bowlers] = await db.query('SELECT * FROM innings_bowlers WHERE innings_id = ?', [currentInnings.id]);
+    const bowlers = await db.models.InningsBowler.find({ innings_id: currentInnings.id }).sort({ updated_at: -1 }).lean();
     let currentBowler = bowlers && bowlers[0];
     if (!currentBowler) {
-      const bowlingSquad = (players || []).filter(p => p.team_id === currentInnings.bowling_team_id && p.role === 'BOWLER');
+      const firstBowler = bowlingSquad.find(p => p.role === 'BOWLER') || bowlingSquad[0];
       currentBowler = {
-        player_id: bowlingSquad[0] ? bowlingSquad[0].id : 'P401',
+        player_id: firstBowler ? firstBowler.id : 'P403',
         overs: 0, balls: 0, maidens: 0, runs_conceded: 0, wickets: 0, economy: 0
       };
     }
 
-    // Deliveries
-    const [deliveries] = await db.query('SELECT * FROM deliveries WHERE innings_id = ? ORDER BY id DESC LIMIT 12', [currentInnings.id]);
+    // Recent deliveries
+    const deliveries = await db.models.Delivery.find({
+      $or: [{ match_id: matchId }, { innings_id: currentInnings.id }]
+    }).sort({ created_at: -1 }).limit(12).lean();
 
-    // Current over deliveries
-    const currentOverNumber = currentInnings.overs + 1;
-    const overDeliveries = (deliveries || [])
-      .filter(d => d.over_number === currentOverNumber || (currentInnings.balls === 0 && d.over_number === currentInnings.overs))
-      .reverse();
-
-    // Squads available for selection
-    const battingSquad = (players || []).filter(p => p.team_id === currentInnings.batting_team_id);
-    const bowlingSquad = (players || []).filter(p => p.team_id === currentInnings.bowling_team_id);
+    const lastDelivery = deliveries && deliveries[0];
 
     // Compute Run Rate
     const totalBallsBowled = (currentInnings.overs * 6) + currentInnings.balls;
@@ -183,11 +175,11 @@ class ScorerService {
     return {
       match: {
         id: match.id,
-        tournament: 'VPL 2026',
-        venue: match.venue_name || 'Kamarajar Stadium',
-        overs: match.overs || 20,
+        tournament: match.tournament_name || 'VPL 2026',
+        venue: match.venue || 'Kamarajar Stadium, Virudhunagar',
+        overs: match.overs_per_side || 20,
         status: match.status,
-        result: match.result_text
+        result: match.result_summary
       },
       innings: {
         id: currentInnings.id,
@@ -198,6 +190,7 @@ class ScorerService {
         totalRuns: currentInnings.total_runs,
         wickets: currentInnings.wickets,
         overs: `${currentInnings.overs}.${currentInnings.balls}`,
+        ballsTotal: totalBallsBowled,
         runRate,
         target: currentInnings.target
       },
@@ -228,6 +221,17 @@ class ScorerService {
         wickets: currentBowler.wickets || 0,
         economy: currentBowler.economy || 0
       },
+      lastDelivery: lastDelivery ? {
+        id: lastDelivery.id,
+        over: `${lastDelivery.over_number}.${lastDelivery.ball_number}`,
+        runs: lastDelivery.runs_batter,
+        extraType: lastDelivery.extra_type,
+        wicket: lastDelivery.wicket,
+        shotType: lastDelivery.shot_type,
+        fieldingPosition: lastDelivery.fielding_position,
+        fielderName: lastDelivery.fielder_name,
+        commentary: lastDelivery.commentary
+      } : null,
       recentDeliveries: (deliveries || []).slice(0, 6).map(d => ({
         id: d.id,
         ball: `${d.over_number}.${d.ball_number}`,
@@ -243,49 +247,41 @@ class ScorerService {
   }
 
   /**
-   * Returns complete scorecard for a match
+   * Returns complete scorecard for a match from MongoDB
    */
   async getFullScorecard(matchId) {
-    const [matchRows] = await db.query('SELECT * FROM matches WHERE id = ?', [matchId]);
-    const match = matchRows && matchRows[0];
-    if (!match) throw { status: 404, message: 'Match not found' };
+    await db.initDb();
 
-    const [tournRows] = await db.query('SELECT * FROM tournaments WHERE id = ?', [match.tournament_id]);
-    const tournament = (tournRows && tournRows[0]) || { name: 'VPL 2026' };
+    const match = await db.models.Match.findOne({ id: matchId }).lean();
+    if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
 
-    const [teams] = await db.query('SELECT * FROM teams');
+    const teams = await db.models.Team.find({}).lean();
     const teamMap = {};
     (teams || []).forEach(t => { teamMap[t.id] = t; });
 
-    const [players] = await db.query('SELECT * FROM players');
+    const players = await db.models.Player.find({}).lean();
     const playerMap = {};
     (players || []).forEach(p => { playerMap[p.id] = p; });
 
-    const [inningsList] = await db.query('SELECT * FROM innings WHERE match_id = ? ORDER BY innings_number ASC', [matchId]);
+    const inningsList = await db.models.Innings.find({ match_id: matchId }).sort({ innings_number: 1 }).lean();
 
     const formattedInnings = await Promise.all((inningsList || []).map(async (inn) => {
       const batTeam = teamMap[inn.batting_team_id] || { name: 'Batting Team' };
       const bowlTeam = teamMap[inn.bowling_team_id] || { name: 'Bowling Team' };
 
-      // Batters from MySQL table innings_batters
-      const [batters] = await db.query('SELECT * FROM innings_batters WHERE innings_id = ? ORDER BY batting_position ASC', [inn.id]);
+      // Batters
+      const batters = await db.models.InningsBatter.find({ innings_id: inn.id }).sort({ batting_position: 1 }).lean();
       const battingCard = (batters || []).map(b => {
         let dismissalText = 'not out';
         if (b.is_out) {
-          const bowlerName = (playerMap[b.dismissed_by] && playerMap[b.dismissed_by].name) || '';
-          if (b.dismissal_type === 'BOWLED') {
-            dismissalText = bowlerName ? `b ${bowlerName}` : 'bowled';
-          } else if (b.dismissal_type === 'CAUGHT') {
-            dismissalText = bowlerName ? `c ${bowlerName}` : 'caught';
-          } else if (b.dismissal_type === 'LBW') {
-            dismissalText = bowlerName ? `lbw b ${bowlerName}` : 'lbw';
-          } else if (b.dismissal_type === 'RUN_OUT') {
-            dismissalText = 'run out';
-          } else if (b.dismissal_type === 'STUMPED') {
-            dismissalText = bowlerName ? `st b ${bowlerName}` : 'stumped';
-          } else {
-            dismissalText = b.dismissal_type ? b.dismissal_type.toLowerCase() : 'out';
-          }
+          const bowlerName = (playerMap[b.bowler_id] && playerMap[b.bowler_id].name) || '';
+          const fielderName = (playerMap[b.fielder_id] && playerMap[b.fielder_id].name) || '';
+          if (b.dismissal_type === 'BOWLED') dismissalText = bowlerName ? `b ${bowlerName}` : 'bowled';
+          else if (b.dismissal_type === 'CAUGHT') dismissalText = fielderName && bowlerName ? `c ${fielderName} b ${bowlerName}` : (bowlerName ? `c & b ${bowlerName}` : 'caught');
+          else if (b.dismissal_type === 'LBW') dismissalText = bowlerName ? `lbw b ${bowlerName}` : 'lbw';
+          else if (b.dismissal_type === 'RUN_OUT') dismissalText = fielderName ? `run out (${fielderName})` : 'run out';
+          else if (b.dismissal_type === 'STUMPED') dismissalText = bowlerName ? `st b ${bowlerName}` : 'stumped';
+          else dismissalText = b.dismissal_type ? b.dismissal_type.toLowerCase() : 'out';
         }
         return {
           id: b.id,
@@ -301,8 +297,8 @@ class ScorerService {
         };
       });
 
-      // Bowlers from MySQL table innings_bowlers
-      const [bowlers] = await db.query('SELECT * FROM innings_bowlers WHERE innings_id = ?', [inn.id]);
+      // Bowlers
+      const bowlers = await db.models.InningsBowler.find({ innings_id: inn.id }).lean();
       const bowlingCard = (bowlers || []).map(bw => ({
         id: bw.id,
         playerId: bw.player_id,
@@ -314,40 +310,31 @@ class ScorerService {
         economy: bw.economy
       }));
 
-      // Calculate extras directly from deliveries table
-      const [delRows] = await db.query('SELECT * FROM deliveries WHERE innings_id = ? ORDER BY id ASC', [inn.id]);
-      let wides = 0, noBalls = 0, byes = 0, legByes = 0;
+      // Deliveries for fall of wickets and extras
+      const delRows = await db.models.Delivery.find({
+        $or: [{ match_id: matchId, innings_number: inn.innings_number }, { innings_id: inn.id }]
+      }).sort({ over_number: 1, ball_number: 1 }).lean();
+
+      let wides = inn.extras?.wides || 0;
+      let noBalls = inn.extras?.no_balls || 0;
+      let byes = inn.extras?.byes || 0;
+      let legByes = inn.extras?.leg_byes || 0;
       const fallOfWickets = [];
       let runningScore = 0;
       let wicketCount = 0;
 
       (delRows || []).forEach(d => {
         runningScore += (d.total_runs || 0);
-        if (d.extra_type === 'WIDE') wides += d.runs_extras;
-        if (d.extra_type === 'NO_BALL') noBalls += d.runs_extras;
-        if (d.extra_type === 'BYE') byes += d.runs_extras;
-        if (d.extra_type === 'LEG_BYE') legByes += d.runs_extras;
         if (d.wicket) {
           wicketCount += 1;
           const dismissedName = (playerMap[d.dismissed_player_id] && playerMap[d.dismissed_player_id].name) || 'Batter';
           fallOfWickets.push(`${wicketCount}-${runningScore} (${dismissedName}, ${d.over_number}.${d.ball_number} ov)`);
         }
       });
-      const totalExtras = wides + noBalls + byes + legByes;
 
-      // Fall of wickets calculation from dismissed batters if delivery rows were aggregated
-      if (fallOfWickets.length === 0 && (batters || []).some(b => b.is_out)) {
-        let fWkt = 0;
-        let cumScore = 0;
-        (batters || []).filter(b => b.is_out).forEach((b) => {
-          fWkt++;
-          cumScore += b.runs;
-          const pName = (playerMap[b.player_id] && playerMap[b.player_id].name) || 'Batter';
-          fallOfWickets.push(`${fWkt}-${cumScore} (${pName}, ${b.dismissal_ball || 'Ov'})`);
-        });
-      }
+      const totalExtras = (inn.extras && inn.extras.total) || (wides + noBalls + byes + legByes);
 
-      // Partnerships calculation
+      // Partnerships
       const partnerships = [];
       if (battingCard.length >= 2) {
         partnerships.push({
@@ -390,30 +377,119 @@ class ScorerService {
       };
     }));
 
-    const matchData = {
-      id: match.id,
-      tournament: tournament.name || 'VPL 2026',
-      teamA: (teamMap[match.team_a_id] && teamMap[match.team_a_id].name) || 'Team A',
-      teamB: (teamMap[match.team_b_id] && teamMap[match.team_b_id].name) || 'Team B',
-      venue: match.venue_name || 'Kamarajar Stadium, Virudhunagar',
-      date: match.scheduled_date || '2026-10-10',
-      time: match.scheduled_time || '10:00 AM',
-      overs: match.overs || 20,
-      status: match.status === 'LIVE' ? 'Live' : (match.status === 'COMPLETED' ? 'Completed' : 'Upcoming'),
-      result: match.result_text || 'Match Concluded'
-    };
+    const statusUpper = (match.status || 'SCHEDULED').toUpperCase();
 
     return {
       matchId: match.id,
-      match: matchData,
-      tournament: matchData.tournament,
-      teamA: matchData.teamA,
-      teamB: matchData.teamB,
-      venue: matchData.venue,
-      date: matchData.date,
-      status: matchData.status,
-      result: matchData.result,
+      match: {
+        id: match.id,
+        tournament: match.tournament_name || 'VPL 2026',
+        teamA: (teamMap[match.team_a_id] && teamMap[match.team_a_id].name) || 'Team A',
+        teamB: (teamMap[match.team_b_id] && teamMap[match.team_b_id].name) || 'Team B',
+        venue: match.venue || 'Kamarajar Stadium, Virudhunagar',
+        date: match.match_date || '2026-10-06',
+        time: match.match_time || '09:30 AM',
+        overs: match.overs_per_side || 20,
+        status: statusUpper === 'LIVE' ? 'Live' : (statusUpper === 'COMPLETED' ? 'Completed' : 'Upcoming'),
+        result: match.result_summary || 'Match in progress'
+      },
+      tournament: match.tournament_name || 'VPL 2026',
+      teamA: (teamMap[match.team_a_id] && teamMap[match.team_a_id].name) || 'Team A',
+      teamB: (teamMap[match.team_b_id] && teamMap[match.team_b_id].name) || 'Team B',
+      venue: match.venue || 'Kamarajar Stadium, Virudhunagar',
+      date: match.match_date || '2026-10-06',
+      status: statusUpper === 'LIVE' ? 'Live' : (statusUpper === 'COMPLETED' ? 'Completed' : 'Upcoming'),
+      result: match.result_summary || 'Match in progress',
       innings: formattedInnings
+    };
+  }
+
+  /**
+   * AI Fielding Commentary Generator (Requirement 8 & 9)
+   * Generates dynamic cricket commentary based on actual match data and previous ball delivery
+   */
+  async generateFieldingCommentary(matchId, { fieldingPosition, fielderId, fielderName }) {
+    await db.initDb();
+
+    // 1. Get most recent ball event
+    const lastDelivery = await db.models.Delivery.findOne({
+      match_id: matchId
+    }).sort({ created_at: -1 }).lean();
+
+    const match = await db.models.Match.findOne({ id: matchId }).lean();
+    if (!match) throw { status: 404, message: 'Match not found' };
+
+    const players = await db.models.Player.find({}).lean();
+    const playerMap = {};
+    (players || []).forEach(p => { playerMap[p.id] = p; });
+
+    const striker = (lastDelivery && playerMap[lastDelivery.striker_id]) || { name: 'The batter' };
+    const bowler = (lastDelivery && playerMap[lastDelivery.bowler_id]) || { name: 'The bowler' };
+
+    // Fielder identification
+    let assignedFielder = fielderName;
+    if (!assignedFielder && fielderId && playerMap[fielderId]) {
+      assignedFielder = playerMap[fielderId].name;
+    }
+    if (!assignedFielder) {
+      // Pick player from active bowling/fielding team
+      const currentInnings = await db.models.Innings.findOne({ match_id: matchId, is_completed: false }).lean();
+      const bowlingTeamId = currentInnings ? currentInnings.bowling_team_id : match.team_b_id;
+      const fieldingSquad = (players || []).filter(p => p.team_id === bowlingTeamId);
+      assignedFielder = fieldingSquad[0] ? fieldingSquad[0].name : 'The fielder';
+    }
+
+    const pos = fieldingPosition || 'Cover';
+    const runs = lastDelivery ? lastDelivery.runs_batter : 0;
+    const isWicket = lastDelivery ? lastDelivery.wicket : false;
+    const extraType = lastDelivery ? lastDelivery.extra_type : 'NONE';
+
+    // Rule-based dynamic cricket commentary based on actual match context
+    let commentary = '';
+
+    if (isWicket) {
+      commentary = `OUT! Great presence of mind by ${assignedFielder} stationed at ${pos}! That brings an end to ${striker.name}'s innings after bowling by ${bowler.name}.`;
+    } else if (extraType === 'WIDE' || extraType === 'NO_BALL') {
+      commentary = `${extraType === 'WIDE' ? 'Wide ball' : 'No ball'} signaled! ${assignedFielder} at ${pos} quickly retrieves the stray delivery to keep the extra runs checked.`;
+    } else if (runs === 4) {
+      commentary = `FOUR! ${striker.name} times it beautifully past ${assignedFielder} at ${pos}! Despite a desperate dive, the ball speeds across the outfield into the fence!`;
+    } else if (runs === 6) {
+      commentary = `SIX! High into the stands! ${assignedFielder} at ${pos} can only watch as ${striker.name} launches ${bowler.name} cleanly over the ropes!`;
+    } else if (runs === 2 || runs === 3) {
+      commentary = `${runs} runs taken. Pushed towards ${pos}. ${assignedFielder} swoops in and makes a clean pick-and-throw, preventing the third!`;
+    } else if (runs === 1) {
+      commentary = `Single taken. ${striker.name} works it gently towards ${pos}. ${assignedFielder} collects comfortably on the bounce.`;
+    } else {
+      commentary = `Dot ball. Excellent ground fielding by ${assignedFielder} at ${pos}! Stifles the stroke from ${striker.name} with lightning agility.`;
+    }
+
+    // Attach to last delivery if exists
+    if (lastDelivery) {
+      await db.models.Delivery.updateOne(
+        { id: lastDelivery.id },
+        { 
+          $set: { 
+            fielding_position: pos,
+            fielder_name: assignedFielder,
+            commentary: commentary
+          } 
+        }
+      );
+    }
+
+    return {
+      success: true,
+      matchId,
+      fieldingPosition: pos,
+      fielderName: assignedFielder,
+      commentary,
+      previousBall: lastDelivery ? {
+        id: lastDelivery.id,
+        over: `${lastDelivery.over_number}.${lastDelivery.ball_number}`,
+        striker: striker.name,
+        bowler: bowler.name,
+        runs: lastDelivery.runs_batter
+      } : null
     };
   }
 }

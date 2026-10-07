@@ -54,40 +54,6 @@ export default function Header({
             <FontAwesome5 name="sign-in-alt" size={11} color="#000" />
             <Text style={styles.loginBtnText}>Login</Text>
           </TouchableOpacity>
-
-          {/* Floodlight Toggle */}
-          <TouchableOpacity
-            style={[
-              styles.iconBtn,
-              {
-                borderColor: currentFl.indicatorColor,
-                backgroundColor: floodlightMode !== 'off' ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
-              },
-            ]}
-            onPress={cycleFloodlightMode}
-            activeOpacity={0.7}
-            accessibilityLabel="Cycle Floodlights"
-          >
-            <MaterialCommunityIcons
-              name={currentFl.icon}
-              size={18}
-              color={currentFl.indicatorColor}
-            />
-          </TouchableOpacity>
-
-          {/* Theme Toggle */}
-          <TouchableOpacity
-            style={[styles.iconBtn, { borderColor: theme.border, backgroundColor: theme.surfaceElevated }]}
-            onPress={toggleTheme}
-            activeOpacity={0.7}
-            accessibilityLabel="Toggle Theme"
-          >
-            <Ionicons
-              name={isDark ? 'moon' : 'sunny'}
-              size={16}
-              color={isDark ? theme.accentGold : '#F59E0B'}
-            />
-          </TouchableOpacity>
         </View>
       </View>
     </View>

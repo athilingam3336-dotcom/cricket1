@@ -102,7 +102,7 @@ export default function ScorecardModal({ matchId, visible, onClose, theme }) {
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
               <Text style={{ color: '#ef4444', fontSize: 15, fontWeight: 'bold', marginBottom: 8 }}>{error}</Text>
               <Text style={{ color: theme.textSecondary, fontSize: 12, marginBottom: 16 }}>
-                Could not retrieve match records from MySQL.
+                Could not retrieve match records from MongoDB.
               </Text>
               <TouchableOpacity onPress={loadScorecard} style={{ backgroundColor: '#b45309', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 4 }}>
                 <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>Retry</Text>

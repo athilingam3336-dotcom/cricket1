@@ -1,7 +1,8 @@
 /**
  * server.js
  * 
- * Express and Socket.IO Backend Server for Cricket Federation Scorer & Management System.
+ * Express and Socket.IO Backend Server for Cricket Association Scorer & Management System.
+ * Fully powered by pure MongoDB database.
  */
 
 require('dotenv').config();
@@ -9,11 +10,16 @@ const http = require('http');
 const express = require('express');
 const cors = require('cors');
 
+const db = require('./config/db');
 const { initSocket } = require('./services/socketService');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const scorerRoutes = require('./routes/scorerRoutes');
 const matchRoutes = require('./routes/matchRoutes');
+const newsRoutes = require('./routes/newsRoutes');
+const portalRoutes = require('./routes/portalRoutes');
+const playerRoutes = require('./routes/playerRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -26,19 +32,29 @@ initSocket(server);
 app.use(cors());
 app.use(express.json());
 
+// Initialize MongoDB connection & default seeding
+db.initDb().catch(err => {
+  console.warn('MongoDB initialization warning:', err.message);
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
-    service: 'Cricket Federation Scorer Backend API',
+    database: 'MongoDB',
+    service: 'Cricket Association Management & Scoring API',
     timestamp: new Date().toISOString()
   });
 });
 
 // Mount Routes
+app.use('/api/portal', portalRoutes);
+app.use('/api/news', newsRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/scorer', scorerRoutes);
+app.use('/api/player', playerRoutes);
+app.use('/api/team', teamRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Global Error Handler

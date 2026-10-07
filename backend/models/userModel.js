@@ -1,88 +1,146 @@
 /**
  * models/userModel.js
- * MySQL User Model for Authentication, Profiles, and OTP persistence
+ * Pure MongoDB User Model using Mongoose for Authentication, Profiles, and OTP persistence
  */
 
 const db = require('../config/db');
 
 class UserModel {
+  get Model() {
+    return db.models.User;
+  }
+
   async findByEmail(email) {
     if (!email) return null;
+    await db.initDb();
     const cleanEmail = email.trim().toLowerCase();
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [cleanEmail]);
-    return rows && rows.length > 0 ? rows[0] : null;
+    return this.Model.findOne({ email: cleanEmail }).lean();
   }
 
   async findById(id) {
     if (!id) return null;
-    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-    return rows && rows.length > 0 ? rows[0] : null;
+    await db.initDb();
+    return this.Model.findOne({ id }).lean();
   }
 
   async create({ id, name, email, mobile, role = 'USER', password_hash = null, status = 'ACTIVE' }) {
+    await db.initDb();
     const userId = id || `USR-${Date.now()}`;
     const cleanEmail = email.trim().toLowerCase();
-    await db.query(
-      `INSERT INTO users (id, name, email, mobile, role, password_hash, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [userId, name, cleanEmail, mobile || null, role, password_hash, status]
-    );
-    return this.findById(userId);
+    const user = await this.Model.create({
+      id: userId,
+      name,
+      email: cleanEmail,
+      mobile: mobile || null,
+      role,
+      password_hash,
+      status
+    });
+    return user.toObject();
   }
 
   async updateStatus(userId, status) {
-    await db.query(
-      `UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?`,
-      [status, userId]
-    );
-    return this.findById(userId);
+    await db.initDb();
+    return this.Model.findOneAndUpdate(
+      { id: userId },
+      { $set: { status, updated_at: new Date() } },
+      { returnDocument: 'after' }
+    ).lean();
   }
 
   async updateStatusByEmail(email, status) {
+    await db.initDb();
     const cleanEmail = email.trim().toLowerCase();
-    await db.query(
-      `UPDATE users SET status = ?, updated_at = NOW() WHERE email = ?`,
-      [status, cleanEmail]
-    );
-    return this.findByEmail(cleanEmail);
+    return this.Model.findOneAndUpdate(
+      { email: cleanEmail },
+      { $set: { status, updated_at: new Date() } },
+      { returnDocument: 'after' }
+    ).lean();
   }
 
   async getScorers(status = null) {
-    if (status) {
-      const [rows] = await db.query(
-        `SELECT id, name, email, mobile, role, status, created_at, updated_at FROM users WHERE role = 'SCORER' AND status = ?`,
-        [status]
-      );
-      return rows;
-    }
-    const [rows] = await db.query(
-      `SELECT id, name, email, mobile, role, status, created_at, updated_at FROM users WHERE role = 'SCORER'`
-    );
-    return rows;
+    await db.initDb();
+    const query = { role: 'SCORER' };
+    if (status) query.status = status;
+    return this.Model.find(query).lean();
   }
 
-  async updateOtp(userId, { otp_hash, otp_expires_at }) {
-    await db.query(
-      `UPDATE users SET otp_hash = ?, otp_expires_at = ?, otp_verified_at = NULL, updated_at = NOW() WHERE id = ?`,
-      [otp_hash, otp_expires_at, userId]
-    );
-    return this.findById(userId);
+  async getAllUsers(role = null) {
+    await db.initDb();
+    const query = {};
+    if (role) query.role = role;
+    return this.Model.find(query).sort({ created_at: -1 }).lean();
   }
 
-  async markOtpVerified(userId) {
-    await db.query(
-      `UPDATE users SET otp_verified_at = NOW(), otp_hash = NULL, otp_expires_at = NULL, updated_at = NOW() WHERE id = ?`,
-      [userId]
-    );
-    return this.findById(userId);
+  async updateOtp(identifier, { otp_hash, otp_expires_at }) {
+    await db.initDb();
+    if (!identifier) return null;
+    const cleanId = typeof identifier === 'string' ? identifier.trim() : identifier;
+    const query = {
+      $or: [
+        { id: cleanId },
+        { email: typeof cleanId === 'string' ? cleanId.toLowerCase() : '' }
+      ]
+    };
+    return this.Model.findOneAndUpdate(
+      query,
+      { 
+        $set: { 
+          otp_hash, 
+          otp_expires_at, 
+          otp_verified_at: null, 
+          updated_at: new Date() 
+        } 
+      },
+      { returnDocument: 'after' }
+    ).lean();
   }
 
-  async clearOtp(userId) {
-    await db.query(
-      `UPDATE users SET otp_hash = NULL, otp_expires_at = NULL, updated_at = NOW() WHERE id = ?`,
-      [userId]
-    );
-    return this.findById(userId);
+  async markOtpVerified(identifier) {
+    await db.initDb();
+    if (!identifier) return null;
+    const cleanId = typeof identifier === 'string' ? identifier.trim() : identifier;
+    const query = {
+      $or: [
+        { id: cleanId },
+        { email: typeof cleanId === 'string' ? cleanId.toLowerCase() : '' }
+      ]
+    };
+    return this.Model.findOneAndUpdate(
+      query,
+      { 
+        $set: { 
+          otp_verified_at: new Date(), 
+          otp_hash: null, 
+          otp_expires_at: null, 
+          updated_at: new Date() 
+        } 
+      },
+      { returnDocument: 'after' }
+    ).lean();
+  }
+
+  async clearOtp(identifier) {
+    await db.initDb();
+    if (!identifier) return null;
+    const cleanId = typeof identifier === 'string' ? identifier.trim() : identifier;
+    const query = {
+      $or: [
+        { id: cleanId },
+        { email: typeof cleanId === 'string' ? cleanId.toLowerCase() : '' }
+      ]
+    };
+    return this.Model.findOneAndUpdate(
+      query,
+      { 
+        $set: { 
+          otp_hash: null, 
+          otp_expires_at: null, 
+          updated_at: new Date() 
+        } 
+      },
+      { returnDocument: 'after' }
+    ).lean();
   }
 }
 
