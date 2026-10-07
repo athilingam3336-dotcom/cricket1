@@ -88,14 +88,6 @@ export default function AppNavigator({
         if (window.location.pathname !== route) {
           window.history.pushState({ appScreen: targetScreen }, '', route);
         }
-
-        // If navigating to Home on Web, notify iframe to render home page
-        if (targetScreen === 'Home') {
-          const iframe = document.getElementById('cfvd-main-frame') as HTMLIFrameElement | null;
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'NAVIGATE', route: '/' }, '*');
-          }
-        }
       } catch (e) {}
     }
   };
@@ -118,13 +110,6 @@ export default function AppNavigator({
 
           if (window.location.pathname !== route) {
             window.history.pushState({ appScreen: targetScreen }, '', route);
-          }
-
-          if (targetScreen === 'Home') {
-            const iframe = document.getElementById('cfvd-main-frame') as HTMLIFrameElement | null;
-            if (iframe && iframe.contentWindow) {
-              iframe.contentWindow.postMessage({ type: 'NAVIGATE', route: '/' }, '*');
-            }
           }
         } catch (e) {}
       }
