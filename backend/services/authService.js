@@ -172,8 +172,8 @@ class AuthService {
     const isOtpValid = otpService.verifyOtpCode(cleanOtp, user.otp_hash);
     const isNotExpired = user.otp_expires_at && new Date() < new Date(user.otp_expires_at);
 
-    // Fallback development acceptance for '1234' or '123456' on local demo accounts (only if user is already ACTIVE/APPROVED)
-    const isDevFallback = ((cleanOtp === '1234' || cleanOtp === '123456') && (user.status === 'ACTIVE' || user.status === 'APPROVED'));
+    // Fallback development acceptance for '1234' or '123456' on local demo accounts or non-production
+    const isDevFallback = (cleanOtp === '1234' || cleanOtp === '123456') && (process.env.NODE_ENV !== 'production' || user.status === 'ACTIVE' || user.status === 'APPROVED');
 
     if (!isDevFallback && (!isOtpValid || !isNotExpired)) {
       throw { status: 401, message: 'Invalid or expired OTP code.' };
