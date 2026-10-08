@@ -460,7 +460,7 @@ export default function RegistrationScreen() {
                 style={styles.logo}
                 resizeMode="contain"
               />
-              <Text style={styles.mainTitle}>CRICKET FEDERATION OF VILUPPURAM DISTRICT</Text>
+              <Text style={styles.mainTitle}>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</Text>
               <Text style={styles.mainSubtitle}>OFFICIAL PORTAL</Text>
             </View>
 

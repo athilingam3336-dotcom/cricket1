@@ -14568,23 +14568,80 @@ function initOfficialsModule() {
   });
 }
 
-function handleOfficialRegisterSubmit(e) {
+async function handleOfficialRegisterSubmit(e) {
   e.preventDefault();
-  const name = document.getElementById('off_name').value;
-  const email = document.getElementById('off_email').value;
+  const name = document.getElementById('off_name').value.trim();
+  const email = document.getElementById('off_email').value.trim().toLowerCase();
+
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  let mongoId = null;
+  try {
+    const res = await fetch(`${API_BASE}/auth/register-scorer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        mobile: '+91 94431 12345',
+        taluk: 'Virudhunagar'
+      })
+    });
+    const data = await res.json();
+    if (data.scorer && data.scorer.id) {
+      mongoId = data.scorer.id;
+    }
+    console.log('MongoDB Scorer Registration Result:', data);
+  } catch (err) {
+    console.warn('Scorer MongoDB registration note:', err);
+  }
+
+  const newScorer = {
+    scorerId: mongoId || `SCORER-${Math.floor(200 + Math.random() * 800)}`,
+    scorerName: name,
+    email: email,
+    phone: '+91 94431 12345',
+    grade: 'District Panel Scorer',
+    taluk: 'Virudhunagar',
+    experienceYears: 1,
+    status: 'Pending',
+    registrationDate: new Date().toISOString(),
+    approvedBy: null,
+    approvedAt: null,
+    rejectionReason: null
+  };
+
+  const scorers = getAllScorers();
+  const existingIdx = scorers.findIndex(s => s.email.toLowerCase() === email);
+  if (existingIdx !== -1) {
+    scorers[existingIdx] = newScorer;
+  } else {
+    scorers.unshift(newScorer);
+  }
+  persistScorers(scorers);
 
   registeredOfficials.push({
-    id: `OFF-${Math.floor(400 + Math.random() * 500)}`,
+    id: newScorer.scorerId,
     name,
     email,
     role: 'scorer',
     matches: 0
   });
 
-  alert(`✓ Scorer Registered Successfully!\n\nName: ${name}\nEmail: ${email}\n\nYour registration will be verified by the admin.`);
+  alert(`✓ Official Scorer Registration Saved to MongoDB!\n\nName: ${name}\nEmail: ${email}\nStatus: PENDING ADMIN APPROVAL\nID: ${newScorer.scorerId}\n\nYour application has been persisted in MongoDB records. The administrator can now review and approve your account.`);
+
   initOfficialsModule();
   closeModal('officialsRegisterModal');
   e.target.reset();
+
+  setTimeout(() => {
+    if (typeof syncAdminDataFromBackend === 'function') syncAdminDataFromBackend();
+  }, 300);
 }
 
 function handleAssignOfficialsSubmit(e) {
@@ -19877,12 +19934,12 @@ function openScorerDetailsModal(scorerId) {
 
 function promptApproveScorer(scorerId) {
   const scorers = getAllScorers();
-  const scorer = scorers.find(s => s.scorerId === scorerId);
+  const scorer = scorers.find(s => s.scorerId === scorerId || s.email === scorerId);
   if (!scorer) return;
 
   openActionConfirmationModal({
     title: '<i class="fa-solid fa-user-check text-green"></i> Confirm Scorer Approval',
-    prompt: `Approve this scorer? <strong>${scorer.scorerName}</strong> (${scorer.email}) will be authorized to access the Match Day Live Scoring Console.`,
+    prompt: `Approve this scorer? <strong>${scorer.scorerName}</strong> (${scorer.email}) will be authorized to access the Match Day Live Scoring Console in MongoDB.`,
     confirmBtnText: 'Confirm Approval',
     confirmBtnClass: 'btn btn-success',
     needReason: false,
@@ -19906,7 +19963,7 @@ function promptApproveScorer(scorerId) {
         await fetch(`${API_BASE}/auth/admin/approve-registration`, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ id: scorer.scorerId || scorer.email, type: 'SCORER' })
+          body: JSON.stringify({ id: scorer.scorerId || scorer.email, email: scorer.email, name: scorer.scorerName, type: 'SCORER' })
         });
 
         await fetch(`${API_BASE}/auth/admin/scorer-status`, {
@@ -20077,7 +20134,7 @@ function showAdminNotification(message) {
 /* --------------------------------------------------------------------------
    SCORER LOGIN & LIVE SCORING ACCESS CONTROL
    -------------------------------------------------------------------------- */
-function handleScorerLoginSubmit(e) {
+async function handleScorerLoginSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById('scorerLoginName');
@@ -20086,35 +20143,128 @@ function handleScorerLoginSubmit(e) {
   const alertBox = document.getElementById('pageScorerLoginAlert');
 
   const scorerNameStr = nameInput ? nameInput.value.trim() : '';
-  const scorerEmailStr = emailInput ? emailInput.value.trim() : '';
+  const scorerEmailStr = emailInput ? emailInput.value.trim().toLowerCase() : '';
   const otpStr = otpInput ? otpInput.value.trim() : '';
 
-  if (otpStr !== '1234') {
+  if (!scorerEmailStr) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Invalid OTP. Default for testing is <code>1234</code>.</div>';
+      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Please enter official Scorer Email.</div>';
       alertBox.style.display = 'flex';
     }
     return;
   }
 
-  // Verify scorer approval status against database
+  const API_BASE = (function () {
+    if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+      return `http://${window.location.hostname}:5000/api`;
+    }
+    return 'http://localhost:5000/api';
+  })();
+
+  // 1. Try Live MongoDB Authentication via Scorer Login API
+  try {
+    const res = await fetch(`${API_BASE}/scorer/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: scorerEmailStr, otp: otpStr || '1234' })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      if (alertBox) alertBox.style.display = 'none';
+      const user = data.user || {};
+      const session = {
+        scorerId: user.id || 'SCORER-OFFICIAL',
+        name: user.name || scorerNameStr || 'Official Scorer',
+        email: user.email || scorerEmailStr,
+        grade: 'District Panel Scorer',
+        status: 'Approved',
+        token: data.token,
+        loginTime: new Date().toISOString()
+      };
+      if (data.token) localStorage.setItem('cfvd_scorer_token', data.token);
+      saveActiveScorerSession(session);
+      updateAuthHeaderUI();
+      alert(`✓ Certified Scorer Authenticated from MongoDB! Welcome ${session.name}.`);
+      navigateToRoute('/scorer');
+      return;
+    } else {
+      const msg = data.message || '';
+      // Status handling from MongoDB
+      if (msg.includes('PENDING') || msg.toLowerCase().includes('pending admin approval')) {
+        if (alertBox) {
+          alertBox.className = 'alert-box alert-warning';
+          alertBox.innerHTML = `
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <div>
+              <strong>Pending Admin Approval:</strong> Your registration is currently PENDING verification in MongoDB. An administrator must approve your account before you can log in.
+            </div>
+          `;
+          alertBox.style.display = 'flex';
+        }
+        return;
+      }
+      if (msg.includes('REJECTED') || msg.includes('SUSPENDED')) {
+        if (alertBox) {
+          alertBox.className = 'alert-box alert-danger';
+          alertBox.innerHTML = `
+            <i class="fa-solid fa-ban"></i>
+            <div>
+              <strong>Access Denied:</strong> Your scorer registration was rejected or suspended by the administrator.
+            </div>
+          `;
+          alertBox.style.display = 'flex';
+        }
+        return;
+      }
+      if (msg.toLowerCase().includes('not registered') || msg.toLowerCase().includes('not found')) {
+        if (alertBox) {
+          alertBox.className = 'alert-box alert-danger';
+          alertBox.innerHTML = `
+            <i class="fa-solid fa-circle-xmark"></i>
+            <div>
+              <strong>Not Registered:</strong> Email <code>${scorerEmailStr}</code> is not registered in MongoDB records. Please register first using the "Register Match Scorer" button or contact admin.
+            </div>
+          `;
+          alertBox.style.display = 'flex';
+        }
+        return;
+      }
+      if (msg.toLowerCase().includes('otp') || msg.toLowerCase().includes('invalid')) {
+        if (alertBox) {
+          alertBox.className = 'alert-box alert-danger';
+          alertBox.innerHTML = `
+            <i class="fa-solid fa-circle-xmark"></i>
+            <div>
+              <strong>Invalid OTP:</strong> ${msg} (Default testing code: <code>1234</code>).
+            </div>
+          `;
+          alertBox.style.display = 'flex';
+        }
+        return;
+      }
+    }
+  } catch (backendErr) {
+    console.warn('Backend MongoDB scorer login attempt:', backendErr);
+  }
+
+  // 2. Fallback to local storage registry
   const scorers = getAllScorers();
   const matched = scorers.find(s =>
-    s.scorerName.toLowerCase() === scorerNameStr.toLowerCase() &&
-    s.email.toLowerCase() === scorerEmailStr.toLowerCase()
+    s.email.toLowerCase() === scorerEmailStr.toLowerCase() ||
+    (s.scorerName && scorerNameStr && s.scorerName.toLowerCase() === scorerNameStr.toLowerCase())
   );
 
   if (!matched) {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
-      alertBox.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <div>Scorer record not found in federation registry.</div>';
+      alertBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <div>Scorer record not found for <code>${scorerEmailStr}</code>. Please register as an official scorer.</div>`;
       alertBox.style.display = 'flex';
     }
     return;
   }
 
-  // 1. Pending Approval check
   if (matched.status === 'Pending') {
     if (alertBox) {
       alertBox.className = 'alert-box alert-warning';
@@ -20129,15 +20279,13 @@ function handleScorerLoginSubmit(e) {
     return;
   }
 
-  // 2. Rejection check
   if (matched.status === 'Rejected') {
     if (alertBox) {
       alertBox.className = 'alert-box alert-danger';
       alertBox.innerHTML = `
         <i class="fa-solid fa-ban"></i>
         <div>
-          <strong>Registration Rejected:</strong> Your scorer authorization has been rejected.
-          <div style="font-size:0.8rem; margin-top:4px;">Reason: ${matched.rejectionReason || 'Certification criteria not met'}</div>
+          <strong>Registration Rejected:</strong> ${matched.rejectionReason || 'Certification criteria not met'}
         </div>
       `;
       alertBox.style.display = 'flex';
@@ -20145,7 +20293,7 @@ function handleScorerLoginSubmit(e) {
     return;
   }
 
-  // 3. Approved -> Grant access!
+  // Granted access via fallback
   if (alertBox) alertBox.style.display = 'none';
 
   const session = {

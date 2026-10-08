@@ -13,7 +13,9 @@ const path = require('path');
 const ASSETS_DIR = path.join(__dirname, 'assets_web');
 
 // Read source files
-let html = fs.readFileSync(path.join(ASSETS_DIR, 'index.html'), 'utf8');
+let html = fs.existsSync(path.join(ASSETS_DIR, 'index.html'))
+  ? fs.readFileSync(path.join(ASSETS_DIR, 'index.html'), 'utf8')
+  : fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(ASSETS_DIR, 'style.css'), 'utf8');
 const adminJs = fs.readFileSync(path.join(ASSETS_DIR, 'adminService.js'), 'utf8');
 const orgRegJs = fs.readFileSync(path.join(ASSETS_DIR, 'orgRegistrationService.js'), 'utf8');

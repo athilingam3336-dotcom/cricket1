@@ -8,6 +8,7 @@ import RegistrationScreen from './src/screens/auth/RegistrationScreen';
 import ScorerNavigator from './src/navigation/ScorerNavigator';
 import PlayerDashboardScreen from './src/screens/player/PlayerDashboardScreen';
 import TeamDashboardScreen from './src/screens/team/TeamDashboardScreen';
+import AdminDashboardScreen from './src/screens/admin/AdminDashboardScreen';
 
 function MainAppShell() {
   const { currentScreen, navigate, goBack, params } = useAppNavigation();
@@ -33,6 +34,12 @@ function MainAppShell() {
           event.data.route === '/coach'
         ) {
           navigate('Team', event.data.params);
+        } else if (
+          event.data.type === 'OPEN_ADMIN_DASHBOARD' ||
+          event.data.type === 'OPEN_ADMIN_MODULE' ||
+          event.data.route === '/admin'
+        ) {
+          navigate('Admin', event.data.params);
         } else if (
           event.data.type === 'OPEN_LOGIN_SCREEN' ||
           event.data.route === '/login' ||
@@ -74,6 +81,8 @@ function MainAppShell() {
               navigate('Player');
             } else if (route === '/team' || route === '/coach') {
               navigate('Team');
+            } else if (route === '/admin') {
+              navigate('Admin');
             } else {
               const [path, queryString] = route.split('?');
               const fullUrl = window.location.origin + path + (queryString ? '?' + queryString : '');
@@ -108,6 +117,10 @@ function MainAppShell() {
     return <TeamDashboardScreen onExit={() => navigate('Home')} initialParams={params} />;
   }
 
+  if (currentScreen === 'Admin') {
+    return <AdminDashboardScreen onExit={() => navigate('Home')} initialParams={params} />;
+  }
+
   // Home Screen rendered as pure React Native component (no iframe, no bundled.html)
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -120,12 +133,13 @@ function MainAppShell() {
 export default function App() {
   const getInitialScreen = (): AppScreenName => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const path = window.location.pathname.toLowerCase();
-      if (path.includes('scorer')) return 'Scorer';
-      if (path.includes('player')) return 'Player';
-      if (path.includes('team') || path.includes('coach')) return 'Team';
-      if (path.includes('login')) return 'Login';
-      if (path.includes('register')) return 'Registration';
+      const fullPath = (window.location.pathname + window.location.hash + window.location.search).toLowerCase();
+      if (fullPath.includes('scorer')) return 'Scorer';
+      if (fullPath.includes('player')) return 'Player';
+      if (fullPath.includes('team') || fullPath.includes('coach')) return 'Team';
+      if (fullPath.includes('admin')) return 'Admin';
+      if (fullPath.includes('login')) return 'Login';
+      if (fullPath.includes('register')) return 'Registration';
     }
     return 'Home';
   };

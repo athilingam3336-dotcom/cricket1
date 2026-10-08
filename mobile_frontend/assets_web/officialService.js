@@ -111,7 +111,20 @@ function handleOfficialSubmit(e) {
       alert('Official updated successfully!');
     } else {
       OfficialService.add(data);
-      alert('Official registered successfully!');
+      if (type && type.toLowerCase().includes('scorer')) {
+        const API_BASE = (function () {
+          if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+            return `http://${window.location.hostname}:5000/api`;
+          }
+          return 'http://localhost:5000/api';
+        })();
+        fetch(`${API_BASE}/auth/register-scorer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, mobile: phone, taluk: district })
+        }).catch(e => console.warn('Official MongoDB sync note:', e));
+      }
+      alert('Official registered successfully and submitted for Admin clearance!');
     }
     closeOfficialRegistrationModal();
     if (document.getElementById('officialListingModal').style.display === 'flex') {

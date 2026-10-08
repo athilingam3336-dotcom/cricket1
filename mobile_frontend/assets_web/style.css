@@ -7742,22 +7742,16 @@ body.admin-mode .marquee-ticker-bar,
 body.admin-mode .top-bar,
 body.admin-mode .main-footer,
 body.admin-mode #page-home,
-body.admin-mode .stadium-floodlights,
-body.admin-mode .cfvd-site-background,
 body:has(#page-admin-dashboard.active) .main-header,
 body:has(#page-admin-dashboard.active) .marquee-ticker-bar,
 body:has(#page-admin-dashboard.active) .top-bar,
 body:has(#page-admin-dashboard.active) .main-footer,
 body:has(#page-admin-dashboard.active) #page-home,
-body:has(#page-admin-dashboard.active) .stadium-floodlights,
-body:has(#page-admin-dashboard.active) .cfvd-site-background,
 body:has(#page-admin-dashboard[style*="display: block"]) .main-header,
 body:has(#page-admin-dashboard[style*="display: block"]) .marquee-ticker-bar,
 body:has(#page-admin-dashboard[style*="display: block"]) .top-bar,
 body:has(#page-admin-dashboard[style*="display: block"]) .main-footer,
-body:has(#page-admin-dashboard[style*="display: block"]) #page-home,
-body:has(#page-admin-dashboard[style*="display: block"]) .stadium-floodlights,
-body:has(#page-admin-dashboard[style*="display: block"]) .cfvd-site-background {
+body:has(#page-admin-dashboard[style*="display: block"]) #page-home {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;

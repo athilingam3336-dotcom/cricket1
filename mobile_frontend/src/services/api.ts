@@ -277,6 +277,13 @@ export const ScorerApi = {
     });
   },
 
+  updateScorerStatus: async (idOrEmail: string, status: string, reason?: string) => {
+    return request('/auth/admin/scorer-status', {
+      method: 'POST',
+      body: JSON.stringify({ id: idOrEmail, email: idOrEmail, status, reason })
+    });
+  },
+
   approveTeam: async (teamId: string) => {
     return request(`/auth/admin/teams/${teamId}/approve`, {
       method: 'POST'
@@ -340,6 +347,12 @@ export const ScorerApi = {
     return request('/news', {
       method: 'POST',
       body: JSON.stringify(payload)
+    });
+  },
+
+  deleteNews: async (id: string) => {
+    return request(`/news/${id}`, {
+      method: 'DELETE'
     });
   },
 

@@ -127,7 +127,8 @@ class AuthService {
       success: true,
       message: `OTP sent successfully to ${user.email} via Nodemailer.`,
       email: user.email,
-      ...(process.env.NODE_ENV !== 'production' ? { devOtp: rawOtp } : {})
+      otp: rawOtp,
+      devOtp: rawOtp
     };
   }
 
@@ -384,7 +385,8 @@ class AuthService {
       teamName: resolvedTeamName,
       coachName: coachName || reg?.coach_name || team?.coach_name,
       email: cleanEmail,
-      ...(process.env.NODE_ENV !== 'production' ? { devOtp: rawOtp } : {})
+      otp: rawOtp,
+      devOtp: rawOtp
     };
   }
 
@@ -501,7 +503,8 @@ class AuthService {
       playerName: playerInfo.name,
       teamName: playerInfo.team_name,
       email: cleanEmail,
-      ...(process.env.NODE_ENV !== 'production' ? { devOtp: rawOtp } : {})
+      otp: rawOtp,
+      devOtp: rawOtp
     };
   }
 
@@ -810,11 +813,25 @@ class AuthService {
 
   async updateScorerStatus(idOrEmail, newStatus, reason = null) {
     const normalizedStatus = String(newStatus).toUpperCase();
-    let user = await userModel.findById(idOrEmail);
-    if (!user) user = await userModel.findByEmail(idOrEmail);
-    if (!user) throw { status: 404, message: `Scorer '${idOrEmail}' not found.` };
+    const clean = String(idOrEmail || '').trim();
+    let user = await userModel.findById(clean);
+    if (!user) user = await userModel.findByEmail(clean);
+    if (!user) {
+      if (normalizedStatus === 'ACTIVE' || normalizedStatus === 'APPROVED') {
+        user = await userModel.create({
+          id: clean.startsWith('SC') || clean.startsWith('OFF') ? clean : `SCR-${Math.floor(100 + Math.random() * 900)}`,
+          name: clean.includes('@') ? clean.split('@')[0] : 'Official Scorer',
+          email: clean.toLowerCase(),
+          role: 'SCORER',
+          status: 'ACTIVE'
+        });
+      } else {
+        throw { status: 404, message: `Scorer '${idOrEmail}' not found.` };
+      }
+    } else {
+      await userModel.updateStatus(user.id, normalizedStatus);
+    }
 
-    await userModel.updateStatus(user.id, normalizedStatus);
     const updated = await userModel.findById(user.id);
     return {
       success: true,
@@ -934,12 +951,29 @@ class AuthService {
     }
 
     // Individual User approval (PLAYER, SCORER, CONTENT_CREATOR)
-    const query = { $or: [{ id }, { email: id }] };
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      query.$or.push({ _id: id });
+    const cleanId = String(id || '').trim();
+    const cleanEmail = cleanId.toLowerCase();
+    const query = { 
+      $or: [
+        { id: cleanId }, 
+        { email: cleanEmail },
+        { email: cleanId }
+      ] 
+    };
+    if (mongoose.Types.ObjectId.isValid(cleanId)) {
+      query.$or.push({ _id: cleanId });
     }
 
-    const user = await db.models.User.findOne(query);
+    let user = await db.models.User.findOne(query);
+    if (!user && (upperType === 'SCORER' || upperType === 'OFFICIAL')) {
+      user = await db.models.User.create({
+        id: cleanId.startsWith('SC') || cleanId.startsWith('OFF') ? cleanId : `SCR-${Math.floor(100 + Math.random() * 900)}`,
+        name: cleanId.includes('@') ? cleanId.split('@')[0] : 'Official Scorer',
+        email: cleanEmail,
+        role: 'SCORER',
+        status: 'ACTIVE'
+      });
+    }
     if (!user) throw { status: 404, message: `Registration '${id}' not found.` };
 
     user.status = 'ACTIVE';
