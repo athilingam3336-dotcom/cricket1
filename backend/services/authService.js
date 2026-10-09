@@ -126,9 +126,7 @@ class AuthService {
     return {
       success: true,
       message: `OTP sent successfully to ${user.email} via Nodemailer.`,
-      email: user.email,
-      otp: rawOtp,
-      devOtp: rawOtp
+      email: user.email
     };
   }
 
@@ -384,9 +382,7 @@ class AuthService {
       message: `OTP sent to ${cleanEmail} via Nodemailer.`,
       teamName: resolvedTeamName,
       coachName: coachName || reg?.coach_name || team?.coach_name,
-      email: cleanEmail,
-      otp: rawOtp,
-      devOtp: rawOtp
+      email: cleanEmail
     };
   }
 
@@ -502,9 +498,7 @@ class AuthService {
       message: `OTP sent to ${cleanEmail} via Nodemailer.`,
       playerName: playerInfo.name,
       teamName: playerInfo.team_name,
-      email: cleanEmail,
-      otp: rawOtp,
-      devOtp: rawOtp
+      email: cleanEmail
     };
   }
 

@@ -42,31 +42,7 @@ function verifyOtpCode(plainOtp, storedHash) {
  * @returns {{ allowed: boolean, message?: string }}
  */
 function checkRateLimit(email) {
-  const key = email.trim().toLowerCase();
-  const now = Date.now();
-  const entry = rateLimitMap.get(key) || { timestamps: [], lastRequestTime: 0 };
-
-  // Check cooldown
-  if (entry.lastRequestTime && (now - entry.lastRequestTime < MIN_COOLDOWN_MS)) {
-    const waitSec = Math.ceil((MIN_COOLDOWN_MS - (now - entry.lastRequestTime)) / 1000);
-    return {
-      allowed: false,
-      message: `Please wait ${waitSec} second(s) before requesting another OTP.`
-    };
-  }
-
-  // Filter out timestamps older than window
-  const recent = entry.timestamps.filter(t => now - t < RATE_LIMIT_WINDOW_MS);
-  if (recent.length >= MAX_REQUESTS_PER_WINDOW) {
-    return {
-      allowed: false,
-      message: 'Too many OTP requests. Please wait 15 minutes before requesting again.'
-    };
-  }
-
-  // Record this request
-  recent.push(now);
-  rateLimitMap.set(key, { timestamps: recent, lastRequestTime: now });
+  // Rate limiting disabled as requested (allows immediate OTP requests)
   return { allowed: true };
 }
 

@@ -94,10 +94,8 @@ export default function LoginScreen() {
     try {
       const res = await ScorerApi.requestPlayerOtp(input);
       setPlayerOtpSent(true);
-      const code = String(res?.otp || res?.devOtp || '1234');
-      setPlayerOtp(code);
-      setLatestDispatchedOtp(code);
-      setStatusMessage(`✓ Player Verification OTP Dispatched: ${code} (Auto-filled in field below)`);
+      setPlayerOtp('');
+      setStatusMessage(`✓ OTP sent to your registered email via Nodemailer! Please check your inbox.`);
       setStatusType('success');
     } catch (err: any) {
       setStatusMessage(err?.message || 'Player not found or team registration pending admin approval.');
@@ -152,10 +150,8 @@ export default function LoginScreen() {
     try {
       const res = await ScorerApi.requestTeamOtp(name, email);
       setCoachOtpSent(true);
-      const code = String(res?.otp || res?.devOtp || '1234');
-      setCoachOtp(code);
-      setLatestDispatchedOtp(code);
-      setStatusMessage(`✓ Coach Verification OTP Dispatched: ${code} (Auto-filled in field below)`);
+      setCoachOtp('');
+      setStatusMessage(`✓ OTP sent to ${email} via Nodemailer! Please check your inbox.`);
       setStatusType('success');
     } catch (err: any) {
       setStatusMessage(err?.message || 'No approved team found for this coach email.');
@@ -222,10 +218,8 @@ export default function LoginScreen() {
     try {
       const res = await ScorerApi.requestOtp(email, 'SCORER');
       setScorerOtpSent(true);
-      const code = String(res?.otp || res?.devOtp || '1234');
-      setScorerOtp(code);
-      setLatestDispatchedOtp(code);
-      setStatusMessage(`✓ Scorer Verification OTP Dispatched: ${code} (Auto-filled in field below)`);
+      setScorerOtp('');
+      setStatusMessage(`✓ OTP sent to ${email} via Nodemailer! Please check your inbox.`);
       setStatusType('success');
     } catch (err: any) {
       setStatusMessage(err?.message || 'Scorer not found or pending admin approval.');
@@ -278,10 +272,8 @@ export default function LoginScreen() {
     try {
       const res = await ScorerApi.requestOtp(email, 'ADMIN');
       setAdminOtpSent(true);
-      const code = String(res?.otp || res?.devOtp || '1234');
-      setAdminOtp(code);
-      setLatestDispatchedOtp(code);
-      setStatusMessage(`✓ Admin Verification OTP Dispatched: ${code} (Auto-filled in field below)`);
+      setAdminOtp('');
+      setStatusMessage(`✓ OTP sent to ${email} via Nodemailer! Please check your inbox.`);
       setStatusType('success');
     } catch (err: any) {
       setStatusMessage(err?.message || 'Administrator email verification failed.');
@@ -510,18 +502,12 @@ export default function LoginScreen() {
                     </TouchableOpacity>
                   ) : (
                     <>
-                      {latestDispatchedOtp && (
-                        <View style={styles.otpBannerCard}>
-                          <View style={styles.otpBannerBadgeRow}>
-                            <Text style={styles.otpBannerBadge}>⚡ YOUR VERIFICATION OTP</Text>
-                            <Text style={styles.otpBannerAutoTag}>✓ Auto-filled in field below</Text>
-                          </View>
-                          <View style={styles.otpCodeContainer}>
-                            <Text style={styles.otpCodeNumber}>{latestDispatchedOtp}</Text>
-                          </View>
-                          <Text style={styles.otpBannerNote}>Dispatched via Nodemailer. Ready to verify!</Text>
+                      <View style={styles.otpBannerCard}>
+                        <View style={styles.otpBannerBadgeRow}>
+                          <Text style={styles.otpBannerBadge}>📧 OTP SENT VIA EMAIL</Text>
                         </View>
-                      )}
+                        <Text style={styles.otpBannerNote}>OTP code sent to your registered email via Nodemailer. Please check your inbox and enter the 6-digit code below.</Text>
+                      </View>
 
                       <Text style={styles.label}>Enter Verification OTP *</Text>
                       <TextInput
@@ -603,18 +589,12 @@ export default function LoginScreen() {
                         </TouchableOpacity>
                       ) : (
                         <>
-                          {latestDispatchedOtp && (
-                            <View style={styles.otpBannerCard}>
-                              <View style={styles.otpBannerBadgeRow}>
-                                <Text style={styles.otpBannerBadge}>⚡ YOUR VERIFICATION OTP</Text>
-                                <Text style={styles.otpBannerAutoTag}>✓ Auto-filled in field below</Text>
-                              </View>
-                              <View style={styles.otpCodeContainer}>
-                                <Text style={styles.otpCodeNumber}>{latestDispatchedOtp}</Text>
-                              </View>
-                              <Text style={styles.otpBannerNote}>Dispatched to coach email via Nodemailer. Ready to verify!</Text>
+                          <View style={styles.otpBannerCard}>
+                            <View style={styles.otpBannerBadgeRow}>
+                              <Text style={styles.otpBannerBadge}>📧 OTP SENT VIA EMAIL</Text>
                             </View>
-                          )}
+                            <Text style={styles.otpBannerNote}>OTP code sent to coach email via Nodemailer. Please check your inbox and enter the 6-digit code below.</Text>
+                          </View>
 
                           <Text style={styles.label}>Enter Coach OTP *</Text>
                           <TextInput
@@ -690,18 +670,12 @@ export default function LoginScreen() {
                     </TouchableOpacity>
                   ) : (
                     <>
-                      {latestDispatchedOtp && (
-                        <View style={styles.otpBannerCard}>
-                          <View style={styles.otpBannerBadgeRow}>
-                            <Text style={styles.otpBannerBadge}>⚡ YOUR VERIFICATION OTP</Text>
-                            <Text style={styles.otpBannerAutoTag}>✓ Auto-filled in field below</Text>
-                          </View>
-                          <View style={styles.otpCodeContainer}>
-                            <Text style={styles.otpCodeNumber}>{latestDispatchedOtp}</Text>
-                          </View>
-                          <Text style={styles.otpBannerNote}>Dispatched to official scorer email via Nodemailer. Ready to verify!</Text>
+                      <View style={styles.otpBannerCard}>
+                        <View style={styles.otpBannerBadgeRow}>
+                          <Text style={styles.otpBannerBadge}>📧 OTP SENT VIA EMAIL</Text>
                         </View>
-                      )}
+                        <Text style={styles.otpBannerNote}>OTP code sent to official scorer email via Nodemailer. Please check your inbox and enter the 6-digit code below.</Text>
+                      </View>
 
                       <Text style={styles.label}>Enter Scorer OTP *</Text>
                       <TextInput
@@ -773,18 +747,12 @@ export default function LoginScreen() {
                       </TouchableOpacity>
                     ) : (
                       <>
-                        {latestDispatchedOtp && (
                           <View style={styles.otpBannerCard}>
                             <View style={styles.otpBannerBadgeRow}>
-                              <Text style={styles.otpBannerBadge}>⚡ YOUR VERIFICATION OTP</Text>
-                              <Text style={styles.otpBannerAutoTag}>✓ Auto-filled in field below</Text>
+                              <Text style={styles.otpBannerBadge}>📧 OTP SENT VIA EMAIL</Text>
                             </View>
-                            <View style={styles.otpCodeContainer}>
-                              <Text style={styles.otpCodeNumber}>{latestDispatchedOtp}</Text>
-                            </View>
-                            <Text style={styles.otpBannerNote}>Dispatched to admin email via Nodemailer. Ready to verify!</Text>
+                            <Text style={styles.otpBannerNote}>OTP code sent to admin email via Nodemailer. Please check your inbox and enter the 6-digit code below.</Text>
                           </View>
-                        )}
 
                         <Text style={styles.label}>Enter Admin OTP *</Text>
                         <TextInput

@@ -158,7 +158,7 @@ const MatchSchema = new mongoose.Schema({
   match_time: { type: String, default: '09:30 AM' },
   match_type: { type: String, default: 'T20' },
   overs_per_side: { type: Number, default: 20 },
-  status: { type: String, enum: ['SCHEDULED', 'LIVE', 'INNINGS_BREAK', 'COMPLETED', 'ABANDONED'], default: 'SCHEDULED', index: true },
+  status: { type: String, enum: ['SCHEDULED', 'LIVE', 'INNINGS_BREAK', 'COMPLETED', 'ABANDONED', 'CANCELLED'], default: 'SCHEDULED', index: true },
   toss_winner_id: { type: String, default: null },
   toss_decision: { type: String, default: null },
   current_innings_number: { type: Number, default: 1 },

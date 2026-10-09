@@ -31,7 +31,7 @@ router.get('/:matchId/live', async (req, res) => {
 // List all matches
 router.get('/', async (req, res) => {
   try {
-    const stats = await scorerService.getDashboardStats('SCR-101');
+    const stats = await scorerService.getDashboardStats(null);
     res.json({ success: true, data: stats.matches || [] });
   } catch (err) {
     res.status(err.status || 500).json({ success: false, error: err.message });
