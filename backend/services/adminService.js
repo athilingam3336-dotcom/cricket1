@@ -187,31 +187,179 @@ async function saveTournament(tournamentData, adminEmail) {
  */
 async function scheduleMatch(fixtureData, adminEmail) {
   await db.initDb();
+
+  const {
+    tournament_id,
+    tournament_name,
+    team_a_id,
+    team_b_id,
+    venue,
+    match_date,
+    match_time,
+    match_type,
+    overs,
+    overs_per_side,
+    assigned_scorer_id
+  } = fixtureData;
+
+  if (!team_a_id || !team_b_id) {
+    throw new Error('Both Team A and Team B are required to schedule a match.');
+  }
+
+  if (team_a_id === team_b_id) {
+    throw new Error('Team A and Team B cannot be the same team.');
+  }
+
+  if (!match_date || !String(match_date).trim()) {
+    throw new Error('Match date is required.');
+  }
+
+  let finalTourName = tournament_name;
+  if (!finalTourName && tournament_id) {
+    const tour = await db.models.Tournament.findOne({ id: tournament_id }).lean();
+    if (tour) finalTourName = tour.name;
+  }
+
   const matchId = fixtureData.id || `M-${Date.now()}`;
   const match = await db.models.Match.create({
     id: matchId,
-    tournament_id: fixtureData.tournament_id || 'T-2026-VPL',
-    tournament_name: fixtureData.tournament_name || 'Virudhunagar Premier League 2026',
-    team_a_id: fixtureData.team_a_id,
-    team_b_id: fixtureData.team_b_id,
-    venue: fixtureData.venue || 'Kamarajar District Stadium',
-    match_date: fixtureData.match_date || new Date().toISOString().split('T')[0],
-    match_time: fixtureData.match_time || '09:30 AM',
-    match_type: fixtureData.match_type || 'T20',
-    overs_per_side: fixtureData.overs || 20,
+    tournament_id: tournament_id || 'T-2026-VPL',
+    tournament_name: finalTourName || 'Virudhunagar Premier League 2026',
+    team_a_id,
+    team_b_id,
+    venue: venue || 'Kamarajar District Stadium',
+    match_date: String(match_date).trim(),
+    match_time: (match_time && String(match_time).trim()) || '09:30 AM',
+    match_type: match_type || 'T20',
+    overs_per_side: Number(overs_per_side || overs || 20),
     status: 'SCHEDULED',
-    assigned_scorer_id: fixtureData.assigned_scorer_id || 'SCR-101'
+    assigned_scorer_id: assigned_scorer_id || 'SCR-101'
   });
 
   await addAuditLog({
     action: 'SCHEDULE_MATCH',
     initiated_by: adminEmail,
     target_user: matchId,
-    result: `Match ${matchId} scheduled between ${fixtureData.team_a_id} and ${fixtureData.team_b_id}`,
-    details: `Match fixture created for ${fixtureData.match_date}`
+    result: `Match ${matchId} scheduled between ${team_a_id} and ${team_b_id}`,
+    details: `Match fixture created for ${match_date}`
   });
 
   return match.toObject();
+}
+
+/**
+ * Update or reschedule an existing match fixture
+ */
+async function updateMatch(matchId, fixtureData, adminEmail) {
+  await db.initDb();
+
+  const match = await db.models.Match.findOne({ id: matchId });
+  if (!match) throw new Error(`Match with ID '${matchId}' not found.`);
+
+  if (match.status === 'COMPLETED') {
+    throw new Error('Cannot modify a completed match. Completed match records are archived.');
+  }
+
+  const isLive = match.status === 'LIVE' || match.status === 'INNINGS_BREAK';
+  if (isLive) {
+    if ((fixtureData.team_a_id && fixtureData.team_a_id !== match.team_a_id) ||
+        (fixtureData.team_b_id && fixtureData.team_b_id !== match.team_b_id)) {
+      throw new Error('Cannot change participating teams for an active live match.');
+    }
+  }
+
+  const newTeamA = fixtureData.team_a_id || match.team_a_id;
+  const newTeamB = fixtureData.team_b_id || match.team_b_id;
+  if (newTeamA === newTeamB) {
+    throw new Error('Team A and Team B cannot be the same team.');
+  }
+
+  let finalTourName = fixtureData.tournament_name || match.tournament_name;
+  if (fixtureData.tournament_id && !fixtureData.tournament_name) {
+    const tour = await db.models.Tournament.findOne({ id: fixtureData.tournament_id }).lean();
+    if (tour) finalTourName = tour.name;
+  }
+
+  if (fixtureData.tournament_id) match.tournament_id = fixtureData.tournament_id;
+  if (finalTourName) match.tournament_name = finalTourName;
+  if (!isLive && fixtureData.team_a_id) match.team_a_id = fixtureData.team_a_id;
+  if (!isLive && fixtureData.team_b_id) match.team_b_id = fixtureData.team_b_id;
+  if (fixtureData.venue) match.venue = fixtureData.venue;
+  if (fixtureData.match_date) match.match_date = fixtureData.match_date;
+  if (fixtureData.match_time) match.match_time = fixtureData.match_time;
+  if (fixtureData.match_type) match.match_type = fixtureData.match_type;
+  if (fixtureData.overs_per_side || fixtureData.overs) match.overs_per_side = Number(fixtureData.overs_per_side || fixtureData.overs);
+  if (fixtureData.assigned_scorer_id) match.assigned_scorer_id = fixtureData.assigned_scorer_id;
+  if (fixtureData.status && !isLive) match.status = fixtureData.status;
+
+  match.updated_at = new Date();
+  await match.save();
+
+  await addAuditLog({
+    action: 'UPDATE_MATCH',
+    initiated_by: adminEmail,
+    target_user: matchId,
+    result: `Match ${matchId} updated/rescheduled`,
+    details: `Updated details for ${match.match_date} at ${match.venue}`
+  });
+
+  return match.toObject();
+}
+
+/**
+ * Cancel a match fixture
+ */
+async function cancelMatch(matchId, reason, adminEmail) {
+  await db.initDb();
+
+  const match = await db.models.Match.findOne({ id: matchId });
+  if (!match) throw new Error(`Match with ID '${matchId}' not found.`);
+
+  if (match.status === 'COMPLETED') {
+    throw new Error('Cannot cancel a completed match.');
+  }
+
+  match.status = 'CANCELLED';
+  match.result_summary = reason ? `Cancelled: ${reason}` : 'Match cancelled by administrator';
+  match.updated_at = new Date();
+  await match.save();
+
+  await addAuditLog({
+    action: 'CANCEL_MATCH',
+    initiated_by: adminEmail,
+    target_user: matchId,
+    result: `Match ${matchId} cancelled`,
+    details: match.result_summary
+  });
+
+  return match.toObject();
+}
+
+/**
+ * Delete a match fixture
+ */
+async function deleteMatch(matchId, adminEmail) {
+  await db.initDb();
+
+  const match = await db.models.Match.findOne({ id: matchId });
+  if (!match) throw new Error(`Match with ID '${matchId}' not found.`);
+
+  if (match.status === 'LIVE' || match.status === 'INNINGS_BREAK') {
+    throw new Error('Cannot delete an ongoing live match. Please abandon or complete it first.');
+  }
+
+  await db.models.Match.deleteOne({ id: matchId });
+  await db.models.Innings.deleteMany({ match_id: matchId, total_runs: 0, overs: 0 });
+
+  await addAuditLog({
+    action: 'DELETE_MATCH',
+    initiated_by: adminEmail,
+    target_user: matchId,
+    result: `Match ${matchId} permanently removed`,
+    details: `Deleted by administrator ${adminEmail}`
+  });
+
+  return { success: true, message: `Match ${matchId} permanently deleted.` };
 }
 
 /**
@@ -337,7 +485,43 @@ async function verifyAddTargetAdminOtp({ requestId, otp, newAdminEmail }) {
 
 async function getMatches() {
   await db.initDb();
-  return db.models.Match.find({}).sort({ match_date: -1 }).lean();
+  const [matches, teams, officials, tournaments] = await Promise.all([
+    db.models.Match.find({}).sort({ match_date: -1 }).lean(),
+    db.models.Team.find({}).lean(),
+    db.models.Official.find({}).lean(),
+    db.models.Tournament.find({}).lean()
+  ]);
+
+  const teamMap = {};
+  (teams || []).forEach(t => { teamMap[t.id] = t; });
+
+  const officialMap = {};
+  (officials || []).forEach(o => { officialMap[o.id] = o; officialMap[o.email] = o; });
+
+  const tournamentMap = {};
+  (tournaments || []).forEach(t => { tournamentMap[t.id] = t; });
+
+  return matches.map(m => {
+    const teamA = teamMap[m.team_a_id] || { name: m.team_a_id, short_name: m.team_a_id };
+    const teamB = teamMap[m.team_b_id] || { name: m.team_b_id, short_name: m.team_b_id };
+    const scorer = officialMap[m.assigned_scorer_id] || { name: m.assigned_scorer_id || 'Unassigned' };
+    const tour = tournamentMap[m.tournament_id];
+
+    return {
+      ...m,
+      team_a_name: teamA.name || m.team_a_id,
+      team_a_short: teamA.short_name || teamA.name || m.team_a_id,
+      team_b_name: teamB.name || m.team_b_id,
+      team_b_short: teamB.short_name || teamB.name || m.team_b_id,
+      scorer_name: scorer.name || m.assigned_scorer_id || 'Unassigned',
+      tournament_display_name: m.tournament_name || tour?.name || 'District Championship'
+    };
+  });
+}
+
+async function getTournaments() {
+  await db.initDb();
+  return db.models.Tournament.find({}).sort({ start_date: -1 }).lean();
 }
 
 async function getTeams() {
@@ -459,7 +643,11 @@ module.exports = {
   getTeams,
   saveTeam,
   saveTournament,
+  getTournaments,
   scheduleMatch,
+  updateMatch,
+  cancelMatch,
+  deleteMatch,
   initiateAddAdminRequest,
   verifyAddCurrentAdminOtp,
   verifyAddTargetAdminOtp,

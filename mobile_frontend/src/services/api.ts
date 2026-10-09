@@ -402,6 +402,38 @@ export const ScorerApi = {
     });
   },
 
+  updateMatch: async (matchId: string, data: any) => {
+    return request(`/admin/matches/${matchId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  cancelMatch: async (matchId: string, reason?: string) => {
+    return request(`/admin/matches/${matchId}/cancel`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason })
+    });
+  },
+
+  deleteMatch: async (matchId: string) => {
+    return request(`/admin/matches/${matchId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  getTournaments: async () => {
+    return request('/admin/tournaments');
+  },
+
+  getPublicMatches: async () => {
+    return request('/matches');
+  },
+
+  getPublicScorecard: async (matchId: string) => {
+    return request(`/matches/${matchId}/scorecard`);
+  },
+
   getAuditLogs: async () => {
     return request('/admin/audit-logs');
   },

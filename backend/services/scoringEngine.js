@@ -230,6 +230,26 @@ class ScoringEngine {
     }
     await batter.save();
 
+    // Ensure non-striker record also exists in InningsBatter
+    const activeNonStrikerId = nonStrikerId || 'P302';
+    if (activeNonStrikerId && activeNonStrikerId !== activeStrikerId) {
+      let nonStrikerBatter = await db.models.InningsBatter.findOne({ innings_id: innings.id, player_id: activeNonStrikerId });
+      if (!nonStrikerBatter) {
+        nonStrikerBatter = new db.models.InningsBatter({
+          id: `BAT-${innings.id}-${activeNonStrikerId}`,
+          innings_id: innings.id,
+          player_id: activeNonStrikerId,
+          batting_position: (await db.models.InningsBatter.countDocuments({ innings_id: innings.id })) + 1,
+          runs: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
+          is_out: false
+        });
+        await nonStrikerBatter.save();
+      }
+    }
+
     // 6. Update or Create Bowler record in MongoDB
     const activeBowlerId = bowlerId || 'P403';
     let bowler = await db.models.InningsBowler.findOne({ innings_id: innings.id, player_id: activeBowlerId });

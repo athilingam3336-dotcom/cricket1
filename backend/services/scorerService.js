@@ -13,8 +13,8 @@ class ScorerService {
   async getDashboardStats(scorerId = 'SCR-101', userEmail = null) {
     await db.initDb();
 
-    // Query matches assigned to this scorer (or all matches if admin/dev)
-    const query = {
+    // Query matches assigned to this scorer (or all matches if scorerId is null or 'ALL')
+    const query = (!scorerId || scorerId === 'ALL') ? {} : {
       $or: [
         { assigned_scorer_id: scorerId },
         { assigned_scorer_id: 'SCR-101' },
@@ -33,12 +33,12 @@ class ScorerService {
 
     const formattedMatches = await Promise.all(allMatches.map(async (m) => {
       const statusUpper = (m.status || 'SCHEDULED').toUpperCase();
-      if (statusUpper === 'LIVE') liveCount++;
+      if (statusUpper === 'LIVE' || statusUpper === 'INNINGS_BREAK') liveCount++;
       else if (statusUpper === 'SCHEDULED') upcomingCount++;
       else if (statusUpper === 'COMPLETED') completedCount++;
 
-      const teamA = teamMap[m.team_a_id] || { name: 'Team A' };
-      const teamB = teamMap[m.team_b_id] || { name: 'Team B' };
+      const teamA = teamMap[m.team_a_id] || { name: m.team_a_id, short_name: 'TMA' };
+      const teamB = teamMap[m.team_b_id] || { name: m.team_b_id, short_name: 'TMB' };
 
       // Fetch latest innings scores
       let scoreA = null;
@@ -53,18 +53,32 @@ class ScorerService {
         });
       }
 
+      const isLive = statusUpper === 'LIVE' || statusUpper === 'INNINGS_BREAK';
+      const isCompleted = statusUpper === 'COMPLETED';
+      const isCancelled = statusUpper === 'CANCELLED' || statusUpper === 'ABANDONED';
+
       return {
         id: m.id,
         tournament: m.tournament_name || 'VPL 2026',
-        teamA: teamA.name,
-        teamB: teamB.name,
+        tournament_name: m.tournament_name || 'VPL 2026',
+        teamA: teamA.name || m.team_a_id,
+        teamB: teamB.name || m.team_b_id,
+        teamAId: m.team_a_id,
+        teamBId: m.team_b_id,
+        teamAShort: teamA.short_name || teamA.name?.substring(0, 3)?.toUpperCase() || 'TMA',
+        teamBShort: teamB.short_name || teamB.name?.substring(0, 3)?.toUpperCase() || 'TMB',
         date: `${m.match_date || '2026-10-06'} ${m.match_time || '09:30 AM'}`,
+        match_date: m.match_date,
+        match_time: m.match_time,
         venue: m.venue || 'Kamarajar Stadium, Virudhunagar',
         format: m.match_type || 'T20',
-        status: statusUpper === 'LIVE' ? 'Live' : (statusUpper === 'COMPLETED' ? 'Completed' : 'Upcoming'),
+        overs: m.overs_per_side || 20,
+        rawStatus: statusUpper,
+        status: isLive ? 'Live' : (isCompleted ? 'Completed' : (isCancelled ? 'Cancelled' : 'Upcoming')),
         scoreA,
-        scoreB: scoreB || (statusUpper === 'LIVE' ? 'Yet to bat' : null),
-        result: m.result_summary
+        scoreB: scoreB || (isLive ? 'Yet to bat' : null),
+        result: m.result_summary,
+        assigned_scorer_id: m.assigned_scorer_id
       };
     }));
 
@@ -124,7 +138,7 @@ class ScorerService {
     const bowlingTeam = teamMap[currentInnings.bowling_team_id] || teamB;
 
     // Batters in this innings
-    const batters = await db.models.InningsBatter.find({ innings_id: currentInnings.id }).lean();
+    const batters = await db.models.InningsBatter.find({ innings_id: currentInnings.id }).sort({ batting_position: 1 }).lean();
     const players = await db.models.Player.find({}).lean();
     const playerMap = {};
     (players || []).forEach(p => { playerMap[p.id] = p; });

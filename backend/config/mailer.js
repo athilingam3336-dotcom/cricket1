@@ -9,7 +9,7 @@ const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
 const SMTP_SECURE = process.env.SMTP_SECURE === 'true' || SMTP_PORT === 465;
 const SMTP_USER = process.env.SMTP_USER || 'cricketfederation21@gmail.com';
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD || '#cricketfederation.';
+const SMTP_PASSWORD = process.env.SMTP_PASSWORD || 'rkwu lzke kklq znig';
 const SMTP_FROM = process.env.SMTP_FROM || `"Cricket Federation" <${SMTP_USER}>`;
 
 let transporter = null;

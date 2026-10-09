@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, useWindowDimensions, Modal, Platform, TextInput } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigator';
 import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
@@ -26,6 +26,13 @@ export default function LiveScoringScreen() {
   const [striker, setStriker] = useState<any>({ id: 'P301', name: 'Suresh Kumar', runs: 42, balls: 30, fours: 4, sixes: 1 });
   const [nonStriker, setNonStriker] = useState<any>({ id: 'P302', name: 'Muthu Raj', runs: 18, balls: 14, fours: 2, sixes: 0 });
   const [bowler, setBowler] = useState<any>({ id: 'P403', name: 'Karthik N', overs: 2.2, runs: 16, wickets: 1, maiden: 0 });
+
+  // Squad & Next Batter Selection Modal State
+  const [showWicketModal, setShowWicketModal] = useState<boolean>(false);
+  const [battingSquad, setBattingSquad] = useState<any[]>([]);
+  const [dismissedBatters, setDismissedBatters] = useState<string[]>([]);
+  const [selectedNextBatterId, setSelectedNextBatterId] = useState<string>('');
+  const [customBatterName, setCustomBatterName] = useState<string>('');
 
   // AI Fielding & Commentary State
   const [selectedFieldPosition, setSelectedFieldPosition] = useState<string>('Cover');
@@ -111,6 +118,9 @@ export default function LiveScoringScreen() {
         if (d.lastDelivery && d.lastDelivery.commentary) {
           setAiCommentary(d.lastDelivery.commentary);
         }
+        if (d.battingSquad && Array.isArray(d.battingSquad) && d.battingSquad.length > 0) {
+          setBattingSquad(d.battingSquad);
+        }
       }
     } catch (e) {
       // Use fallback initial mock
@@ -143,32 +153,56 @@ export default function LiveScoringScreen() {
       overs: ballToAdd > 0 ? parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1)) : bowler.overs
     });
 
-    // Update batter if not extra
-    if (!isExtra || type === 'noball') {
-      if (type === 'normal') {
-        const newStrikerRuns = striker.runs + run;
-        const newStrikerBalls = striker.balls + 1;
-        const newFours = run === 4 ? striker.fours + 1 : striker.fours;
-        const newSixes = run === 6 ? striker.sixes + 1 : striker.sixes;
+    // Batter & Strike Rotation calculation
+    let newStriker = { ...striker };
+    let newNonStriker = { ...nonStriker };
 
-        setStriker({ ...striker, runs: newStrikerRuns, balls: newStrikerBalls, fours: newFours, sixes: newSixes });
+    if (type === 'normal') {
+      const runsScored = run;
+      newStriker.runs += runsScored;
+      newStriker.balls += 1;
+      if (runsScored === 4) newStriker.fours += 1;
+      if (runsScored === 6) newStriker.sixes += 1;
 
-        // Switch strike on odd runs or end of over
-        if (run % 2 !== 0 || (balls + ballToAdd) % 6 === 0) {
-           const temp = striker;
-           setStriker({ ...nonStriker, runs: nonStriker.runs, balls: nonStriker.balls, fours: nonStriker.fours, sixes: nonStriker.sixes });
-           setNonStriker({ ...temp, runs: newStrikerRuns, balls: newStrikerBalls, fours: newFours, sixes: newSixes });
-        }
+      if (runsScored % 2 !== 0 || (nextBalls % 6 === 0 && nextBalls > 0)) {
+        setStriker(newNonStriker);
+        setNonStriker(newStriker);
+      } else {
+        setStriker(newStriker);
+        setNonStriker(newNonStriker);
       }
-    } else {
-       if (type === 'bye' || type === 'legbye') {
-         setStriker({ ...striker, balls: striker.balls + 1 });
-         if (run % 2 !== 0 || (balls + ballToAdd) % 6 === 0) {
-           const temp = striker;
-           setStriker(nonStriker);
-           setNonStriker({ ...temp, balls: temp.balls + 1 });
-         }
-       }
+    } else if (type === 'noball') {
+      const runsScored = run;
+      newStriker.runs += runsScored;
+      if (runsScored === 4) newStriker.fours += 1;
+      if (runsScored === 6) newStriker.sixes += 1;
+
+      if (runsScored % 2 !== 0) {
+        setStriker(newNonStriker);
+        setNonStriker(newStriker);
+      } else {
+        setStriker(newStriker);
+        setNonStriker(newNonStriker);
+      }
+    } else if (type === 'bye' || type === 'legbye') {
+      newStriker.balls += 1;
+
+      if (run % 2 !== 0 || (nextBalls % 6 === 0 && nextBalls > 0)) {
+        setStriker(newNonStriker);
+        setNonStriker(newStriker);
+      } else {
+        setStriker(newStriker);
+        setNonStriker(newNonStriker);
+      }
+    } else if (type === 'wide') {
+      // Wide runs are team extras. Batter runs and balls faced DO NOT CHANGE!
+      if (run % 2 !== 0) {
+        setStriker(newNonStriker);
+        setNonStriker(newStriker);
+      } else {
+        setStriker(newStriker);
+        setNonStriker(newNonStriker);
+      }
     }
 
     // Persist delivery to pure MongoDB backend (Requirement 5 & 8)
@@ -186,7 +220,7 @@ export default function LiveScoringScreen() {
         nonStrikerId: nonStriker.id,
         bowlerId: bowler.id,
         runsBatter: isExtra && type !== 'noball' ? 0 : run,
-        runsExtras: isExtra ? 1 : (type === 'bye' || type === 'legbye' ? run : 0),
+        runsExtras: isExtra ? (type === 'wide' || type === 'noball' ? 1 + run : run) : (type === 'bye' || type === 'legbye' ? run : 0),
         extraType: extraTypeMap[type] || 'NONE',
         wicket: false,
         fieldingPosition: selectedFieldPosition
@@ -201,22 +235,89 @@ export default function LiveScoringScreen() {
     }
   };
 
-  const handleWicket = async () => {
-    if (wickets >= 10) return;
+  const defaultSquad = [
+    { id: 'P303', name: 'Vijay Anand', role: 'BATSMAN' },
+    { id: 'P304', name: 'Dinesh Karthik', role: 'WICKET_KEEPER' },
+    { id: 'P305', name: 'R. Ashwin', role: 'ALL_ROUNDER' },
+    { id: 'P306', name: 'S. Murugan', role: 'BATSMAN' },
+    { id: 'P307', name: 'K. Saravanan', role: 'BATSMAN' },
+    { id: 'P308', name: 'M. Arun', role: 'ALL_ROUNDER' },
+    { id: 'P309', name: 'V. Prakash', role: 'BATSMAN' },
+    { id: 'P310', name: 'Ganesh Kumar', role: 'BOWLER' },
+    { id: 'P311', name: 'Kamal Hassan', role: 'BATSMAN' }
+  ];
+
+  const fullSquad = battingSquad.length > 0 ? battingSquad : defaultSquad;
+  const availableSquad = fullSquad.filter(p => p.id !== striker.id && p.id !== nonStriker.id && !dismissedBatters.includes(p.id));
+
+  const handleWicketClick = () => {
+    if (wickets >= 10) {
+      const msg = 'Innings Completed! All 10 wickets are down.';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Innings End', msg);
+      return;
+    }
+    if (availableSquad.length > 0) {
+      setSelectedNextBatterId(availableSquad[0].id);
+    } else {
+      setSelectedNextBatterId('');
+    }
+    setCustomBatterName('');
+    setShowWicketModal(true);
+  };
+
+  const confirmNextBatter = async () => {
+    if (wickets >= 10) {
+      setShowWicketModal(false);
+      return;
+    }
+
+    let nextBatterName = customBatterName.trim();
+    let nextBatterId = selectedNextBatterId;
+
+    if (!nextBatterName && nextBatterId) {
+      const found = fullSquad.find(p => p.id === nextBatterId);
+      if (found) nextBatterName = found.name;
+    }
+
+    if (!nextBatterName) {
+      const benchNames = ['Vijay Anand', 'Dinesh Karthik', 'R. Ashwin', 'S. Murugan', 'K. Saravanan'];
+      nextBatterName = benchNames[wickets % benchNames.length];
+      nextBatterId = `P30${(wickets % 9) + 3}`;
+    }
+
+    // Save history for undo
     setHistory([...history, { runs, wickets, balls, striker, nonStriker, bowler }]);
-    setWickets(wickets + 1);
-    setBalls(balls + 1);
+
+    const dismissedId = striker.id;
+    if (dismissedId) {
+      setDismissedBatters(prev => [...prev, dismissedId]);
+    }
+
+    const nextWickets = wickets + 1;
+    const nextBalls = balls + 1;
+    setWickets(nextWickets);
+    setBalls(nextBalls);
+
+    // Update Bowler
     setBowler({
       ...bowler,
       wickets: bowler.wickets + 1,
       overs: parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1))
     });
-    
-    const benchNames = ['Vijay', 'Dinesh', 'Ashwin', 'Murugan', 'Saravanan', 'Arun', 'Prakash', 'Ganesh', 'Kamal'];
-    const newBatterName = benchNames[wickets % benchNames.length];
-    setStriker({ id: `P30${(wickets % 9) + 3}`, name: newBatterName, runs: 0, balls: 0, fours: 0, sixes: 0 });
 
-    // Persist wicket ball to pure MongoDB backend
+    const newBatterObj = {
+      id: nextBatterId || `P30${nextWickets + 2}`,
+      name: nextBatterName,
+      runs: 0,
+      balls: 0,
+      fours: 0,
+      sixes: 0
+    };
+    setStriker(newBatterObj);
+    setShowWicketModal(false);
+    setCustomBatterName('');
+
+    // Persist delivery to MongoDB backend
     try {
       const payload = {
         strikerId: striker.id,
@@ -227,8 +328,10 @@ export default function LiveScoringScreen() {
         extraType: 'NONE',
         wicket: true,
         wicketType: 'CAUGHT',
+        dismissedPlayerId: striker.id,
         fieldingPosition: selectedFieldPosition
       };
+
       const res = await ScorerApi.recordDelivery(matchId, payload);
       if (res && res.commentary) {
         setAiCommentary(res.commentary);
@@ -397,7 +500,7 @@ export default function LiveScoringScreen() {
                   </TouchableOpacity>
                 );
               })}
-              <TouchableOpacity style={[styles.scoreBtn, styles.wicketBtn]} onPress={handleWicket}>
+              <TouchableOpacity style={[styles.scoreBtn, styles.wicketBtn]} onPress={handleWicketClick}>
                 <Text style={[styles.scoreBtnText, styles.wicketBtnText]}>W</Text>
               </TouchableOpacity>
             </View>
@@ -454,6 +557,66 @@ export default function LiveScoringScreen() {
       
       <SharedFooter />
       </ScrollView>
+
+      {/* NEXT BATSMAN SELECTION MODAL */}
+      <Modal visible={showWicketModal} transparent animationType="fade" onRequestClose={() => setShowWicketModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxWidth: 440 }]}>
+            <View style={styles.wicketModalHeader}>
+              <Text style={styles.wicketModalTitle}>🏏 Select Next Batsman</Text>
+              <Text style={styles.wicketModalSub}>Wicket Fallen! Choose incoming batter from the squad</Text>
+            </View>
+
+            <View style={styles.dismissedBanner}>
+              <Text style={styles.dismissedLabel}>DISMISSED BATTER</Text>
+              <Text style={styles.dismissedValue}>* {striker.name} ({striker.runs} runs off {striker.balls} balls)</Text>
+            </View>
+
+            <Text style={styles.selectLabel}>CHOOSE FROM BATTING SQUAD:</Text>
+            <ScrollView style={{ maxHeight: 180, marginBottom: 14 }}>
+              {availableSquad.map((player) => {
+                const isSelected = selectedNextBatterId === player.id && !customBatterName.trim();
+                return (
+                  <TouchableOpacity
+                    key={player.id}
+                    style={[styles.batterOption, isSelected && styles.batterOptionSelected]}
+                    onPress={() => {
+                      setSelectedNextBatterId(player.id);
+                      setCustomBatterName('');
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={[styles.radioDot, isSelected && styles.radioDotSelected]} />
+                      <Text style={[styles.batterOptionName, isSelected && styles.batterOptionNameSelected]}>
+                        {player.name}
+                      </Text>
+                    </View>
+                    <Text style={styles.batterOptionRole}>{player.role || 'BATSMAN'}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <Text style={styles.selectLabel}>OR ENTER BATSMAN NAME MANUALLY:</Text>
+            <TextInput
+              style={styles.customNameInput}
+              placeholder="e.g. R. Saravanan"
+              placeholderTextColor="#94a3b8"
+              value={customBatterName}
+              onChangeText={(txt) => setCustomBatterName(txt)}
+            />
+
+            <View style={[styles.modalActions, { marginTop: 18 }]}>
+              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowWicketModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirmBtn} onPress={confirmNextBatter}>
+                <Text style={styles.modalConfirmText}>Confirm & Send Batter</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -569,5 +732,22 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   modalCancelBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#f1f5f9' },
   modalCancelText: { color: '#475569', fontWeight: 'bold', fontSize: 13 },
   modalConfirmBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#dc2626' },
-  modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 }
+  modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
+
+  // WICKET MODAL STYLES
+  wicketModalHeader: { marginBottom: 12 },
+  wicketModalTitle: { fontSize: 18, fontWeight: 'bold', color: '#b45309' },
+  wicketModalSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  dismissedBanner: { backgroundColor: '#fef2f2', borderColor: '#fca5a5', borderWidth: 1, padding: 10, borderRadius: 6, marginBottom: 14 },
+  dismissedLabel: { fontSize: 10, fontWeight: 'bold', color: '#ef4444', letterSpacing: 0.5 },
+  dismissedValue: { fontSize: 13, fontWeight: 'bold', color: '#991b1b', marginTop: 2 },
+  selectLabel: { fontSize: 11, fontWeight: 'bold', color: '#475569', marginBottom: 6, letterSpacing: 0.5 },
+  batterOption: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, paddingHorizontal: 12, borderRadius: 6, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 6, backgroundColor: '#f8fafc' },
+  batterOptionSelected: { backgroundColor: '#fef3c7', borderColor: '#b45309' },
+  radioDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#94a3b8', marginRight: 10 },
+  radioDotSelected: { borderColor: '#b45309', backgroundColor: '#b45309' },
+  batterOptionName: { fontSize: 13, fontWeight: '600', color: '#1e293b' },
+  batterOptionNameSelected: { color: '#78350f', fontWeight: 'bold' },
+  batterOptionRole: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  customNameInput: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, padding: 10, fontSize: 13, color: '#1e293b', backgroundColor: '#FFF' }
 });
