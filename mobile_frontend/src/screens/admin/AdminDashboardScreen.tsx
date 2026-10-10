@@ -1708,7 +1708,8 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     paddingVertical: 24,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    paddingBottom: 150
   },
   contentConstrained: {
     maxWidth: 1200,

@@ -482,16 +482,16 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   topSection: { flexDirection: isDesktop ? 'row' : 'column', gap: 16, marginBottom: 16 },
   scoreBoardCard: { 
     flex: isDesktop ? 1 : undefined,
-    backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 20, borderRadius: 8, 
-    borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', 
+    backgroundColor: '#ffffff', padding: 24, borderRadius: 12, 
+    borderWidth: 1, borderColor: '#e2e8f0', 
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
+    shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4
   },
-  battingTeam: { color: '#b45309', fontSize: 13, fontWeight: 'bold', marginBottom: 6, textTransform: 'uppercase' },
+  battingTeam: { color: '#b45309', fontSize: 14, fontWeight: '800', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  scoreText: { color: '#1e293b', fontSize: 48, fontWeight: 'bold' },
-  oversText: { color: '#64748b', fontSize: 20, marginLeft: 10, fontWeight: '600' },
-  rrText: { color: '#475569', fontSize: 13, marginTop: 6, fontWeight: '600' },
+  scoreText: { color: '#0f172a', fontSize: 56, fontWeight: '900' },
+  oversText: { color: '#475569', fontSize: 22, marginLeft: 12, fontWeight: '700' },
+  rrText: { color: '#64748b', fontSize: 14, marginTop: 8, fontWeight: '700', backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
   
   playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 16, justifyContent: 'space-between' },
   playerCard: { backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', flex: 1, justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
@@ -503,22 +503,22 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
 
   // AI COMMENTARY CARD
   commentaryCard: {
-    backgroundColor: 'rgba(254, 243, 199, 0.75)',
+    backgroundColor: '#fffbeb',
     borderWidth: 1,
     borderColor: '#fde68a',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#d97706',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3
   },
-  commentaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  commentaryTag: { fontSize: 10, fontWeight: '800', color: '#b45309', letterSpacing: 0.5 },
-  commentaryPosition: { fontSize: 11, fontWeight: '700', color: '#92400e', backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  commentaryText: { fontSize: 13, color: '#78350f', fontWeight: '500', lineHeight: 18 },
+  commentaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  commentaryTag: { fontSize: 11, fontWeight: '900', color: '#b45309', letterSpacing: 1 },
+  commentaryPosition: { fontSize: 12, fontWeight: '800', color: '#92400e', backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  commentaryText: { fontSize: 14, color: '#78350f', fontWeight: '600', lineHeight: 20 },
 
   // BOTTOM SECTION
   controlsSection: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 8, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
