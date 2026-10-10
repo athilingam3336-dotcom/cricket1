@@ -1341,7 +1341,9 @@ const styles = StyleSheet.create({
   },
   heroStatsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    gap: 16
   },
   heroStatCol: {
     alignItems: 'center'
@@ -1359,10 +1361,13 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 12,
     marginBottom: 16
   },
   actionBtn: {
     flex: 1,
+    minWidth: 140,
     backgroundColor: '#0b1329',
     borderRadius: 10,
     paddingVertical: 12,
