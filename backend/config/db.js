@@ -182,6 +182,11 @@ const InningsSchema = new mongoose.Schema({
   balls: { type: Number, default: 0 },
   target: { type: Number, default: null },
   is_completed: { type: Boolean, default: false },
+    current_striker_id: { type: String, default: null },
+    current_non_striker_id: { type: String, default: null },
+    current_bowler_id: { type: String, default: null },
+    previous_bowler_id: { type: String, default: null },
+    is_over_complete: { type: Boolean, default: false },
   extras: {
     wides: { type: Number, default: 0 },
     no_balls: { type: Number, default: 0 },
@@ -377,11 +382,20 @@ async function seedDefaultData() {
         { id: 'P305', team_id: 'TM-01', name: 'R. Vignesh', email: 'vignesh@spartans.com', role: 'BOWLER', jersey_number: 23, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Fast', stats: { runs: 24, balls: 18, fours: 2, sixes: 1, highest_score: 14, wickets: 12, overs: 20, runs_conceded: 130, catches: 1, stumpings: 0 } },
         { id: 'P306', team_id: 'TM-01', name: 'Arun Pandian', email: 'player@example.com', role: 'ALL_ROUNDER', jersey_number: 10, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Medium', stats: { runs: 198, balls: 135, fours: 21, sixes: 7, highest_score: 62, wickets: 6, overs: 14, runs_conceded: 98, catches: 5, stumpings: 0 } },
         
-        // Team 2: Strikers
-        { id: 'P401', team_id: 'TM-02', name: 'Dinesh Karthik', email: 'dinesh@strikers.com', role: 'WICKET_KEEPER', jersey_number: 21, batting_style: 'Right Hand Bat', stats: { runs: 240, balls: 160, fours: 26, sixes: 8, highest_score: 72, wickets: 0, overs: 0, runs_conceded: 0, catches: 7, stumpings: 2 } },
-        { id: 'P402', team_id: 'TM-02', name: 'R. Ashwin', email: 'ashwin@strikers.com', role: 'ALL_ROUNDER', jersey_number: 99, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Off Break', stats: { runs: 120, balls: 82, fours: 12, sixes: 3, highest_score: 41, wickets: 11, overs: 20, runs_conceded: 115, catches: 2, stumpings: 0 } },
-        { id: 'P403', team_id: 'TM-02', name: 'S. Balamurugan', email: 'bala@strikers.com', role: 'BOWLER', jersey_number: 11, batting_style: 'Right Hand Bat', bowling_style: 'Left Arm Fast', stats: { runs: 18, balls: 12, fours: 2, sixes: 0, highest_score: 11, wickets: 9, overs: 19, runs_conceded: 128, catches: 1, stumpings: 0 } }
-      ];
+                  // Team 2: Strikers
+          { id: 'P401', team_id: 'TM-02', name: 'Dinesh Karthik', email: 'dinesh@strikers.com', role: 'WICKET_KEEPER', jersey_number: 21, batting_style: 'Right Hand Bat', stats: { runs: 240, balls: 160, fours: 26, sixes: 8, highest_score: 72, wickets: 0, overs: 0, runs_conceded: 0, catches: 7, stumpings: 2 } },
+          { id: 'P402', team_id: 'TM-02', name: 'R. Ashwin', email: 'ashwin@strikers.com', role: 'ALL_ROUNDER', jersey_number: 99, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Off Break', stats: { runs: 120, balls: 82, fours: 12, sixes: 3, highest_score: 41, wickets: 11, overs: 20, runs_conceded: 115, catches: 2, stumpings: 0 } },
+          { id: 'P403', team_id: 'TM-02', name: 'S. Balamurugan', email: 'bala@strikers.com', role: 'BOWLER', jersey_number: 11, batting_style: 'Right Hand Bat', bowling_style: 'Left Arm Fast', stats: { runs: 18, balls: 12, fours: 2, sixes: 0, highest_score: 11, wickets: 9, overs: 19, runs_conceded: 128, catches: 1, stumpings: 0 } },
+
+          // Team 3: Royals
+          { id: 'P501', team_id: 'TM-03', name: 'M. Vijay', email: 'vijay@royals.com', role: 'BATTER', jersey_number: 8, batting_style: 'Right Hand Bat', stats: { runs: 210, balls: 140, fours: 22, sixes: 5, highest_score: 65, wickets: 0, overs: 0, runs_conceded: 0, catches: 3, stumpings: 0 } },
+          { id: 'P502', team_id: 'TM-03', name: 'K. Balaji', email: 'balaji@royals.com', role: 'ALL_ROUNDER', jersey_number: 12, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Medium', stats: { runs: 130, balls: 90, fours: 12, sixes: 3, highest_score: 42, wickets: 7, overs: 16, runs_conceded: 110, catches: 2, stumpings: 0 } },
+          { id: 'P503', team_id: 'TM-03', name: 'S. Saravanan', email: 'saravanan@royals.com', role: 'BOWLER', jersey_number: 25, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Fast', stats: { runs: 15, balls: 10, fours: 1, sixes: 0, highest_score: 8, wickets: 10, overs: 18, runs_conceded: 120, catches: 1, stumpings: 0 } },
+
+          // Team 4: Aces
+          { id: 'P601', team_id: 'TM-04', name: 'P. Saravanan', email: 'saravanan@aces.com', role: 'BATTER', jersey_number: 5, batting_style: 'Right Hand Bat', stats: { runs: 195, balls: 130, fours: 18, sixes: 4, highest_score: 58, wickets: 0, overs: 0, runs_conceded: 0, catches: 4, stumpings: 0 } },
+          { id: 'P602', team_id: 'TM-04', name: 'T. Prabhu', email: 'prabhu@aces.com', role: 'BOWLER', jersey_number: 14, batting_style: 'Right Hand Bat', bowling_style: 'Right Arm Medium', stats: { runs: 20, balls: 15, fours: 2, sixes: 0, highest_score: 12, wickets: 8, overs: 15, runs_conceded: 105, catches: 1, stumpings: 0 } }
+        ];
       await Player.insertMany(initialPlayers);
 
       // 5. Matches
@@ -419,22 +433,22 @@ async function seedDefaultData() {
         },
         {
           id: 'M003',
-          tournament_id: 'T-2026-VPL',
-          tournament_name: 'Virudhunagar Premier League 2026',
-          team_a_id: 'TM-02',
-          team_b_id: 'TM-04',
-          venue: 'Sivakasi Cricket Ground',
-          match_date: '2026-10-04',
-          match_time: '09:30 AM',
-          match_type: 'T20',
-          overs_per_side: 20,
-          status: 'COMPLETED',
-          toss_winner_id: 'TM-02',
-          toss_decision: 'BAT',
-          result_summary: 'Sivakasi Strikers won by 34 runs',
-          player_of_match: 'Dinesh Karthik',
-          assigned_scorer_id: 'SCR-101'
-        }
+            tournament_id: 'T-2026-VPL',
+            tournament_name: 'Virudhunagar Premier League 2026',
+            team_a_id: 'TM-01',
+            team_b_id: 'TM-02',
+            venue: 'Kamarajar Stadium',
+            match_date: '2026-10-04',
+            match_time: '09:30 AM',
+            match_type: 'T20',
+            overs_per_side: 20,
+            status: 'COMPLETED',
+            toss_winner_id: 'TM-01',
+            toss_decision: 'BAT',
+            result_summary: 'Virudhunagar Strikers won by 7 wickets',
+            player_of_match: 'Dinesh Karthik',
+            assigned_scorer_id: 'SCR-101'
+          }
       ]);
 
       // 6. Innings for M002 (Live) & M003 (Completed)
@@ -454,17 +468,17 @@ async function seedDefaultData() {
         },
         {
           id: 'INN-M003-1',
-          match_id: 'M003',
-          innings_number: 1,
-          batting_team_id: 'TM-02',
-          bowling_team_id: 'TM-04',
-          total_runs: 178,
-          wickets: 6,
-          overs: 20,
-          balls: 0,
-          is_completed: true,
-          extras: { wides: 6, no_balls: 1, byes: 2, leg_byes: 2, total: 11 }
-        },
+            match_id: 'M003',
+            innings_number: 1,
+            batting_team_id: 'TM-01',
+            bowling_team_id: 'TM-02',
+            total_runs: 160,
+            wickets: 8,
+            overs: 20,
+            balls: 0,
+            is_completed: true,
+            extras: { wides: 6, no_balls: 1, byes: 2, leg_byes: 2, total: 11 }
+          },
         {
           id: 'INN-M003-2',
           match_id: 'M003',
@@ -485,10 +499,56 @@ async function seedDefaultData() {
       await InningsBatter.insertMany([
         { id: 'IBAT-01', innings_id: 'INN-M002-1', player_id: 'P301', batting_position: 1, runs: 64, balls: 42, fours: 8, sixes: 2, strike_rate: 152.38, is_out: false },
         { id: 'IBAT-02', innings_id: 'INN-M002-1', player_id: 'P302', batting_position: 2, runs: 28, balls: 22, fours: 3, sixes: 1, strike_rate: 127.27, is_out: true, dismissal_type: 'CAUGHT', bowler_id: 'P402', fielder_id: 'P401' },
-        { id: 'IBAT-03', innings_id: 'INN-M002-1', player_id: 'P303', batting_position: 3, runs: 35, balls: 24, fours: 4, sixes: 1, strike_rate: 145.83, is_out: false }
+        { id: 'IBAT-03', innings_id: 'INN-M002-1', player_id: 'P303', batting_position: 3, runs: 35, balls: 24, fours: 4, sixes: 1, strike_rate: 145.83, is_out: false },
+          { id: 'IBAT-M003-01', innings_id: 'INN-M003-1', player_id: 'P301', batting_position: 1, runs: 42, balls: 30, fours: 4, sixes: 1, strike_rate: 140.0, is_out: false },
+          { id: 'IBAT-M003-02', innings_id: 'INN-M003-1', player_id: 'P302', batting_position: 2, runs: 12, balls: 10, fours: 1, sixes: 0, strike_rate: 120.0, is_out: true, dismissal_type: 'BOWLED', bowler_id: 'P403' },
+          { id: 'IBAT-M003-03', innings_id: 'INN-M003-1', player_id: 'P303', batting_position: 3, runs: 18, balls: 14, fours: 2, sixes: 0, strike_rate: 128.57, is_out: false },
       ]);
 
-      await InningsBowler.insertMany([
+      
+        // 7b. Initial Deliveries for INN-M002-1
+        await Delivery.insertMany([
+          {
+            id: 'DEL-M002-1-01',
+            match_id: 'M002',
+            innings_id: 'INN-M002-1',
+            innings_number: 1,
+            over_number: 1,
+            ball_number: 1,
+            striker_id: 'P301',
+            non_striker_id: 'P302',
+            bowler_id: 'P401',
+            runs_batter: 1,
+            runs_extras: 0,
+            total_runs: 1,
+            extra_type: 'NONE',
+            wicket: false,
+            is_legal_delivery: true,
+            commentary: '1 run pushed to cover.',
+            timestamp: new Date()
+          },
+          {
+            id: 'DEL-M002-1-02',
+            match_id: 'M002',
+            innings_id: 'INN-M002-1',
+            innings_number: 1,
+            over_number: 1,
+            ball_number: 2,
+            striker_id: 'P302',
+            non_striker_id: 'P301',
+            bowler_id: 'P401',
+            runs_batter: 4,
+            runs_extras: 0,
+            total_runs: 4,
+            extra_type: 'NONE',
+            boundary_type: 'FOUR',
+            wicket: false,
+            is_legal_delivery: true,
+            commentary: 'FOUR! Dispatched to the boundary.',
+            timestamp: new Date()
+          }
+        ]);
+        await InningsBowler.insertMany([
         { id: 'IBOW-01', innings_id: 'INN-M002-1', player_id: 'P401', overs: 3, balls: 2, maidens: 0, runs_conceded: 28, wickets: 1, no_balls: 1, wides: 2, economy: 8.40 },
         { id: 'IBOW-02', innings_id: 'INN-M002-1', player_id: 'P402', overs: 4, balls: 0, maidens: 0, runs_conceded: 32, wickets: 2, no_balls: 0, wides: 1, economy: 8.00 }
       ]);
@@ -708,6 +768,20 @@ async function mongoQuery(sqlOrModel, params = []) {
     return [matches];
   }
 
+  
+  // SELECT from deliveries
+  if (lower.startsWith('select') && lower.includes('from deliveries')) {
+    if (lower.includes('innings_id = ?')) {
+      const dels = await Delivery.find({ innings_id: params[0] }).sort({ timestamp: 1 }).lean();
+      return [dels];
+    }
+    if (lower.includes('match_id = ?')) {
+      const dels = await Delivery.find({ match_id: params[0] }).sort({ timestamp: 1 }).lean();
+      return [dels];
+    }
+    const dels = await Delivery.find({}).lean();
+    return [dels];
+  }
   // SELECT from innings
   if (lower.startsWith('select') && lower.includes('from innings')) {
     if (lower.includes('match_id = ?')) {

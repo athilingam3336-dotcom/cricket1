@@ -38,6 +38,15 @@ async function runAllTests() {
   // Initialize MongoDB for test suite
   await db.initDb();
 
+  // Idempotent test fixture reset before each run
+  await db.models.Match.updateOne({ id: 'M001' }, { status: 'SCHEDULED', team_a_id: 'TM-01', team_b_id: 'TM-02', current_innings_number: 1, result_summary: null });
+  await db.models.Match.updateOne({ id: 'M002' }, { status: 'LIVE', team_a_id: 'TM-01', team_b_id: 'TM-02', current_innings_number: 1, result_summary: null });
+  await db.models.Match.updateOne({ id: 'M003' }, { status: 'COMPLETED', team_a_id: 'TM-01', team_b_id: 'TM-02', result_summary: 'Virudhunagar Strikers won by 7 wickets' });
+  await db.models.Innings.updateOne({ id: 'INN-M002-1' }, { is_completed: false, is_over_complete: false, wickets: 3, total_runs: 142, overs: 16, balls: 2 });
+  await db.models.Innings.deleteOne({ id: 'INN-M002-2' });
+  await db.models.Team.updateOne({ id: 'TM-01' }, { name: 'Sattur Spartans' });
+  await db.models.Team.updateOne({ id: 'TM-02' }, { name: 'Virudhunagar Strikers' });
+
   console.log('--- 1. AUTHENTICATION & AUTHORIZATION ---');
   let authToken = null;
   let scorerUser = null;

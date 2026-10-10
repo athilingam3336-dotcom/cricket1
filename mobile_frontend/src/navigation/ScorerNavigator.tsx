@@ -1,5 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, SafeAreaView } from 'react-native';
 
 import ScorerAuthScreen from '../screens/scorer/ScorerAuthScreen';
 import ScorerDashboardScreen from '../screens/scorer/ScorerDashboardScreen';
@@ -8,23 +8,13 @@ import LiveScoringScreen from '../screens/scorer/LiveScoringScreen';
 import ScorecardScreen from '../screens/scorer/ScorecardScreen';
 import SharedBackground from '../components/scorer/SharedBackground';
 
-export type ScreenName = 'Auth' | 'Dashboard' | 'MatchSetup' | 'LiveScoring' | 'Scorecard';
+import {
+  ScreenName,
+  ScorerNavigationContext,
+  useScorerNavigation
+} from './ScorerNavigationContext';
 
-interface ScorerNavigationContextType {
-  currentScreen: ScreenName;
-  navigate: (screen: ScreenName, params?: any) => void;
-  params: any;
-  onExit: () => void;
-}
-
-const ScorerNavigationContext = createContext<ScorerNavigationContextType>({
-  currentScreen: 'Auth',
-  navigate: () => {},
-  params: null,
-  onExit: () => {}
-});
-
-export const useScorerNavigation = () => useContext(ScorerNavigationContext);
+export { ScreenName, ScorerNavigationContext, useScorerNavigation };
 
 interface Props {
   onExit: () => void;

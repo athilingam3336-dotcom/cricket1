@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "migrate": "node migrations/migrate.js",
     "seed": "node seeds/seed.js",
-    "test": "node tests/runTests.js"
+    "test": "node tests/runTests.js",
+    "view-db": "node scripts/viewDb.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
