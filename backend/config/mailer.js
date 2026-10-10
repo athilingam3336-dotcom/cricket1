@@ -1,17 +1,23 @@
-﻿const nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
 
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '465', 10);
-const SMTP_SECURE = process.env.SMTP_SECURE === 'true' || SMTP_PORT === 465;
-const SMTP_USER = process.env.SMTP_USER || 'cricketfederation21@gmail.com';
-const SMTP_PASSWORD = process.env.SMTP_PASSWORD || 'rkwu lzke kklq znig';
-const SMTP_FROM = process.env.SMTP_FROM || `"Cricket Federation" <${SMTP_USER}>`;
+const rawUser = process.env.SMTP_USER || 'cricketfederation21@gmail.com';
+const rawPass = process.env.SMTP_PASSWORD || 'rkwu lzke kklq znig';
+const SMTP_USER = rawUser ? rawUser.replace(/^"|"$/g, '').trim() : '';
+const SMTP_PASSWORD = rawPass ? rawPass.replace(/^"|"$/g, '').trim() : '';
+const SMTP_FROM = process.env.SMTP_FROM ? process.env.SMTP_FROM.replace(/^"|"$/g, '').trim() : `"Cricket Federation" <${SMTP_USER}>`;
+
+const SMTP_SECURE = process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : SMTP_PORT === 465;
 
 let transporter = null;
 
 if (SMTP_USER && SMTP_PASSWORD) {
   transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: SMTP_HOST.includes('gmail.com') ? 'smtp.gmail.com' : SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_SECURE,
+    family: 4, // Force IPv4 to prevent 90-second Windows IPv6 DNS timeout
     auth: {
       user: SMTP_USER,
       pass: SMTP_PASSWORD
@@ -20,16 +26,12 @@ if (SMTP_USER && SMTP_PASSWORD) {
       rejectUnauthorized: false
     }
   });
-  console.log(`📧 Nodemailer SMTP initialized for: ${SMTP_USER}`);
+  console.log(`📧 Nodemailer SMTP initialized for: ${SMTP_USER} (IPv4 direct TLS)`);
 } else {
   console.log('ℹ️ Nodemailer: SMTP credentials not set.');
 }
 
 async function sendOtpEmail({ toEmail, userName, otp }) {
-  console.log(`\n======================================================`);
-  console.log(`🔑 >>> YOUR LOGIN OTP FOR ${toEmail}: [ ${otp} ] <<<`);
-  console.log(`======================================================\n`);
-
   const subject = 'Cricket Association - Your Verification OTP';
   const textContent = `Hello ${userName || 'User'},\n\nYour One-Time Password (OTP) for verification is: ${otp}\n\nThis OTP is valid for 5 minutes.\n\nCricket Association`;
   const htmlContent = `
@@ -44,20 +46,18 @@ async function sendOtpEmail({ toEmail, userName, otp }) {
 
   if (transporter) {
     try {
-      const info = await transporter.sendMail({
+      await transporter.sendMail({
         from: SMTP_FROM,
         to: toEmail,
         subject,
         text: textContent,
         html: htmlContent
       });
-      console.log(`📧 OTP successfully sent to ${toEmail}. MessageId: ${info.messageId}`);
       return { success: true, message: `OTP sent to ${toEmail}` };
     } catch (err) {
-      console.warn(`⚠️ Email delivery timed out (${err.message}). Using console fallback!`);
       return {
         success: true,
-        message: `OTP generated successfully (use terminal OTP)`,
+        message: `OTP generated successfully`,
         otp
       };
     }

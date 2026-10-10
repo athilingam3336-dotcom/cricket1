@@ -57,6 +57,8 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
+const authController = require('../controllers/authController');
+
 /**
  * POST /api/team/login
  * Team login endpoint
@@ -66,6 +68,9 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const result = await teamService.loginTeam({ email, password });
+    if (result && result.token) {
+      authController.setAuthCookies(res, result.token);
+    }
     res.json({ success: true, ...result });
   } catch (err) {
     res.status(401).json({ error: err.message });

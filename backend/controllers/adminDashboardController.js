@@ -618,21 +618,44 @@ class AdminDashboardController {
       const teamMap = {};
       (teams || []).forEach(t => { teamMap[t.id] = t.name || t.team_name; });
 
-      const formatted = (matches || []).map(m => ({
-        id: m.id,
-        tournamentId: m.tournament_id,
-        tournamentName: m.tournament_id === 'TOUR-2026' ? 'VPL 2026' : 'District Cup',
-        teamAId: m.team_a_id,
-        teamAName: teamMap[m.team_a_id] || m.team_a_id,
-        teamBId: m.team_b_id,
-        teamBName: teamMap[m.team_b_id] || m.team_b_id,
-        venue: m.venue_name || 'Kamarajar Stadium, Virudhunagar',
-        date: m.scheduled_date,
-        time: m.scheduled_time || '10:00 AM',
-        overs: m.overs || 20,
-        status: m.status,
-        result: m.result_text
-      }));
+      const formatted = (matches || []).map(m => {
+        const teamAName = teamMap[m.team_a_id] || m.team_a_name || m.team_a_id || 'Team A';
+        const teamBName = teamMap[m.team_b_id] || m.team_b_name || m.team_b_id || 'Team B';
+        const venue = m.venue || m.venue_name || 'Kamarajar District Stadium';
+        const matchDate = m.match_date || m.scheduled_date || '2026-10-08';
+        const matchTime = m.match_time || m.scheduled_time || '02:30 PM';
+        const tournamentName = m.tournament_name || (m.tournament_id === 'TOUR-2026' ? 'VPL 2026' : 'Virudhunagar Premier League 2026');
+        const overs = m.overs_per_side || m.overs || 20;
+
+        return {
+          id: m.id,
+          tournamentId: m.tournament_id,
+          tournament_id: m.tournament_id,
+          tournamentName,
+          tournament_name: tournamentName,
+          teamAId: m.team_a_id,
+          team_a_id: m.team_a_id,
+          teamAName,
+          team_a_name: teamAName,
+          teamBId: m.team_b_id,
+          team_b_id: m.team_b_id,
+          teamBName,
+          team_b_name: teamBName,
+          venue,
+          date: matchDate,
+          match_date: matchDate,
+          time: matchTime,
+          match_time: matchTime,
+          overs,
+          overs_per_side: overs,
+          match_type: m.match_type || 'T20',
+          assigned_scorer_id: m.assigned_scorer_id || 'SCR-101',
+          scorer_name: m.scorer_name || m.assigned_scorer_id || 'SCR-101',
+          status: m.status || 'SCHEDULED',
+          result: m.result_summary || m.result_text,
+          result_summary: m.result_summary || m.result_text
+        };
+      });
 
       return res.status(200).json({ success: true, matches: formatted });
     } catch (err) {

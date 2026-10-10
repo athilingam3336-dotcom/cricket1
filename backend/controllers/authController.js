@@ -1,61 +1,71 @@
 /**
  * controllers/authController.js
- * HTTP Controller for Authentication, Scorer Registration & Admin Approvals
+ * Controller for Email OTP Registration Verification, Password Set,
+ * and Password Authentication with JWT HTTP Cookie support.
  */
 
 const authService = require('../services/authService');
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in ms
+};
+
+function setAuthCookies(res, token) {
+  if (token) {
+    res.cookie('auth_token', token, COOKIE_OPTIONS);
+    res.cookie('token', token, COOKIE_OPTIONS);
+  }
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie('auth_token', { httpOnly: true, sameSite: 'lax' });
+  res.clearCookie('token', { httpOnly: true, sameSite: 'lax' });
+}
+
 class AuthController {
-  // General / Scorer / Admin / Content OTP Request
-  async requestOtp(req, res) {
+  // Step 1 of Registration: Request OTP to verify email
+  async requestRegistrationOtp(req, res) {
     try {
-      const { email, role } = req.body;
-      const result = await authService.requestOtp(email, role);
+      const { email, name, role } = req.body;
+      const result = await authService.requestRegistrationOtp(email, name, role);
       res.status(200).json(result);
     } catch (err) {
-      const status = err.status || 500;
+      const status = err.status || 400;
       res.status(status).json({
         success: false,
-        message: err.message || 'Failed to request OTP'
+        message: err.message || 'Failed to request registration OTP'
       });
     }
   }
 
-  // General / Scorer / Admin / Content OTP Verification
-  async verifyOtp(req, res) {
+  // Step 2 of Registration: Verify OTP code
+  async verifyRegistrationOtp(req, res) {
     try {
       const { email, otp } = req.body;
-      const result = await authService.verifyOtp(email, otp);
+      const result = await authService.verifyRegistrationOtp(email, otp);
       res.status(200).json(result);
     } catch (err) {
-      const status = err.status || 401;
+      const status = err.status || 400;
       res.status(status).json({
         success: false,
-        message: err.message || 'OTP verification failed'
+        message: err.message || 'Registration OTP verification failed'
       });
     }
   }
 
-  // Admin Direct Login (Password or OTP)
-  async adminLogin(req, res) {
-    try {
-      const { email, password, otp } = req.body;
-      const result = await authService.adminLogin(email, password || otp);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 401;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Administrator login failed'
-      });
-    }
-  }
-
-  // General Login
+  // Unified Password-Based Login (Sets JWT Cookie)
   async login(req, res) {
     try {
-      const { email, password, otp } = req.body;
-      const result = await authService.login(email, password || otp);
+      const { email, emailOrPhone, name, username, password, otp, role } = req.body;
+      const identifier = email || emailOrPhone || username || name;
+      const credential = password || otp;
+      const result = await authService.login(identifier, credential, role);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
       res.status(200).json(result);
     } catch (err) {
       const status = err.status || 401;
@@ -66,73 +76,87 @@ class AuthController {
     }
   }
 
-  // Team / Coach OTP Request
+  // Admin Direct Login (Sets JWT Cookie)
+  async adminLogin(req, res) {
+    try {
+      const { email, password, otp } = req.body;
+      const result = await authService.adminLogin(email, password || otp);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
+      res.status(200).json(result);
+    } catch (err) {
+      const status = err.status || 401;
+      res.status(status).json({
+        success: false,
+        message: err.message || 'Administrator login failed'
+      });
+    }
+  }
+
+  // Logout (Clears JWT Cookie)
+  async logout(req, res) {
+    try {
+      clearAuthCookies(res);
+      res.status(200).json({
+        success: true,
+        message: 'Logged out successfully. Cookie cleared.'
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: 'Logout failed: ' + (err.message || 'Unknown error')
+      });
+    }
+  }
+
+  // Current authenticated user
+  async getMe(req, res) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Not authenticated' });
+      }
+      res.status(200).json({
+        success: true,
+        user: req.user
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  // Legacy/Compatibility OTP Request & Verify
+  async requestOtp(req, res) {
+    return this.requestRegistrationOtp(req, res);
+  }
+
+  async verifyOtp(req, res) {
+    return this.login(req, res);
+  }
+
   async requestTeamOtp(req, res) {
-    try {
-      const { coachName, coachEmail, email } = req.body;
-      const result = await authService.requestTeamOtp(coachName, coachEmail || email);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Failed to request team OTP'
-      });
-    }
+    return this.requestRegistrationOtp(req, res);
   }
 
-  // Team / Coach OTP Verification
   async verifyTeamOtp(req, res) {
-    try {
-      const { coachEmail, email, otp } = req.body;
-      const result = await authService.verifyTeamOtp(coachEmail || email, otp);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 401;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Team OTP verification failed'
-      });
-    }
+    return this.login(req, res);
   }
 
-  // Player OTP Request
   async requestPlayerOtp(req, res) {
-    try {
-      const { name, email, playerName, nameOrEmail, emailOrPhone, input } = req.body;
-      const identifier = playerName || nameOrEmail || emailOrPhone || input || name || email;
-      const result = await authService.requestPlayerOtp(identifier);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Failed to request player OTP'
-      });
-    }
+    return this.requestRegistrationOtp(req, res);
   }
 
-  // Player OTP Verification
   async verifyPlayerOtp(req, res) {
-    try {
-      const { name, email, playerName, nameOrEmail, emailOrPhone, input, otp } = req.body;
-      const identifier = playerName || nameOrEmail || emailOrPhone || input || name || email;
-      const result = await authService.verifyPlayerOtp(identifier, otp);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 401;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Player OTP verification failed'
-      });
-    }
+    return this.login(req, res);
   }
 
   // Register Scorer
   async registerScorer(req, res) {
     try {
-      const { name, email, mobile } = req.body;
-      const result = await authService.registerScorer({ name, email, mobile });
+      const result = await authService.registerScorer(req.body);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
       res.status(201).json(result);
     } catch (err) {
       const status = err.status || 400;
@@ -143,10 +167,13 @@ class AuthController {
     }
   }
 
-  // Register Player (Module 2 in PDF)
+  // Register Player
   async registerPlayer(req, res) {
     try {
       const result = await authService.registerPlayer(req.body);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
       res.status(201).json(result);
     } catch (err) {
       const status = err.status || 400;
@@ -157,24 +184,13 @@ class AuthController {
     }
   }
 
-  // Register Content Staff
-  async registerContentStaff(req, res) {
-    try {
-      const result = await authService.registerContentStaff(req.body);
-      res.status(201).json(result);
-    } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({
-        success: false,
-        message: err.message || 'Content Staff registration failed'
-      });
-    }
-  }
-
-  // Register Team with Coach and 15 Squad Players
+  // Register Team
   async registerTeam(req, res) {
     try {
       const result = await authService.registerTeam(req.body);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
       res.status(201).json(result);
     } catch (err) {
       const status = err.status || 400;
@@ -185,104 +201,63 @@ class AuthController {
     }
   }
 
-  // Get Teams
+  // Register Content Staff
+  async registerContentStaff(req, res) {
+    try {
+      const result = await authService.registerContentStaff(req.body);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
+      res.status(201).json(result);
+    } catch (err) {
+      const status = err.status || 400;
+      res.status(status).json({
+        success: false,
+        message: err.message || 'Content Staff registration failed'
+      });
+    }
+  }
+
   async getTeams(req, res) {
     try {
-      const statusFilter = req.query.status || null;
-      const teams = await authService.getTeams(statusFilter);
+      const teams = await authService.getTeams();
       res.status(200).json({ success: true, teams });
     } catch (err) {
-      const status = err.status || 500;
-      res.status(status).json({ success: false, message: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 
-  // Approve Team
   async approveTeam(req, res) {
     try {
-      const teamId = req.params.id || req.body.teamId || req.body.id;
-      const adminId = (req.user && req.user.id) || 'ADMIN';
-      const result = await authService.approveRegistration(teamId, 'TEAM', adminId);
+      const result = await authService.approveTeam(req.params.id || req.body.id);
       res.status(200).json(result);
     } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({ success: false, message: err.message });
+      res.status(400).json({ success: false, message: err.message });
     }
   }
 
-  // Reject Team
   async rejectTeam(req, res) {
     try {
-      const teamId = req.params.id || req.body.teamId || req.body.id;
-      const reason = req.body.reason || 'Criteria not met';
-      const adminId = (req.user && req.user.id) || 'ADMIN';
-      const result = await authService.rejectRegistration(teamId, 'TEAM', reason, adminId);
+      const result = await authService.rejectTeam(req.params.id || req.body.id, req.body.reason);
       res.status(200).json(result);
     } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({ success: false, message: err.message });
+      res.status(400).json({ success: false, message: err.message });
     }
   }
 
-  // Get All Registrations across all roles
   async getAllRegistrations(req, res) {
     try {
-      const { status, role } = req.query;
-      const registrations = await authService.getAllRegistrations(status, role);
-      res.status(200).json({ success: true, count: registrations.length, registrations });
+      const result = await authService.getAllRegistrations();
+      res.status(200).json({ success: true, ...result });
     } catch (err) {
-      const status = err.status || 500;
-      res.status(status).json({ success: false, message: err.message });
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 
-  // Unified Approve Any Registration
-  async approveRegistration(req, res) {
-    try {
-      const id = req.params.id || req.body.id;
-      const type = req.body.type || req.query.type || 'TEAM';
-      const adminId = (req.user && req.user.id) || 'ADMIN';
-      const result = await authService.approveRegistration(id, type, adminId);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({ success: false, message: err.message });
-    }
-  }
-
-  // Unified Reject Any Registration
-  async rejectRegistration(req, res) {
-    try {
-      const id = req.params.id || req.body.id;
-      const type = req.body.type || req.query.type || 'TEAM';
-      const reason = req.body.reason || 'Criteria not met';
-      const adminId = (req.user && req.user.id) || 'ADMIN';
-      const result = await authService.rejectRegistration(id, type, reason, adminId);
-      res.status(200).json(result);
-    } catch (err) {
-      const status = err.status || 400;
-      res.status(status).json({ success: false, message: err.message });
-    }
-  }
-
-  // Admin Notifications
   async getAdminNotifications(req, res) {
     try {
-      const statusFilter = req.query.status || null;
-      const notifications = await authService.getAdminNotifications(statusFilter);
-      res.status(200).json({ success: true, notifications });
-    } catch (err) {
-      const status = err.status || 500;
-      res.status(status).json({ success: false, message: err.message });
-    }
-  }
-
-  // Scorer List & Status
-  async getScorers(req, res) {
-    try {
-      const statusFilter = req.query.status || null;
-      const scorers = await authService.getScorers(statusFilter);
-      res.status(200).json({ success: true, scorers });
+      const notifs = await authService.getAdminNotifications();
+      res.status(200).json({ success: true, notifications: notifs });
     } catch (err) {
       res.status(500).json({ success: false, message: err.message });
     }
@@ -290,24 +265,15 @@ class AuthController {
 
   async updateScorerStatus(req, res) {
     try {
-      const idOrEmail = req.params.id || req.body.id || req.body.email;
-      const { status, reason } = req.body;
-      const result = await authService.updateScorerStatus(idOrEmail, status, reason);
+      const result = await authService.updateScorerStatus(req.params.id || req.body.id, req.body.status);
       res.status(200).json(result);
     } catch (err) {
       res.status(400).json({ success: false, message: err.message });
     }
   }
-
-  // Current User Profile
-  async getMe(req, res) {
-    try {
-      const profile = await authService.getProfile(req.user.id);
-      res.status(200).json({ success: true, user: profile });
-    } catch (err) {
-      res.status(500).json({ success: false, message: err.message });
-    }
-  }
 }
 
-module.exports = new AuthController();
+const authController = new AuthController();
+authController.setAuthCookies = setAuthCookies;
+authController.clearAuthCookies = clearAuthCookies;
+module.exports = authController;

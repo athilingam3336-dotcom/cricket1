@@ -117,8 +117,6 @@ class AuthService {
       otp: rawOtp
     });
 
-    console.log(`\n📨 [OTP DISPATCH] Role: ${user.role} | Email: ${user.email} | OTP: ${rawOtp}\n`);
-
     if (mailResult && !mailResult.success && mailResult.smtpError) {
       throw { status: 500, message: `Failed to deliver email: ${mailResult.smtpError}. Please check your SMTP settings.` };
     }

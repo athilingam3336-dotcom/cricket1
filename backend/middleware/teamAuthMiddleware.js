@@ -10,11 +10,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'cricket_team_jwt_secret_2025';
 
 function requireTeamAuth(req, res, next) {
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: No token provided.' });
+  let token = null;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.cookies && (req.cookies.auth_token || req.cookies.token || req.cookies.teamAuthToken)) {
+    token = req.cookies.auth_token || req.cookies.token || req.cookies.teamAuthToken;
   }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided.' });
+  }
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'TEAM') {

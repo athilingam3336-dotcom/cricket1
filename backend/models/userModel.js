@@ -23,7 +23,7 @@ class UserModel {
     return this.Model.findOne({ id }).lean();
   }
 
-  async create({ id, name, email, mobile, role = 'USER', password_hash = null, status = 'ACTIVE' }) {
+  async create({ id, name, email, mobile, role = 'USER', password_hash = null, status = 'ACTIVE', player_details, scorer_details, ...rest }) {
     await db.initDb();
     const userId = id || `USR-${Date.now()}`;
     const cleanEmail = email.trim().toLowerCase();
@@ -34,7 +34,10 @@ class UserModel {
       mobile: mobile || null,
       role,
       password_hash,
-      status
+      status,
+      ...(player_details && { player_details }),
+      ...(scorer_details && { scorer_details }),
+      ...rest
     });
     return user.toObject();
   }

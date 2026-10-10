@@ -91,16 +91,27 @@ async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : { 'x-user-role': 'ADMIN', 'x-user-email': 'admin@cfvd.org' })
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 
   try {
     const res = await fetch(url, {
+      credentials: 'include',
       ...options,
       headers: { ...headers, ...(options.headers as any) }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (_e) {
+      if (!res.ok) {
+        throw new Error(`Server returned error (${res.status}): ${res.statusText || 'Endpoint unavailable'}`);
+      }
+      throw new Error('Unexpected response format from server');
+    }
+
     if (!res.ok) {
       throw new Error(data.message || data.error || `Request failed with status ${res.status}`);
     }
@@ -112,18 +123,71 @@ async function request(endpoint: string, options: RequestInit = {}) {
 }
 
 export const ScorerApi = {
-  // --- REAL AUTHENTICATION & OTP APIs ---
+  // --- REAL AUTHENTICATION & PASSWORD APIs ---
+  getMe: async () => {
+    return request('/auth/me');
+  },
+
+  logout: async () => {
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch (_e) {}
+    setAuthToken(null);
+    setCurrentUser(null);
+    return { success: true };
+  },
+
+  checkAuthSession: async () => {
+    try {
+      const res = await request('/auth/me');
+      if (res && res.success && res.user) {
+        setCurrentUser(res.user);
+        return res.user;
+      }
+    } catch (_e) {
+      // Token expired or unauthenticated
+    }
+    return currentUser;
+  },
+
+  sendRegistrationOtp: async (email: string, name?: string, role?: string) => {
+    return request('/auth/send-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, name, role })
+    });
+  },
+
+  verifyRegistrationOtp: async (email: string, otp: string) => {
+    return request('/auth/verify-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  },
+
+  loginWithPassword: async (email: string, password: string, role?: string) => {
+    const res = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, role })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+
   requestOtp: async (email: string, role?: string) => {
-    return request('/auth/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
       body: JSON.stringify({ email, role })
     });
   },
 
   verifyOtp: async (email: string, otp: string) => {
-    const res = await request('/auth/verify-otp', {
+    const res = await request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, otp })
+      body: JSON.stringify({ email, password: otp })
     });
     if (res.token) {
       setAuthToken(res.token);
@@ -132,48 +196,32 @@ export const ScorerApi = {
     return res;
   },
 
-  login: async (email: string, otp: string) => {
-    return ScorerApi.verifyOtp(email, otp);
+  login: async (email: string, passwordOrOtp: string, role?: string) => {
+    return ScorerApi.loginWithPassword(email, passwordOrOtp, role);
   },
 
-  // Team / Coach OTP
+  // Team / Coach
   requestTeamOtp: async (coachName: string, coachEmail: string) => {
-    return request('/auth/team/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
-      body: JSON.stringify({ coachName, coachEmail })
+      body: JSON.stringify({ name: coachName, email: coachEmail, role: 'COACH' })
     });
   },
 
   verifyTeamOtp: async (coachEmail: string, otp: string) => {
-    const res = await request('/auth/team/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ coachEmail, otp })
-    });
-    if (res.token) {
-      setAuthToken(res.token);
-      if (res.user) setCurrentUser(res.user);
-    }
-    return res;
+    return ScorerApi.loginWithPassword(coachEmail, otp, 'COACH');
   },
 
-  // Player OTP
+  // Player
   requestPlayerOtp: async (nameOrEmail: string) => {
-    return request('/auth/player/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
-      body: JSON.stringify({ nameOrEmail })
+      body: JSON.stringify({ email: nameOrEmail, role: 'PLAYER' })
     });
   },
 
   verifyPlayerOtp: async (nameOrEmail: string, otp: string) => {
-    const res = await request('/auth/player/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ nameOrEmail, otp })
-    });
-    if (res.token) {
-      setAuthToken(res.token);
-      if (res.user) setCurrentUser(res.user);
-    }
-    return res;
+    return ScorerApi.loginWithPassword(nameOrEmail, otp, 'PLAYER');
   },
 
   register: async (payload: any) => {
@@ -192,6 +240,7 @@ export const ScorerApi = {
   registerPlayer: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     role?: string;
     category?: string;
@@ -199,40 +248,60 @@ export const ScorerApi = {
     battingStyle?: string;
     bowlingStyle?: string;
     clubChoice?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-player', {
+    const res = await request('/auth/register-player', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Scorer Registration (PDF Module 5 & 10)
   registerScorer: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     taluk?: string;
     certificationLevel?: string;
     pin?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-scorer', {
+    const res = await request('/auth/register-scorer', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Content Staff Registration (PDF Module 7 & 10)
   registerContentStaff: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     specialization?: string;
     credentials?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-content', {
+    const res = await request('/auth/register-content', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Team Registration with 15 Squad Players (PDF Module 3)
@@ -240,14 +309,21 @@ export const ScorerApi = {
     teamName: string;
     coachName: string;
     coachEmail: string;
+    password?: string;
     taluk?: string;
     city?: string;
     players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
+    otp?: string;
   }) => {
-    return request('/auth/register-team', {
+    const res = await request('/auth/register-team', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   getTeams: async (status?: string) => {
@@ -677,6 +753,10 @@ export const PlayerApi = {
 
   getNotifications: async () => {
     return request('/player/notifications');
+  },
+
+  logout: async () => {
+    return ScorerApi.logout();
   }
 };
 

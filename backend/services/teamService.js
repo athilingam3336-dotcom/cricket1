@@ -5,7 +5,7 @@
  * Supports both MySQL and in-memory fallback modes.
  */
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool, getUseMemoryFallback, memoryDb } = require('../config/db');
