@@ -173,6 +173,10 @@ const INITIAL_TEAMS_DATA = [
 ];
 
 export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
+  const { width } = Dimensions.get('window');
+  const isDesktop = width > 768;
+  const insetsTop = Platform.OS === 'android' ? 40 : Platform.OS === 'ios' ? 50 : 0;
+
   // Start on 'scorers' tab to immediately match the user's screenshot, or allow 'overview'
   const [activeTab, setActiveTab] = useState<AdminTab>('scorers');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -438,22 +442,24 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
       {/* ─────────────────────────────────────────────────────────────
           1. DEDICATED ADMIN TOP BAR (Website Navbar Removed)
           ───────────────────────────────────────────────────────────── */}
-      <View style={styles.adminMinimalTopBar}>
+      <View style={[styles.adminMinimalTopBar, { paddingTop: styles.adminMinimalTopBar.paddingVertical + insetsTop }]}>
         <View style={styles.adminMinimalBrandCol}>
           <Image source={IMG_LOGO} style={styles.adminMinimalLogo} resizeMode="contain" />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.adminMinimalTitle}>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</Text>
-            <Text style={styles.adminMinimalSub}>Official Administrator Management Console • Clearance & Operations</Text>
+          <View style={{ marginLeft: 12, flex: 1 }}>
+            <Text style={styles.adminMinimalTitle} numberOfLines={2}>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</Text>
+            <Text style={styles.adminMinimalSub} numberOfLines={1}>Official Administrator Management Console</Text>
           </View>
         </View>
-        <View style={styles.adminMinimalActionRow}>
-          <View style={styles.adminUserBadgePill}>
-            <Text style={styles.adminUserBadgePillText}>👤 {adminEmail}</Text>
+        {isDesktop && (
+          <View style={styles.adminMinimalActionRow}>
+            <View style={styles.adminUserBadgePill}>
+              <Text style={styles.adminUserBadgePillText}>👤 {adminEmail}</Text>
+            </View>
+            <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
+              <Text style={styles.adminExitBtnPillText}>← Exit</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
-            <Text style={styles.adminExitBtnPillText}>← Exit Admin</Text>
-          </TouchableOpacity>
-        </View>
+        )}
       </View>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -545,7 +551,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
           {activeTab === 'scorers' && (
             <View>
               {/* TOP TWO SIDE-BY-SIDE HIGHLIGHT CARDS */}
-              <View style={styles.highlightCardsRow}>
+              <View style={[styles.highlightCardsRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                 {/* Left Card: Scorer Management Stats */}
                 <View style={styles.navyStatCard}>
                   <View style={styles.statCardHeader}>
@@ -610,6 +616,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <View
                       style={[
                         styles.donutOuterRing,
+                        !isDesktop && { width: 140, height: 140, borderRadius: 70 },
                         Platform.OS === 'web' &&
                           ({
                             background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
@@ -618,9 +625,9 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                       ]}
                     >
                       {/* Center Hole */}
-                      <View style={styles.donutHole}>
-                        <Text style={styles.donutNumber}>{scorerTotal}</Text>
-                        <Text style={styles.donutUnitLabel}>SCORERS</Text>
+                      <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                        <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{scorerTotal}</Text>
+                        <Text style={[styles.donutUnitLabel, !isDesktop && { fontSize: 8 }]}>SCORERS</Text>
                       </View>
                     </View>
                   </View>
