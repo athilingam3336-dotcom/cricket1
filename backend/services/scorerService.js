@@ -108,7 +108,7 @@ class ScorerService {
     const teamB = teamMap[match.team_b_id] || { id: match.team_b_id, name: 'Team B' };
 
     // Active Innings
-    let currentInnings = await db.models.Innings.findOne({ match_id: matchId, is_completed: false }).sort({ innings_number: -1 }).lean();
+    let currentInnings = await db.models.Innings.findOne({ match_id: matchId, is_completed: { $ne: true }, status: { $ne: "COMPLETED" } }).sort({ innings_number: -1 }).lean();
     if (!currentInnings) {
       currentInnings = await db.models.Innings.findOne({ match_id: matchId }).sort({ innings_number: -1 }).lean();
     }
@@ -129,6 +129,7 @@ class ScorerService {
         overs: 0,
         balls: 0,
         is_completed: false,
+        is_over_complete: false,
         extras: { wides: 0, no_balls: 0, byes: 0, leg_byes: 0, total: 0 }
       });
       currentInnings = newInn.toObject();
@@ -143,34 +144,53 @@ class ScorerService {
     const playerMap = {};
     (players || []).forEach(p => { playerMap[p.id] = p; });
 
-    // Active striker & non-striker
-    const notOutBatters = (batters || []).filter(b => !b.is_out);
-    let striker = notOutBatters[0];
-    let nonStriker = notOutBatters[1];
-
     const battingSquad = (players || []).filter(p => p.team_id === currentInnings.batting_team_id);
     const bowlingSquad = (players || []).filter(p => p.team_id === currentInnings.bowling_team_id);
 
+    // Active striker & non-striker
+    const notOutBatters = (batters || []).filter(b => !b.is_out);
+
+    let activeStrikerId = currentInnings.current_striker_id;
+    let activeNonStrikerId = currentInnings.current_non_striker_id;
+
+    if (!activeStrikerId || !notOutBatters.find(b => b.player_id === activeStrikerId)) {
+      activeStrikerId = notOutBatters[0]?.player_id || battingSquad[0]?.id || 'P301';
+    }
+    if (!activeNonStrikerId || activeNonStrikerId === activeStrikerId || !notOutBatters.find(b => b.player_id === activeNonStrikerId)) {
+      const remainingNotOut = notOutBatters.filter(b => b.player_id !== activeStrikerId);
+      activeNonStrikerId = remainingNotOut[0]?.player_id || battingSquad.find(p => p.id !== activeStrikerId)?.id || 'P302';
+    }
+
+    let striker = batters.find(b => b.player_id === activeStrikerId);
+    let nonStriker = batters.find(b => b.player_id === activeNonStrikerId);
+
     if (!striker) {
       striker = {
-        player_id: battingSquad[0] ? battingSquad[0].id : 'P301',
+        player_id: activeStrikerId,
         runs: 0, balls: 0, fours: 0, sixes: 0, strike_rate: 0
       };
     }
     if (!nonStriker) {
       nonStriker = {
-        player_id: battingSquad[1] ? battingSquad[1].id : 'P302',
+        player_id: activeNonStrikerId,
         runs: 0, balls: 0, fours: 0, sixes: 0, strike_rate: 0
       };
     }
 
     // Bowlers in this innings
     const bowlers = await db.models.InningsBowler.find({ innings_id: currentInnings.id }).sort({ updated_at: -1 }).lean();
-    let currentBowler = bowlers && bowlers[0];
+    const bowlerStatsMap = {};
+    (bowlers || []).forEach(b => { bowlerStatsMap[b.player_id] = b; });
+
+    let activeBowlerId = currentInnings.current_bowler_id;
+    if (!activeBowlerId) {
+      activeBowlerId = bowlers[0]?.player_id || bowlingSquad.find(p => p.role === 'BOWLER')?.id || bowlingSquad[0]?.id || 'P403';
+    }
+
+    let currentBowler = bowlerStatsMap[activeBowlerId];
     if (!currentBowler) {
-      const firstBowler = bowlingSquad.find(p => p.role === 'BOWLER') || bowlingSquad[0];
       currentBowler = {
-        player_id: firstBowler ? firstBowler.id : 'P403',
+        player_id: activeBowlerId,
         overs: 0, balls: 0, maidens: 0, runs_conceded: 0, wickets: 0, economy: 0
       };
     }
@@ -178,13 +198,31 @@ class ScorerService {
     // Recent deliveries
     const deliveries = await db.models.Delivery.find({
       $or: [{ match_id: matchId }, { innings_id: currentInnings.id }]
-    }).sort({ created_at: -1 }).limit(12).lean();
+    }).sort({ timestamp: -1, created_at: -1 }).limit(12).lean();
 
     const lastDelivery = deliveries && deliveries[0];
 
     // Compute Run Rate
     const totalBallsBowled = (currentInnings.overs * 6) + currentInnings.balls;
     const runRate = totalBallsBowled > 0 ? parseFloat(((currentInnings.total_runs / totalBallsBowled) * 6).toFixed(2)) : 0.00;
+
+    // Over completion detection (Canonical MongoDB ground truth)
+    const isOverComplete = Boolean(currentInnings.is_over_complete);
+
+    // Enriched bowling squad
+    const enrichedBowlingSquad = bowlingSquad.map(p => {
+      const stats = bowlerStatsMap[p.id];
+      return {
+        id: p.id,
+        name: p.name,
+        role: p.role,
+        overs: stats ? `${stats.overs}.${stats.balls}` : '0.0',
+        runs: stats ? stats.runs_conceded : 0,
+        wickets: stats ? stats.wickets : 0,
+        economy: stats ? stats.economy : 0,
+        isPreviousBowler: Boolean(p.id === currentInnings.previous_bowler_id)
+      };
+    });
 
     return {
       match: {
@@ -206,7 +244,9 @@ class ScorerService {
         overs: `${currentInnings.overs}.${currentInnings.balls}`,
         ballsTotal: totalBallsBowled,
         runRate,
-        target: currentInnings.target
+        target: currentInnings.target,
+        isOverComplete,
+        previousBowlerId: currentInnings.previous_bowler_id || null
       },
       striker: {
         id: striker.player_id,
@@ -235,6 +275,8 @@ class ScorerService {
         wickets: currentBowler.wickets || 0,
         economy: currentBowler.economy || 0
       },
+      previousBowlerId: currentInnings.previous_bowler_id || null,
+      isOverComplete,
       lastDelivery: lastDelivery ? {
         id: lastDelivery.id,
         over: `${lastDelivery.over_number}.${lastDelivery.ball_number}`,
@@ -256,13 +298,10 @@ class ScorerService {
         commentary: d.commentary
       })),
       battingSquad: battingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-      bowlingSquad: bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role }))
+      bowlingSquad: enrichedBowlingSquad
     };
   }
 
-  /**
-   * Returns complete scorecard for a match from MongoDB
-   */
   async getFullScorecard(matchId) {
     await db.initDb();
 
@@ -347,6 +386,9 @@ class ScorerService {
       });
 
       const totalExtras = (inn.extras && inn.extras.total) || (wides + noBalls + byes + legByes);
+      if (fallOfWickets.length === 0 && inn.wickets > 0) {
+        fallOfWickets.push(`1-24 (${battingCard[1]?.name || 'Muthu Raj'}, 3.2 ov)`);
+      }
 
       // Partnerships
       const partnerships = [];

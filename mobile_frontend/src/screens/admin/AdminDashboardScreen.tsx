@@ -47,132 +47,6 @@ type AdminTab = 'overview' | 'teams' | 'scorers' | 'content' | 'schedules';
 type FilterStatus = 'all' | 'Pending' | 'Approved' | 'Rejected';
 type MatchFilterStatus = 'all' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
 
-// Fallback initial scorers data (matching exact counts: 2 Approved, 2 Pending, 1 Rejected = 5 Total)
-const INITIAL_SCORERS_DATA = [
-  {
-    scorerId: 'SCORER-101',
-    scorerName: 'Thiru. K. Sundararajan',
-    email: 'sundararajan@cfvd.org',
-    phone: '+91 94431 12345',
-    grade: 'BCCI Level 1 Digital Scorer',
-    taluk: 'Virudhunagar',
-    experienceYears: 8,
-    status: 'Approved',
-    registrationDate: '2026-09-15T10:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: '2026-09-16T11:00:00.000Z',
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-102',
-    scorerName: 'Thiru. M. Venkatesh',
-    email: 'venkatesh.m@gmail.com',
-    phone: '+91 98422 67890',
-    grade: 'District Senior Panel Scorer',
-    taluk: 'Sivakasi',
-    experienceYears: 5,
-    status: 'Approved',
-    registrationDate: '2026-09-16T11:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: '2026-09-17T09:30:00.000Z',
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-103',
-    scorerName: 'Thiru. S. Pitchaimuthu',
-    email: 'pitchai.s@yahoo.com',
-    phone: '+91 97890 23456',
-    grade: 'Collegiate League Scorer',
-    taluk: 'Rajapalayam',
-    experienceYears: 3,
-    status: 'Pending',
-    registrationDate: '2026-09-27T08:30:00.000Z',
-    approvedBy: null,
-    approvedAt: null,
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-104',
-    scorerName: 'Thiru. R. Vignesh Kumar',
-    email: 'vignesh.k@gmail.com',
-    phone: '+91 96555 89012',
-    grade: 'Academy Digital Scorer',
-    taluk: 'Aruppukottai',
-    experienceYears: 2,
-    status: 'Pending',
-    registrationDate: '2026-09-28T14:20:00.000Z',
-    approvedBy: null,
-    approvedAt: null,
-    rejectionReason: null
-  },
-  {
-    scorerId: 'SCORER-105',
-    scorerName: 'Thiru. P. Arumugam',
-    email: 'arumugam.p@gmail.com',
-    phone: '+91 99444 34567',
-    grade: 'Club Panel Scorer',
-    taluk: 'Sattur',
-    experienceYears: 1,
-    status: 'Rejected',
-    registrationDate: '2026-09-19T09:00:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: null,
-    rejectedAt: '2026-09-20T12:00:00.000Z',
-    rejectedBy: 'admin@cfvd.org',
-    rejectionReason: 'Required scorer certification credentials expired. Renewal required.'
-  }
-];
-
-// Fallback initial teams data (matching exact counts: 1 Pending, 1 Approved = 2 Total)
-const INITIAL_TEAMS_DATA = [
-  {
-    teamId: 'TEAM-VRD-1001',
-    teamName: 'Virudhunagar Strikers CC',
-    coach: { name: 'S. Rajendran', email: 'rajendran@strikerscc.org' },
-    taluk: 'Virudhunagar',
-    status: 'Approved',
-    adminApprovalStatus: 'Approved',
-    registrationDate: '2026-09-15T09:30:00.000Z',
-    approvedBy: 'admin@cfvd.org',
-    approvedAt: '2026-09-16T11:00:00.000Z',
-    rejectionReason: null,
-    members: [
-      { playerId: 'CFVD-PLY-101', playerName: 'R. Saravanan', playerEmail: 'saravanan.r@strikerscc.org', jerseyNumber: '10', role: 'Captain / All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast Medium' },
-      { playerId: 'CFVD-PLY-STR-02', playerName: 'M. Anandhan', playerEmail: 'anandhan.m@strikerscc.org', jerseyNumber: '7', role: 'Opening Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
-      { playerId: 'CFVD-PLY-STR-03', playerName: 'K. Praveen Kumar', playerEmail: 'praveen.k@strikerscc.org', jerseyNumber: '17', role: 'Spin Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' },
-      { playerId: 'CFVD-PLY-STR-04', playerName: 'G. Karthick', playerEmail: 'karthick.g@strikerscc.org', jerseyNumber: '3', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Medium' },
-      { playerId: 'CFVD-PLY-STR-05', playerName: 'S. Balamurugan', playerEmail: 'bala.s@strikerscc.org', jerseyNumber: '9', role: 'Top Order Batsman', battingStyle: 'Left Hand Bat', bowlingStyle: 'None' },
-      { playerId: 'CFVD-PLY-STR-06', playerName: 'N. Muthuraman', playerEmail: 'muthu.n@strikerscc.org', jerseyNumber: '21', role: 'Pace Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
-      { playerId: 'CFVD-PLY-STR-07', playerName: 'P. Sivakumar', playerEmail: 'siva.p@strikerscc.org', jerseyNumber: '28', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
-      { playerId: 'CFVD-PLY-STR-08', playerName: 'V. Prakash', playerEmail: 'prakash.v@strikerscc.org', jerseyNumber: '14', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Medium' },
-      { playerId: 'CFVD-PLY-STR-09', playerName: 'T. Karthick', playerEmail: 'karthick.t@strikerscc.org', jerseyNumber: '99', role: 'Strike Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
-      { playerId: 'CFVD-PLY-STR-10', playerName: 'A. Vijay', playerEmail: 'vijay.a@strikerscc.org', jerseyNumber: '45', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Left Arm Fast' },
-      { playerId: 'CFVD-PLY-STR-11', playerName: 'G. Suresh', playerEmail: 'suresh.g@strikerscc.org', jerseyNumber: '22', role: 'Leg Spinner', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Leg Spin' },
-      { playerId: 'CFVD-PLY-STR-12', playerName: 'C. Vignesh', playerEmail: 'vignesh.c@strikerscc.org', jerseyNumber: '12', role: 'Middle Order Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
-      { playerId: 'CFVD-PLY-STR-13', playerName: 'J. Dinesh', playerEmail: 'dinesh.j@strikerscc.org', jerseyNumber: '33', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' },
-      { playerId: 'CFVD-PLY-STR-14', playerName: 'E. Ramesh', playerEmail: 'ramesh.e@strikerscc.org', jerseyNumber: '1', role: 'Wicketkeeper Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
-      { playerId: 'CFVD-PLY-STR-15', playerName: 'D. Kumar', playerEmail: 'kumar.d@strikerscc.org', jerseyNumber: '88', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' }
-    ]
-  },
-  {
-    teamId: 'TEAM-VRD-1002',
-    teamName: 'Sivakasi Super Kings',
-    coach: { name: 'K. Meenakshisundaram', email: 'meenakshi@sivakasisk.com' },
-    taluk: 'Sivakasi',
-    status: 'Pending',
-    adminApprovalStatus: 'Pending',
-    registrationDate: '2026-09-28T11:00:00.000Z',
-    approvedBy: null,
-    approvedAt: null,
-    rejectionReason: null,
-    members: [
-      { playerId: 'CFVD-PLY-SSK-01', playerName: 'S. Vigneshwaran', playerEmail: 'vignesh.s@sivakasisk.com', jerseyNumber: '18', role: 'Opening Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Left Arm Fast' },
-      { playerId: 'CFVD-PLY-SSK-02', playerName: 'T. Balamurugan', playerEmail: 'bala.t@sivakasisk.com', jerseyNumber: '5', role: 'Opening Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
-      { playerId: 'CFVD-PLY-SSK-03', playerName: 'N. Muthuraman', playerEmail: 'muthu.n@sivakasisk.com', jerseyNumber: '11', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' }
-    ]
-  }
-];
-
 export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
   // Start on 'scorers' tab to immediately match the user's screenshot, or allow 'overview'
   const [activeTab, setActiveTab] = useState<AdminTab>('scorers');
@@ -184,13 +58,9 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const adminEmail = initialParams?.adminEmail || currentUser?.email || 'admin@cfvd.org';
 
   // State for Teams and Scorers
-  const [scorers, setScorers] = useState<any[]>(INITIAL_SCORERS_DATA);
-  const [teams, setTeams] = useState<any[]>(INITIAL_TEAMS_DATA);
-  const [newsList, setNewsList] = useState<any[]>([
-    { id: 'NEWS-01', title: 'District Senior Division League 2026 Fixtures Released', category: 'TOURNAMENT', author: 'CFVD Secretariat', createdAt: '2026-09-25T10:00:00.000Z' },
-    { id: 'NEWS-02', title: 'Official Digital Scorer Accreditation Certification Workshop', category: 'ANNOUNCEMENT', author: 'Technical Committee', createdAt: '2026-09-22T14:30:00.000Z' },
-    { id: 'NEWS-03', title: 'Under-19 District Selection Trials Venue & Schedule', category: 'SELECTION_TRIALS', author: 'Honorary Secretary', createdAt: '2026-09-20T09:00:00.000Z' }
-  ]);
+  const [scorers, setScorers] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [newsList, setNewsList] = useState<any[]>([]);
 
   // Filters
   const [scorerFilter, setScorerFilter] = useState<FilterStatus>('all');
@@ -278,14 +148,22 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               approvedBy: r.details?.approvedBy || (normStatus === 'Approved' ? 'admin@cfvd.org' : null),
               rejectedAt: r.details?.rejectedAt || null,
               rejectionReason: r.details?.rejectionReason || null,
-              members: Array.isArray(r.members) && r.members.length > 0 ? r.members : (r.details?.players || [])
+              members: (Array.isArray(r.members) && r.members.length > 0 ? r.members : (r.details?.players || [])).map((p: any) => ({
+                ...p,
+                name: p.name || p.playerName || 'Player',
+                playerName: p.name || p.playerName || 'Player',
+                email: p.email || p.playerEmail || '',
+                playerEmail: p.email || p.playerEmail || '',
+                jerseyNumber: p.jersey_number || p.jerseyNumber,
+                role: p.role || 'Player'
+              }))
             });
           } else if (r.type === 'SCORER') {
             backendScorers.push({
               scorerId: r.id || r.details?.certification_id || `SCORER-${101 + idx}`,
               scorerName: r.name,
               email: r.email,
-              phone: r.phone || r.details?.phone || '+91 94431 12345',
+              phone: r.phone || r.details?.phone || '—',
               grade: r.details?.specialty || r.roleDisplay || 'District Panel Scorer',
               taluk: r.details?.taluk || 'Virudhunagar',
               experienceYears: r.details?.experience_years || 2,
@@ -298,15 +176,17 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
           }
         });
 
-        if (backendTeams.length > 0) setTeams(backendTeams);
-        if (backendScorers.length > 0) setScorers(backendScorers);
+        setTeams(backendTeams);
+        setScorers(backendScorers);
+      } else {
+        setTeams([]);
+        setScorers([]);
       }
 
-      // 2. Fetch live news
+      // 2. Fetch live news from MongoDB
       const newsRes = await ScorerApi.getNews();
-      if (newsRes && newsRes.success && Array.isArray(newsRes.news)) {
-        setNewsList(newsRes.news);
-      }
+      const newsData = (newsRes && (Array.isArray(newsRes.data) ? newsRes.data : (Array.isArray(newsRes.news) ? newsRes.news : []))) || [];
+      setNewsList(newsData);
 
       // 3. Fetch match schedules & logistics
       await loadMatchesAndLogistics();
@@ -1580,25 +1460,31 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               {/* Published News List */}
               <View style={styles.newsListContainer}>
                 <Text style={styles.sectionHeading}>Published Official Notices ({newsList.length})</Text>
-                {newsList.map(n => (
-                  <View key={n.id} style={styles.newsItemRow}>
-                    <View style={styles.newsItemTextCol}>
-                      <Text style={styles.newsItemTitle}>{n.title}</Text>
-                      <Text style={styles.newsItemMeta}>
-                        <Text style={{ fontWeight: '700', color: '#1e293b' }}>Category: </Text>
-                        {n.category} • <Text style={{ fontWeight: '700', color: '#1e293b' }}>Author: </Text>
-                        {n.author} • {n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'Live'}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.btnDeleteNews}
-                      onPress={() => handleDeleteNews(n.id)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.btnDeleteNewsText}>🗑 Delete</Text>
-                    </TouchableOpacity>
+                {newsList.length === 0 ? (
+                  <View style={{ padding: 24, alignItems: 'center' }}>
+                    <Text style={{ color: '#64748b' }}>No official notices published yet.</Text>
                   </View>
-                ))}
+                ) : (
+                  newsList.map((n: any) => (
+                    <View key={n.id || n._id} style={styles.newsItemRow}>
+                      <View style={styles.newsItemTextCol}>
+                        <Text style={styles.newsItemTitle}>{n.title}</Text>
+                        <Text style={styles.newsItemMeta}>
+                          <Text style={{ fontWeight: '700', color: '#1e293b' }}>Category: </Text>
+                          {n.category} • <Text style={{ fontWeight: '700', color: '#1e293b' }}>Author: </Text>
+                          {n.author} • {n.createdAt || n.published_at ? new Date(n.createdAt || n.published_at).toLocaleDateString() : 'Live'}
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.btnDeleteNews}
+                        onPress={() => handleDeleteNews(n.id || n._id)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={styles.btnDeleteNewsText}>🗑 Delete</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                )}
               </View>
             </View>
           )}
@@ -1947,23 +1833,22 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               <View style={styles.squadTableContainer}>
                 <View style={styles.squadTableHeader}>
                   <Text style={[styles.thCell, { width: 50 }]}>#</Text>
-                  <Text style={[styles.thCell, { flex: 2 }]}>Player Name</Text>
+                  <Text style={[styles.thCell, { flex: 2.2 }]}>Player Name</Text>
+                  <Text style={[styles.thCell, { flex: 2 }]}>Player Email</Text>
                   <Text style={[styles.thCell, { flex: 1.5 }]}>Playing Role</Text>
-                  <Text style={[styles.thCell, { flex: 1.5 }]}>Batting Style</Text>
-                  <Text style={[styles.thCell, { flex: 1.5 }]}>Bowling Style</Text>
                 </View>
 
                 {selectedSquadModal?.members && selectedSquadModal.members.length > 0 ? (
                   selectedSquadModal.members.map((m: any, idx: number) => (
-                    <View key={m.playerId || idx} style={[styles.squadTableRow, idx % 2 === 1 && styles.rowAlt]}>
-                      <Text style={[styles.tdCell, { width: 50, fontWeight: '700' }]}>{m.jerseyNumber || idx + 1}</Text>
-                      <View style={{ flex: 2 }}>
-                        <Text style={[styles.tdCell, { fontWeight: '700', color: '#0f172a' }]}>{m.playerName}</Text>
-                        <Text style={{ fontSize: 11, color: '#64748b' }}>{m.playerEmail || m.playerId}</Text>
+                    <View key={m.playerId || m._id || idx} style={[styles.squadTableRow, idx % 2 === 1 && styles.rowAlt]}>
+                      <Text style={[styles.tdCell, { width: 50, fontWeight: '700' }]}>{m.jersey_number || m.jerseyNumber || idx + 1}</Text>
+                      <Text style={[styles.tdCell, { flex: 2.2, fontWeight: '700', color: '#0f172a' }]}>{m.name || m.playerName || 'Player'}</Text>
+                      <Text style={[styles.tdCell, { flex: 2, color: '#475569', fontSize: 13 }]}>{m.email || m.playerEmail || m.playerId || '—'}</Text>
+                      <View style={{ flex: 1.5, justifyContent: 'center' }}>
+                        <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, alignSelf: 'flex-start' }}>
+                          <Text style={{ color: '#b45309', fontWeight: '700', fontSize: 12 }}>{m.role || 'Player'}</Text>
+                        </View>
                       </View>
-                      <Text style={[styles.tdCell, { flex: 1.5, color: '#d97706', fontWeight: '600' }]}>{m.role || 'Player'}</Text>
-                      <Text style={[styles.tdCell, { flex: 1.5 }]}>{m.battingStyle || 'Right Hand Bat'}</Text>
-                      <Text style={[styles.tdCell, { flex: 1.5 }]}>{m.bowlingStyle || 'None'}</Text>
                     </View>
                   ))
                 ) : (

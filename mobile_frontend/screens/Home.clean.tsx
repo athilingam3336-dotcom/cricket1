@@ -24,8 +24,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppNavigation } from '../src/navigation/AppNavigator';
-import { io } from 'socket.io-client';
-import { ScorerApi, SOCKET_URL } from '../src/services/api';
+import { ScorerApi } from '../src/services/api';
 
 // ─── ASSET REFERENCES ──────────────────────────────────────────────────────────
 const IMG_LOGO = require('../assets/logo_transparent.png');
@@ -360,38 +359,6 @@ export default function HomeScreen() {
   const [realScorecardData, setRealScorecardData] = useState<any>(null);
   const [isLoadingScorecard, setIsLoadingScorecard] = useState<boolean>(false);
 
-  // Dynamic MongoDB Portal Data (Standings, Performance, Directory)
-  const [portalPointsTable, setPortalPointsTable] = useState<any[]>([]);
-  const [portalTopBatsmen, setPortalTopBatsmen] = useState<any[]>([]);
-  const [portalTopBowlers, setPortalTopBowlers] = useState<any[]>([]);
-  const [portalTopFielders, setPortalTopFielders] = useState<any[]>([]);
-  const [portalAllPlayers, setPortalAllPlayers] = useState<any[]>([]);
-
-  const loadPortalData = async () => {
-    try {
-      const res = await ScorerApi.getPortalHome();
-      if (res && res.success && res.data) {
-        if (Array.isArray(res.data.pointsTable) && res.data.pointsTable.length > 0) {
-          setPortalPointsTable(res.data.pointsTable);
-        }
-        if (Array.isArray(res.data.topBatsmen) && res.data.topBatsmen.length > 0) {
-          setPortalTopBatsmen(res.data.topBatsmen);
-        }
-        if (Array.isArray(res.data.topBowlers) && res.data.topBowlers.length > 0) {
-          setPortalTopBowlers(res.data.topBowlers);
-        }
-        if (Array.isArray(res.data.topFielders) && res.data.topFielders.length > 0) {
-          setPortalTopFielders(res.data.topFielders);
-        }
-        if (Array.isArray(res.data.allPlayers) && res.data.allPlayers.length > 0) {
-          setPortalAllPlayers(res.data.allPlayers);
-        }
-      }
-    } catch (err: any) {
-      console.warn('Failed to load portal data from MongoDB:', err.message);
-    }
-  };
-
   const loadPublicMatches = async () => {
     setIsLoadingMatches(true);
     setMatchesError(null);
@@ -414,33 +381,6 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadPublicMatches();
-    loadPortalData();
-
-    // Real-time Socket.IO Live Score Synchronization
-    let socket: any = null;
-    try {
-      socket = io(SOCKET_URL);
-      socket.on('score:update', () => {
-        loadPublicMatches();
-        loadPortalData();
-      });
-      socket.on('connect', () => {
-        loadPublicMatches();
-        loadPortalData();
-      });
-    } catch (e) {
-      // Fallback to active interval
-    }
-
-    const timer = setInterval(() => {
-      loadPublicMatches();
-      loadPortalData();
-    }, 8000);
-
-    return () => {
-      clearInterval(timer);
-      if (socket) socket.disconnect();
-    };
   }, []);
 
   const handleOpenScorecard = async (matchItem: any) => {
@@ -538,25 +478,22 @@ export default function HomeScreen() {
   };
 
   // Filtered Players
-  const allDisplayPlayers = portalAllPlayers.length > 0 ? portalAllPlayers : DISTRICT_PLAYERS;
-  const filteredPlayers = allDisplayPlayers.filter(p => {
+  const filteredPlayers = DISTRICT_PLAYERS.filter(p => {
     const matchesCategory =
       playerFilter === 'all'
         ? true
         : playerFilter === 'womens'
         ? p.role === 'womens' || p.category === 'womens'
-        : playerFilter === 'allrounder'
-        ? p.role === 'allrounder' || p.role === 'all_rounder'
         : p.role === playerFilter;
 
     const q = playerSearchQuery.toLowerCase().trim();
     const matchesSearch =
       !q ||
       p.name.toLowerCase().includes(q) ||
-      (p.team && p.team.toLowerCase().includes(q)) ||
-      (p.taluk && p.taluk.toLowerCase().includes(q)) ||
-      (p.roleLabel && p.roleLabel.toLowerCase().includes(q)) ||
-      (p.playingRole && p.playingRole.toLowerCase().includes(q));
+      p.team.toLowerCase().includes(q) ||
+      p.taluk.toLowerCase().includes(q) ||
+      p.roleLabel.toLowerCase().includes(q) ||
+      p.playingRole.toLowerCase().includes(q);
 
     return matchesCategory && matchesSearch;
   });
@@ -717,40 +654,26 @@ export default function HomeScreen() {
             style={styles.liveTickerScrollView}
             contentContainerStyle={styles.liveTickerScrollContent}
           >
-            {(() => {
-              const liveM = publicMatches.find(m => (m.status || '').toLowerCase() === 'live' || (m.rawStatus || '').toUpperCase() === 'LIVE');
-              const compM = publicMatches.filter(m => (m.status || '').toLowerCase() === 'completed' || (m.rawStatus || '').toUpperCase() === 'COMPLETED');
-              return (
-                <TouchableOpacity
-                  onPress={() => {
-                    if (liveM) handleOpenScorecard(liveM);
-                    else if (publicMatches[0]) handleOpenScorecard(publicMatches[0]);
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.liveTickerText}>
-                    {liveM ? (
-                      <>
-                        <Text style={styles.tickerMatchHighlight}>
-                          {`🔴 LIVE: ${liveM.teamA} ${liveM.scoreA || ''} vs ${liveM.teamB}${liveM.scoreB && liveM.scoreB !== 'Yet to bat' ? ' ' + liveM.scoreB : ' (Yet to bat)'} — ${liveM.current_innings_number === 2 ? '2nd Innings in Progress' : '1st Innings in Progress'}`}
-                        </Text>
-                        {'   •   '}
-                      </>
-                    ) : null}
-                    {compM.map((cm, i) => (
-                      <React.Fragment key={cm.id || i}>
-                        <Text style={styles.tickerPrefix}>🏁 {cm.teamA} vs {cm.teamB}:</Text>
-                        <Text style={styles.tickerMatchHighlight}>{` ${cm.scoreA || ''} vs ${cm.scoreB || ''}`}</Text>
-                        {` — ${cm.result || cm.result_summary || 'Match Concluded'}${i < compM.length - 1 ? '   •   ' : ''}`}
-                      </React.Fragment>
-                    ))}
-                    {publicMatches.length === 0 && (
-                      <Text style={styles.tickerPrefix}>🏆 Cricket Federation of Virudhunagar District • Official Match Centre</Text>
-                    )}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })()}
+            <TouchableOpacity
+              onPress={() => {
+                setActiveScorecardMatch('match-1');
+                setScorecardModalVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.liveTickerText}>
+                <Text style={styles.tickerMatchHighlight}>62/8 — Need 2 runs in 4 balls</Text>
+                {'   •   '}
+                <Text style={styles.tickerPrefix}>📢 District Division 1 League:</Text>
+                {' Day 2 Stumps — Rajapalayam CC 312 & 45/1 vs Aruppukottai Stars 220'}
+                {'   •   '}
+                <Text style={styles.tickerStarPrefix}>⭐ District Trials:</Text>
+                {' Under-19 Virudhunagar Team selection on Oct 5 at District Sports Complex'}
+                {'   •   '}
+                <Text style={styles.tickerPrefix}>🏆 VPL 2026 Final:</Text>
+                {' Virudhunagar Strikers 164/5 vs Sivakasi Super Kings 162/8'}
+              </Text>
+            </TouchableOpacity>
           </ScrollView>
 
           {/* Right Links */}
@@ -1263,75 +1186,54 @@ export default function HomeScreen() {
                   <Text style={[styles.tableTh, { width: 130, textAlign: 'center' }]}>Recent Form</Text>
                 </View>
 
-                {((portalPointsTable.length > 0 ? portalPointsTable : (TABLE_DATA[pointsTableKey] || [])).map((row: any, idx: number) => {
-                  const standNum = row.pos || row.stand || (idx + 1);
-                  const isGold = standNum === 1;
-                  const isSilver = standNum === 2;
-                  const isBronze = standNum === 3;
-                  const teamTitle = row.teamName || row.name || 'District Club';
-                  const teamSubtitle = row.sub || (standNum <= 2 ? 'Qualified for Knockouts' : 'In Contention');
-                  const pPlayed = row.played ?? row.p ?? 5;
-                  const pWon = row.won ?? row.w ?? 0;
-                  const pLost = row.lost ?? row.l ?? 0;
-                  const pNr = row.nr ?? row.tied ?? 0;
-                  const pBonus = row.bonus ?? 1;
-                  const pNrr = row.nrr ?? '+0.000';
-                  const pPts = row.points ?? row.pts ?? 0;
-                  const pForm = Array.isArray(row.form) ? row.form : ['W', 'L', 'W', 'W'];
-
-                  return (
-                    <View key={row.teamId || idx} style={[styles.tableRow, standNum <= 3 && styles.tableRowQualified]}>
-                      <View style={{ width: 50, alignItems: 'center' }}>
-                        <View
-                          style={[
-                            styles.rankBadge,
-                            isGold
-                              ? styles.rankBadgeGold
-                              : isSilver
-                              ? styles.rankBadgeSilver
-                              : isBronze
-                              ? styles.rankBadgeBronze
-                              : null
-                          ]}
-                        >
-                          <Text style={styles.rankBadgeText}>{standNum}</Text>
-                        </View>
-                      </View>
-                      <View style={{ width: 230 }}>
-                        <Text style={styles.pointsTeamName}>{teamTitle}</Text>
-                        <Text style={styles.pointsTeamSub}>{teamSubtitle}</Text>
-                      </View>
-                      <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{pPlayed}</Text>
-                      <Text style={[styles.tableTd, { width: 45, textAlign: 'center', fontWeight: '700' }]}>{pWon}</Text>
-                      <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{pLost}</Text>
-                      <Text style={[styles.tableTd, { width: 45, textAlign: 'center', color: '#fed966', fontWeight: '700' }]}>
-                        {pNr}
-                      </Text>
-                      <Text style={[styles.tableTd, { width: 60, textAlign: 'center' }]}>{pBonus}</Text>
-                      <Text style={[styles.tableTd, { width: 75, textAlign: 'center' }]}>{pNrr}</Text>
-                      <Text style={[styles.tableTd, { width: 55, textAlign: 'center', color: '#f5c43d', fontWeight: '800' }]}>
-                        {pPts}
-                      </Text>
-                      <View style={{ width: 130, flexDirection: 'row', justifyContent: 'center', gap: 4 }}>
-                        {pForm.map((f: string, fi: number) => (
-                          <View
-                            key={fi}
-                            style={[
-                              styles.formPill,
-                              String(f).toLowerCase() === 'w'
-                                ? styles.formPillW
-                                : String(f).toLowerCase() === 'l'
-                                ? styles.formPillL
-                                : styles.formPillNR
-                            ]}
-                          >
-                            <Text style={styles.formPillText}>{String(f).toUpperCase()}</Text>
-                          </View>
-                        ))}
+                {(TABLE_DATA[pointsTableKey] || []).map((row, idx) => (
+                  <View key={idx} style={[styles.tableRow, row.stand <= 3 && styles.tableRowQualified]}>
+                    <View style={{ width: 50, alignItems: 'center' }}>
+                      <View
+                        style={[
+                          styles.rankBadge,
+                          row.badge === 'gold'
+                            ? styles.rankBadgeGold
+                            : row.badge === 'silver'
+                            ? styles.rankBadgeSilver
+                            : row.badge === 'bronze'
+                            ? styles.rankBadgeBronze
+                            : null
+                        ]}
+                      >
+                        <Text style={styles.rankBadgeText}>{row.stand}</Text>
                       </View>
                     </View>
-                  );
-                }))}
+                    <View style={{ width: 230 }}>
+                      <Text style={styles.pointsTeamName}>{row.name}</Text>
+                      {row.sub ? <Text style={styles.pointsTeamSub}>{row.sub}</Text> : null}
+                    </View>
+                    <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{row.p}</Text>
+                    <Text style={[styles.tableTd, { width: 45, textAlign: 'center', fontWeight: '700' }]}>{row.w}</Text>
+                    <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{row.l}</Text>
+                    <Text style={[styles.tableTd, { width: 45, textAlign: 'center', color: '#fed966', fontWeight: '700' }]}>
+                      {row.nr}
+                    </Text>
+                    <Text style={[styles.tableTd, { width: 60, textAlign: 'center' }]}>{row.bonus}</Text>
+                    <Text style={[styles.tableTd, { width: 75, textAlign: 'center' }]}>{row.nrr}</Text>
+                    <Text style={[styles.tableTd, { width: 55, textAlign: 'center', color: '#f5c43d', fontWeight: '800' }]}>
+                      {row.pts}
+                    </Text>
+                    <View style={{ width: 130, flexDirection: 'row', justifyContent: 'center', gap: 4 }}>
+                      {row.form.map((f, fi) => (
+                        <View
+                          key={fi}
+                          style={[
+                            styles.formPill,
+                            f === 'w' ? styles.formPillW : f === 'l' ? styles.formPillL : styles.formPillNR
+                          ]}
+                        >
+                          <Text style={styles.formPillText}>{f.toUpperCase()}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                ))}
               </View>
             </ScrollView>
           </View>
@@ -1393,32 +1295,32 @@ export default function HomeScreen() {
                       <Text style={[styles.tableTh, { width: 45, textAlign: 'center', color: '#fed966' }]}>100s</Text>
                       <Text style={[styles.tableTh, { width: 65, textAlign: 'right', color: '#f5c43d' }]}>Runs</Text>
                     </View>
-                    {((portalTopBatsmen.length > 0 ? portalTopBatsmen : PERF_DATA.batting).map((p: any, idx: number) => (
-                      <View key={p.id || idx} style={styles.tableRow}>
+                    {PERF_DATA.batting.map((p, idx) => (
+                      <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableTd, { width: 50, textAlign: 'center', fontWeight: '700' }]}>
-                          {p.stand || (idx + 1)}
+                          {p.stand}
                         </Text>
                         <View style={{ width: 170 }}>
                           <Text style={styles.pointsTeamName}>{p.name}</Text>
-                          <Text style={styles.playerSubRole}>{p.role || 'Batter'}</Text>
+                          <Text style={styles.playerSubRole}>{p.role}</Text>
                         </View>
-                        <Text style={[styles.tableTd, { width: 170 }]}>{p.team || 'District Club'}</Text>
-                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.mat || 5}</Text>
-                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.inns || 5}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.hs || (p.runs ? p.runs + '*' : '50*')}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.average || p.avg || '35.0'}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.strikeRate || p.sr || '135.0'}</Text>
+                        <Text style={[styles.tableTd, { width: 170 }]}>{p.team}</Text>
+                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.mat}</Text>
+                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.inns}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.hs}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.avg}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.sr}</Text>
                         <Text style={[styles.tableTd, { width: 45, textAlign: 'center', color: '#fed966' }]}>
-                          {p.fifties ?? (p.runs >= 100 ? 1 : 0)}
+                          {p.fifties}
                         </Text>
                         <Text style={[styles.tableTd, { width: 45, textAlign: 'center', color: '#fed966' }]}>
-                          {p.hundreds ?? 0}
+                          {p.hundreds}
                         </Text>
                         <Text style={[styles.tableTd, { width: 65, textAlign: 'right', color: '#f5c43d', fontWeight: '800' }]}>
-                          {p.runs || 0}
+                          {p.runs}
                         </Text>
                       </View>
-                    )))}
+                    ))}
                   </View>
                 )}
 
@@ -1437,32 +1339,32 @@ export default function HomeScreen() {
                       <Text style={[styles.tableTh, { width: 50, textAlign: 'center', color: '#fed966' }]}>5w</Text>
                       <Text style={[styles.tableTh, { width: 65, textAlign: 'right', color: '#4ade80' }]}>Wkts</Text>
                     </View>
-                    {((portalTopBowlers.length > 0 ? portalTopBowlers : PERF_DATA.bowling).map((p: any, idx: number) => (
-                      <View key={p.id || idx} style={styles.tableRow}>
+                    {PERF_DATA.bowling.map((p, idx) => (
+                      <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableTd, { width: 50, textAlign: 'center', fontWeight: '700' }]}>
-                          {p.stand || (idx + 1)}
+                          {p.stand}
                         </Text>
                         <View style={{ width: 170 }}>
                           <Text style={styles.pointsTeamName}>{p.name}</Text>
-                          <Text style={styles.playerSubRole}>{p.role || 'Bowler'}</Text>
+                          <Text style={styles.playerSubRole}>{p.role}</Text>
                         </View>
-                        <Text style={[styles.tableTd, { width: 170 }]}>{p.team || 'District Club'}</Text>
-                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.mat || 5}</Text>
-                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.inns || 5}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.overs || '20.0'}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.runs_conceded || p.runs || 120}</Text>
-                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.economy || p.econ || '6.50'}</Text>
+                        <Text style={[styles.tableTd, { width: 170 }]}>{p.team}</Text>
+                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.mat}</Text>
+                        <Text style={[styles.tableTd, { width: 45, textAlign: 'center' }]}>{p.inns}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.overs}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.runs}</Text>
+                        <Text style={[styles.tableTd, { width: 55, textAlign: 'center' }]}>{p.econ}</Text>
                         <Text style={[styles.tableTd, { width: 50, textAlign: 'center', color: '#fed966' }]}>
-                          {p.threeWkts ?? (p.wickets >= 3 ? 1 : 0)}
+                          {p.threeWkts}
                         </Text>
                         <Text style={[styles.tableTd, { width: 50, textAlign: 'center', color: '#fed966' }]}>
-                          {p.fiveWkts ?? (p.wickets >= 5 ? 1 : 0)}
+                          {p.fiveWkts}
                         </Text>
                         <Text style={[styles.tableTd, { width: 65, textAlign: 'right', color: '#4ade80', fontWeight: '800' }]}>
-                          {p.wickets || 0}
+                          {p.wkts}
                         </Text>
                       </View>
-                    )))}
+                    ))}
                   </View>
                 )}
 
@@ -1479,32 +1381,32 @@ export default function HomeScreen() {
                       <Text style={[styles.tableTh, { width: 70, textAlign: 'center', color: '#fed966' }]}>Run Outs</Text>
                       <Text style={[styles.tableTh, { width: 70, textAlign: 'right', color: '#4ade80' }]}>Total</Text>
                     </View>
-                    {((portalTopFielders.length > 0 ? portalTopFielders : PERF_DATA.fielding).map((p: any, idx: number) => (
-                      <View key={p.id || idx} style={styles.tableRow}>
+                    {PERF_DATA.fielding.map((p, idx) => (
+                      <View key={idx} style={styles.tableRow}>
                         <Text style={[styles.tableTd, { width: 50, textAlign: 'center', fontWeight: '700' }]}>
-                          {p.stand || (idx + 1)}
+                          {p.stand}
                         </Text>
                         <View style={{ width: 180 }}>
                           <Text style={styles.pointsTeamName}>{p.name}</Text>
-                          <Text style={styles.playerSubRole}>{p.role || 'Fielder'}</Text>
+                          <Text style={styles.playerSubRole}>{p.role}</Text>
                         </View>
-                        <Text style={[styles.tableTd, { width: 180 }]}>{p.team || 'District Club'}</Text>
-                        <Text style={[styles.tableTd, { width: 50, textAlign: 'center' }]}>{p.mat || 5}</Text>
-                        <Text style={[styles.tableTd, { width: 50, textAlign: 'center' }]}>{p.inns || 5}</Text>
+                        <Text style={[styles.tableTd, { width: 180 }]}>{p.team}</Text>
+                        <Text style={[styles.tableTd, { width: 50, textAlign: 'center' }]}>{p.mat}</Text>
+                        <Text style={[styles.tableTd, { width: 50, textAlign: 'center' }]}>{p.inns}</Text>
                         <Text style={[styles.tableTd, { width: 60, textAlign: 'center', color: '#fed966' }]}>
-                          {p.catches || 0}
+                          {p.catches}
                         </Text>
                         <Text style={[styles.tableTd, { width: 70, textAlign: 'center', color: '#fed966' }]}>
-                          {p.stumpings || 0}
+                          {p.stumpings}
                         </Text>
                         <Text style={[styles.tableTd, { width: 70, textAlign: 'center', color: '#fed966' }]}>
-                          {p.runOuts || 0}
+                          {p.runOuts}
                         </Text>
                         <Text style={[styles.tableTd, { width: 70, textAlign: 'right', color: '#4ade80', fontWeight: '800' }]}>
-                          {p.dismissals || (p.catches || 0) + (p.stumpings || 0)}
+                          {p.total}
                         </Text>
                       </View>
-                    )))}
+                    ))}
                   </View>
                 )}
               </View>
@@ -1551,7 +1453,7 @@ export default function HomeScreen() {
             {/* Category Filter Pills */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subTabsScroll}>
               {[
-                { id: 'all', label: `⭐ All Players (${allDisplayPlayers.length})` },
+                { id: 'all', label: `⭐ All Players (${DISTRICT_PLAYERS.length})` },
                 { id: 'batter', label: '🏏 Batters' },
                 { id: 'bowler', label: '🎯 Bowlers' },
                 { id: 'allrounder', label: '⚡ All-Rounders' },
@@ -1575,11 +1477,11 @@ export default function HomeScreen() {
               {filteredPlayers.map(p => (
                 <View key={p.id} style={styles.playerCard}>
                   <View style={styles.playerCardHeader}>
-                    <LinearGradient colors={p.avatarColor || ['#1e3a8a', '#3b82f6']} style={styles.playerAvatar}>
+                    <LinearGradient colors={p.avatarColor} style={styles.playerAvatar}>
                       <Text style={styles.playerAvatarText}>
                         {p.name
                           .split(' ')
-                          .map((w: string) => w[0])
+                          .map(w => w[0])
                           .join('')
                           .slice(0, 2)}
                       </Text>
