@@ -8,23 +8,7 @@ import LiveScoringScreen from '../screens/scorer/LiveScoringScreen';
 import ScorecardScreen from '../screens/scorer/ScorecardScreen';
 import SharedBackground from '../components/scorer/SharedBackground';
 
-export type ScreenName = 'Auth' | 'Dashboard' | 'MatchSetup' | 'LiveScoring' | 'Scorecard';
-
-interface ScorerNavigationContextType {
-  currentScreen: ScreenName;
-  navigate: (screen: ScreenName, params?: any) => void;
-  params: any;
-  onExit: () => void;
-}
-
-const ScorerNavigationContext = createContext<ScorerNavigationContextType>({
-  currentScreen: 'Auth',
-  navigate: () => {},
-  params: null,
-  onExit: () => {}
-});
-
-export const useScorerNavigation = () => useContext(ScorerNavigationContext);
+import { ScreenName, ScorerNavigationContext, ScorerNavigationContextType } from './ScorerNavigationContext';
 
 interface Props {
   onExit: () => void;

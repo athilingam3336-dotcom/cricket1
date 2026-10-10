@@ -10,7 +10,7 @@ import {
   Platform,
   ActivityIndicator
 } from 'react-native';
-import { useScorerNavigation } from '../../navigation/ScorerNavigator';
+import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
 

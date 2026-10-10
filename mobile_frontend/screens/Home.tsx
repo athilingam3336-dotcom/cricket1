@@ -686,7 +686,7 @@ export default function HomeScreen() {
           />
 
           {/* Large Gold Watermark Crest positioned center-right */}
-          <View style={styles.heroWatermarkContainer} pointerEvents="none">
+          <View style={[styles.heroWatermarkContainer, isMobile && { right: 'auto', left: '50%', transform: [{ translateX: -270 }, { translateY: -270 }] }]} pointerEvents="none">
             {/* Outer and Inner Halo Rings */}
             <View style={styles.emblemRingOuter} />
             <View style={styles.emblemRingInner} />
@@ -697,7 +697,7 @@ export default function HomeScreen() {
             />
           </View>
 
-          <View style={[styles.container, styles.heroContainer]}>
+          <View style={[styles.container, styles.heroContainer, isMobile && { alignItems: 'center' }]}>
             {/* Pretitle badges row */}
             <View style={styles.heroPretitleRow}>
               <View style={styles.heroBadgeDistrict}>
@@ -712,8 +712,8 @@ export default function HomeScreen() {
             </View>
 
             {/* Main Title */}
-            <Text style={styles.heroHeadingLine1}>CRICKET FEDERATION OF</Text>
-            <Text style={styles.heroHeadingLine2}>VIRUDHUNAGAR DISTRICT</Text>
+            <Text style={[styles.heroHeadingLine1, isMobile && { textAlign: 'center' }]}>CRICKET FEDERATION OF</Text>
+            <Text style={[styles.heroHeadingLine2, isMobile && { textAlign: 'center' }]}>VIRUDHUNAGAR DISTRICT</Text>
 
             {/* 3D Folded Golden Motto Ribbon Banner */}
             <View style={styles.ribbonWrapper}>
@@ -732,14 +732,14 @@ export default function HomeScreen() {
             </View>
 
             {/* Description */}
-            <Text style={styles.heroDescription}>
+            <Text style={[styles.heroDescription, isMobile && { textAlign: 'center' }]}>
               Governing, developing, and fostering grassroots, collegiate, and competitive cricket across
               Srivilliputhur, Sivakasi, Rajapalayam, Sattur, Aruppukottai, and Virudhunagar under the official
               authority of Cricket Federation of Virudhunagar District.
             </Text>
 
             {/* 3 Hero Action Buttons */}
-            <View style={styles.heroButtonsRow}>
+            <View style={[styles.heroButtonsRow, isMobile && { justifyContent: 'center' }]}>
               {/* 1. Match Centre Live (Solid Navy with Gold Border) */}
               <TouchableOpacity
                 style={styles.heroBtnNavy}
