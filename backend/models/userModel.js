@@ -23,7 +23,7 @@ class UserModel {
     return this.Model.findOne({ id }).lean();
   }
 
-  async create({ id, name, email, mobile, role = 'USER', password_hash = null, status = 'ACTIVE' }) {
+  async create({ id, name, email, mobile, role = 'USER', password_hash = null, status = 'ACTIVE', player_details, scorer_details, ...rest }) {
     await db.initDb();
     const userId = id || `USR-${Date.now()}`;
     const cleanEmail = email.trim().toLowerCase();
@@ -34,7 +34,10 @@ class UserModel {
       mobile: mobile || null,
       role,
       password_hash,
-      status
+      status,
+      ...(player_details && { player_details }),
+      ...(scorer_details && { scorer_details }),
+      ...rest
     });
     return user.toObject();
   }
@@ -72,7 +75,7 @@ class UserModel {
     return this.Model.find(query).sort({ created_at: -1 }).lean();
   }
 
-  async updateOtp(identifier, { otp_hash, otp_expires_at }) {
+  async updateOtp(identifier, { otp_hash, otp_expires_at, otp_attempts }) {
     await db.initDb();
     if (!identifier) return null;
     const cleanId = typeof identifier === 'string' ? identifier.trim() : identifier;
@@ -82,16 +85,18 @@ class UserModel {
         { email: typeof cleanId === 'string' ? cleanId.toLowerCase() : '' }
       ]
     };
+    const setFields = {
+      otp_hash,
+      otp_expires_at,
+      otp_verified_at: null,
+      updated_at: new Date()
+    };
+    if (typeof otp_attempts === 'number') {
+      setFields.otp_attempts = otp_attempts;
+    }
     return this.Model.findOneAndUpdate(
       query,
-      { 
-        $set: { 
-          otp_hash, 
-          otp_expires_at, 
-          otp_verified_at: null, 
-          updated_at: new Date() 
-        } 
-      },
+      { $set: setFields },
       { returnDocument: 'after' }
     ).lean();
   }

@@ -51,9 +51,16 @@ function checkRateLimit(email) {
  */
 function resetRateLimit(email) {
   if (email) {
-    rateLimitMap.delete(email.trim().toLowerCase());
+    const clean = email.trim().toLowerCase();
+    rateLimitMap.delete(clean);
+    if (global.__scorerRateLimitMap) {
+      global.__scorerRateLimitMap.delete(clean);
+    }
   } else {
     rateLimitMap.clear();
+    if (global.__scorerRateLimitMap) {
+      global.__scorerRateLimitMap.clear();
+    }
   }
 }
 

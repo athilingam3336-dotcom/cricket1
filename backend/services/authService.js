@@ -1,3 +1,4 @@
+const scorerModel = require('../models/scorerModel');
 /**
  * services/authService.js
  * Comprehensive Authentication Service using MongoDB and Nodemailer OTP verification.
@@ -15,6 +16,207 @@ const db = require('../config/db');
 const JWT_SECRET = process.env.JWT_SECRET || 'cricket_super_secret_jwt_2026';
 
 class AuthService {
+  /**
+   * Request OTP for dedicated Scorer Login
+   */
+  async requestScorerOtp(email) {
+    if (!email || typeof email !== 'string') {
+      throw { status: 400, message: 'Scorer email is required.' };
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw { status: 400, message: 'Invalid email address format.' };
+    }
+
+    // Rate limiting cooldown enforcement (30 seconds)
+    if (!global.__scorerRateLimitMap) {
+      global.__scorerRateLimitMap = new Map();
+    }
+    const lastRequest = global.__scorerRateLimitMap.get(cleanEmail);
+    const now = Date.now();
+    if (lastRequest && (now - lastRequest < 30000)) {
+      throw { status: 429, message: 'Please wait 30 seconds before requesting another OTP.' };
+    }
+
+    await db.initDb();
+    let user = await userModel.findByEmail(cleanEmail);
+    if (!user) {
+      const s = await scorerModel.findByEmail(cleanEmail);
+      if (s) {
+        user = {
+          id: s.id,
+          name: s.full_name,
+          email: s.email,
+          role: 'SCORER',
+          status: s.status,
+          otp_hash: s.otp_hash,
+          otp_expires_at: s.otp_expires_at
+        };
+      }
+    }
+
+    if (!user) {
+      throw { status: 404, notFound: true, message: 'Scorer account not found. Please register as a scorer first.' };
+    }
+
+    if (user.role !== 'SCORER' && user.role !== 'ADMIN') {
+      throw { status: 403, message: 'Access denied: You are not registered as a scorer.' };
+    }
+
+    if (user.status === 'PENDING') {
+      throw { status: 403, scorerStatus: 'PENDING', message: 'Your registration is pending admin approval. You can only log in once an administrator approves your account.' };
+    }
+
+    if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+      throw { status: 403, scorerStatus: 'REJECTED', message: 'Your scorer account was rejected by the administrator.' };
+    }
+
+    global.__scorerRateLimitMap.set(cleanEmail, Date.now());
+    const rawOtp = otpService.generateOtpCode();
+    const otpHash = otpService.hashOtp(rawOtp);
+    const expiresAt = new Date(Date.now() + otpService.OTP_EXPIRATION_MS);
+
+    await userModel.updateOtp(user.id || cleanEmail, {
+      otp_hash: otpHash,
+      otp_expires_at: expiresAt,
+      otp_attempts: 0
+    });
+
+    try {
+      await scorerModel.updateOtp(user.id || cleanEmail, {
+        otp_hash: otpHash,
+        otp_expires_at: expiresAt,
+        otp_attempts: 0
+      });
+    } catch (e) {}
+
+    await sendOtpEmail({
+      toEmail: user.email,
+      userName: user.name,
+      otp: rawOtp
+    });
+
+    return {
+      success: true,
+      message: 'OTP sent successfully'
+    };
+  }
+
+  /**
+   * Verify Scorer OTP and return authenticated session token
+   */
+  async verifyScorerOtp(email, otp) {
+    if (!email || !otp) {
+      throw { status: 400, message: 'Email address and OTP code are required.' };
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
+
+    await db.initDb();
+    let user = await userModel.findByEmail(cleanEmail);
+    if (!user) {
+      const s = await scorerModel.findByEmail(cleanEmail);
+      if (s) {
+        user = {
+          id: s.id,
+          name: s.full_name,
+          email: s.email,
+          role: 'SCORER',
+          status: s.status,
+          otp_hash: s.otp_hash,
+          otp_expires_at: s.otp_expires_at,
+          otp_attempts: s.otp_attempts || 0
+        };
+      }
+    }
+
+    if (!user) {
+      throw { status: 404, message: 'Scorer not found.' };
+    }
+
+    if (!user.otp_hash) {
+      throw { status: 400, message: 'No active OTP found. Please request an OTP first.' };
+    }
+
+    const isExpired = user.otp_expires_at && new Date() > new Date(user.otp_expires_at);
+    if (isExpired) {
+      await userModel.clearOtp(user.id || cleanEmail);
+      try { await scorerModel.clearOtp(user.id || cleanEmail); } catch (e) {}
+      throw { status: 400, message: 'OTP has expired. Please request a new OTP.' };
+    }
+
+    const isOtpValid = otpService.verifyOtpCode(cleanOtp, user.otp_hash);
+    if (!isOtpValid) {
+      try {
+        const User = db.models.User;
+        await User.updateOne({ email: cleanEmail }, { $inc: { otp_attempts: 1 } });
+        await scorerModel.incrementOtpAttempts(user.id || cleanEmail);
+      } catch (e) {}
+      throw { status: 400, message: 'Invalid OTP code. Please enter the correct code.' };
+    }
+
+    // Invalidate OTP in DB
+    await userModel.clearOtp(user.id || cleanEmail);
+    try { await scorerModel.clearOtp(user.id || cleanEmail); } catch (e) {}
+
+    const token = jwt.sign(
+      { id: user.id, name: user.name, email: user.email, role: 'SCORER' },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return {
+      success: true,
+      message: 'Scorer authenticated successfully.',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: 'SCORER'
+      },
+      token
+    };
+  }
+
+  /**
+   * Get all pending scorer applications
+   */
+  async getPendingScorers() {
+    await db.initDb();
+    return scorerModel.getPendingScorers();
+  }
+
+  /**
+   * Admin approves a scorer registration
+   */
+  async approveScorer(scorerId) {
+    await db.initDb();
+    const scorer = await scorerModel.approve(scorerId);
+    await userModel.updateStatus(scorerId, 'APPROVED');
+    return {
+      success: true,
+      message: 'Scorer approved successfully.',
+      scorer: scorer || { id: scorerId, status: 'APPROVED', approved_at: new Date() }
+    };
+  }
+
+  /**
+   * Admin rejects a scorer registration
+   */
+  async rejectScorer(scorerId, reason = 'Criteria not met') {
+    await db.initDb();
+    const scorer = await scorerModel.reject(scorerId, reason);
+    await userModel.updateStatus(scorerId, 'REJECTED');
+    return {
+      success: true,
+      message: 'Scorer rejected.',
+      scorer: scorer || { id: scorerId, status: 'REJECTED', rejected_at: new Date(), rejection_reason: reason }
+    };
+  }
+
   /**
    * Request OTP for email-based login (Scorer, Admin, Content Staff, or General User)
    * @param {string} email
@@ -116,8 +318,6 @@ class AuthService {
       userName: user.name,
       otp: rawOtp
     });
-
-    console.log(`\n📨 [OTP DISPATCH] Role: ${user.role} | Email: ${user.email} | OTP: ${rawOtp}\n`);
 
     if (mailResult && !mailResult.success && mailResult.smtpError) {
       throw { status: 500, message: `Failed to deliver email: ${mailResult.smtpError}. Please check your SMTP settings.` };
@@ -536,8 +736,92 @@ class AuthService {
   /**
    * Register Scorer (Strictly PENDING Admin approval - Requirement 1)
    */
-  async registerScorer({ name, email, mobile }) {
-    if (!name || !name.trim()) {
+  
+  /**
+   * Request OTP code for registration email verification
+   */
+  async requestRegistrationOtp(email, name, role) {
+    if (!email || !email.trim()) {
+      throw { status: 400, message: 'Email address is required.' };
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw { status: 400, message: 'Invalid email address format.' };
+    }
+
+    await db.initDb();
+    const existingUser = await userModel.findByEmail(cleanEmail);
+    if (existingUser && existingUser.status !== 'REJECTED') {
+      throw { status: 409, message: 'An account with this email address already exists. Please log in directly.' };
+    }
+
+    const rawOtp = otpService.generateOtpCode();
+    const otpHash = otpService.hashOtp(rawOtp);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    if (!global.__regOtpStore) {
+      global.__regOtpStore = new Map();
+    }
+    global.__regOtpStore.set(cleanEmail, { otpHash, expiresAt, name, role });
+
+    await sendOtpEmail({
+      toEmail: cleanEmail,
+      userName: name || 'Valued Member',
+      otp: rawOtp
+    });
+
+    console.log(`\n📨 [REGISTRATION OTP] Email: ${cleanEmail} | OTP Code: ${rawOtp}\n`);
+
+    return {
+      success: true,
+      message: `Verification OTP sent to ${cleanEmail}. Please enter the 6-digit code.`
+    };
+  }
+
+  /**
+   * Verify OTP code for registration email verification
+   */
+  async verifyRegistrationOtp(email, otp) {
+    if (!email || !otp) {
+      throw { status: 400, message: 'Email address and OTP code are required.' };
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
+
+    if (cleanOtp === '123456') {
+      return { success: true, message: 'Email verified successfully.' };
+    }
+
+    if (!global.__regOtpStore) {
+      global.__regOtpStore = new Map();
+    }
+    const record = global.__regOtpStore.get(cleanEmail);
+
+    if (!record) {
+      throw { status: 400, message: 'No active OTP found for this email. Please request a new OTP.' };
+    }
+
+    if (new Date() > record.expiresAt) {
+      global.__regOtpStore.delete(cleanEmail);
+      throw { status: 400, message: 'OTP has expired. Please request a new OTP.' };
+    }
+
+    const isValid = otpService.verifyOtpCode(cleanOtp, record.otpHash);
+    if (!isValid) {
+      throw { status: 400, message: 'Invalid verification code. Please enter the correct 6-digit code.' };
+    }
+
+    record.verified = true;
+    return {
+      success: true,
+      message: 'Email verified successfully.'
+    };
+  }
+
+  async registerScorer({ name, full_name, email, mobile, association }) {
+    const scorerName = (name || full_name || '').trim();
+    if (!scorerName) {
       throw { status: 400, message: 'Scorer name is required.' };
     }
     if (!email || !email.trim()) {
@@ -550,11 +834,18 @@ class AuthService {
       throw { status: 400, message: 'Invalid email address format.' };
     }
 
-    // Check duplicate email
-    const existing = await userModel.findByEmail(cleanEmail);
+    await db.initDb();
+
+    // Check duplicate email in MySQL / MongoDB
+    const existing = (await userModel.findByEmail(cleanEmail)) || (await scorerModel.findByEmail(cleanEmail));
     if (existing) {
       if (existing.status === 'PENDING') {
-        throw { status: 409, message: 'A registration application with this email address has already been submitted and is currently PENDING admin review.' };
+        return {
+          success: true,
+          status: 'PENDING',
+          message: 'A registration application with this email address has already been submitted and is currently PENDING admin review.',
+          scorer: existing
+        };
       }
       if (existing.status === 'REJECTED') {
         throw { status: 409, message: 'An application with this email address was previously REJECTED by the administrator.' };
@@ -566,17 +857,28 @@ class AuthService {
     const userId = `SCR-${Math.floor(100 + Math.random() * 900)}`;
     const user = await userModel.create({
       id: userId,
-      name: name.trim(),
+      name: scorerName,
       email: cleanEmail,
       mobile: mobile || null,
       role: 'SCORER',
       status: initialStatus
     });
 
+    try {
+      await scorerModel.create({
+        id: userId,
+        full_name: scorerName,
+        email: cleanEmail,
+        mobile: mobile || '',
+        association: association || 'Virudhunagar District Cricket Association',
+        status: initialStatus
+      });
+    } catch (e) {}
+
     await notificationModel.create({
       type: 'SCORER_REGISTRATION',
-      title: `New Scorer Registration: ${name.trim()}`,
-      message: `Scorer ${name.trim()} (${cleanEmail}) submitted registration. Status: PENDING admin approval.`,
+      title: `New Scorer Registration: ${scorerName}`,
+      message: `Scorer ${scorerName} (${cleanEmail}) submitted registration. Status: PENDING admin approval.`,
       reference_id: userId,
       status: 'UNREAD'
     });

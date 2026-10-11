@@ -20,12 +20,13 @@ import {
   Dimensions,
   Animated,
   StatusBar,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
+import { io } from 'socket.io-client';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppNavigation } from '../src/navigation/AppNavigator';
-import { io } from 'socket.io-client';
-import { ScorerApi, SOCKET_URL } from '../src/services/api';
+import { ScorerApi, getCurrentUser, setCurrentUser, SOCKET_URL } from '../src/services/api';
 
 // ─── ASSET REFERENCES ──────────────────────────────────────────────────────────
 const IMG_LOGO = require('../assets/logo_transparent.png');
@@ -314,6 +315,50 @@ const OFFICIALS_ROSTER = [
 export default function HomeScreen() {
   const { navigate } = useAppNavigation();
 
+  // Authentication Session State (JWT Bearer / Cookie)
+  const [sessionUser, setSessionUser] = useState<any>(() => getCurrentUser());
+
+  useEffect(() => {
+    // 1. Check local session cache
+    const cached = getCurrentUser();
+    if (cached) setSessionUser(cached);
+
+    // 2. Validate session with backend /api/auth/me (validates Bearer token or HttpOnly Cookie)
+    ScorerApi.getMe()
+      .then((res: any) => {
+        if (res && res.success && res.user) {
+          setCurrentUser(res.user);
+          setSessionUser(res.user);
+        }
+      })
+      .catch(() => {
+        // Unauthenticated or expired session
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await ScorerApi.logout();
+    } catch (_e) { }
+    setSessionUser(null);
+  };
+
+  const handleNavigateToUserPortal = () => {
+    if (!sessionUser) return;
+    const role = (sessionUser.role || '').toUpperCase();
+    if (role === 'ADMIN') {
+      navigate('Admin', { user: sessionUser });
+    } else if (role === 'SCORER') {
+      navigate('Scorer', { user: sessionUser });
+    } else if (role === 'PLAYER') {
+      navigate('Player', { user: sessionUser, playerName: sessionUser.name });
+    } else if (role === 'COACH' || role === 'TEAM') {
+      navigate('Team', { user: sessionUser, teamName: sessionUser.teamName });
+    } else {
+      navigate('Login');
+    }
+  };
+
   // Screen Width for responsive layouts
   const [windowWidth, setWindowWidth] = useState(Dimensions.get('window').width);
   const isMobile = windowWidth < 768;
@@ -512,7 +557,7 @@ export default function HomeScreen() {
   // Handlers
   const handleAddCollege = () => {
     if (!newColName.trim()) {
-      alert('Please enter college name.');
+      Alert.alert('Validation Error', 'Please enter college name.');
       return;
     }
     const newCol: CollegeItem = {
@@ -528,13 +573,13 @@ export default function HomeScreen() {
     setNewColName('');
     setNewColHead('');
     setNewColGround('');
-    alert(`✓ ${newCol.name} successfully registered in Federation Admin Setup!`);
+    Alert.alert('Success', `✓ ${newCol.name} successfully registered in Federation Admin Setup!`);
   };
 
   const handleRecordToss = () => {
     const text = `🪙 ${tossWinner} won the toss and elected to ${tossDecision.toUpperCase()} FIRST (${selectedOvers}.0 Overs).`;
     setTossAnnouncement(text);
-    alert(`Toss Decision Recorded!\n\n${text}`);
+    Alert.alert('Toss Decision', `Toss Decision Recorded!\n\n${text}`);
   };
 
   // Filtered Players
@@ -544,10 +589,10 @@ export default function HomeScreen() {
       playerFilter === 'all'
         ? true
         : playerFilter === 'womens'
-        ? p.role === 'womens' || p.category === 'womens'
-        : playerFilter === 'allrounder'
-        ? p.role === 'allrounder' || p.role === 'all_rounder'
-        : p.role === playerFilter;
+          ? p.role === 'womens' || p.category === 'womens'
+          : playerFilter === 'allrounder'
+            ? p.role === 'allrounder' || p.role === 'all_rounder'
+            : p.role === playerFilter;
 
     const q = playerSearchQuery.toLowerCase().trim();
     const matchesSearch =
@@ -619,7 +664,7 @@ export default function HomeScreen() {
                 <Text style={styles.navDropdownText}>🏏 Match Centre ⌄</Text>
               </TouchableOpacity>
 
-              
+
               <TouchableOpacity
                 style={styles.navLinkDropdown}
                 onPress={() => scrollToSection('pointsTable')}
@@ -628,19 +673,46 @@ export default function HomeScreen() {
                 <Text style={styles.navDropdownText}>📊 Standings ⌄</Text>
               </TouchableOpacity>
 
-              
+
             </View>
           )}
 
           {/* Header Action Buttons */}
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerLoginBtn}
-              onPress={() => navigate('Login')}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.headerLoginBtnText}>👤 Login</Text>
-            </TouchableOpacity>
+            {sessionUser ? (
+              <>
+                <TouchableOpacity
+                  style={styles.headerUserPill}
+                  onPress={handleNavigateToUserPortal}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.headerUserNameText} numberOfLines={1}>
+                    👤 {sessionUser.name || sessionUser.email || 'User'}
+                  </Text>
+                  <View style={styles.headerUserRoleBadge}>
+                    <Text style={styles.headerUserRoleBadgeText}>
+                      {(sessionUser.role || 'USER').toUpperCase()}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.headerLogoutBtn}
+                  onPress={handleLogout}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.headerLogoutBtnText}>↪ Logout</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.headerLoginBtn}
+                onPress={() => navigate('Login')}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.headerLoginBtnText}>👤 Login</Text>
+              </TouchableOpacity>
+            )}
 
             {isMobile && (
               <TouchableOpacity
@@ -657,6 +729,48 @@ export default function HomeScreen() {
         {/* Mobile Navigation Dropdown Drawer */}
         {isMobile && mobileNavOpen && (
           <View style={styles.mobileNavDrawer}>
+            {sessionUser ? (
+              <View style={styles.mobileUserCard}>
+                <Text style={styles.mobileUserCardGreeting}>
+                  👤 Logged In: <Text style={{ color: '#f5c43d', fontWeight: 'bold' }}>{sessionUser.name || sessionUser.email}</Text>
+                </Text>
+                <Text style={styles.mobileUserCardRole}>
+                  Role: {(sessionUser.role || 'USER').toUpperCase()}
+                </Text>
+                <View style={styles.mobileUserActionsRow}>
+                  <TouchableOpacity
+                    style={styles.mobilePortalBtn}
+                    onPress={() => {
+                      setMobileNavOpen(false);
+                      handleNavigateToUserPortal();
+                    }}
+                  >
+                    <Text style={styles.mobilePortalBtnText}>🚀 Open Dashboard →</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.mobileLogoutBtn}
+                    onPress={() => {
+                      setMobileNavOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <Text style={styles.mobileLogoutBtnText}>↪ Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.mobileNavItem, { backgroundColor: 'rgba(245, 196, 61, 0.12)', borderRadius: 6, paddingHorizontal: 10, marginBottom: 6 }]}
+                onPress={() => {
+                  setMobileNavOpen(false);
+                  navigate('Login');
+                }}
+              >
+                <Text style={[styles.mobileNavText, { color: '#f5c43d', fontWeight: '800' }]}>
+                  👤 Login to Portal
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.mobileNavItem}
               onPress={() => {
@@ -669,7 +783,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.mobileNavItem} onPress={() => scrollToSection('matchCentre')}>
               <Text style={styles.mobileNavText}>🏏 Match Centre & Live Scores</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mobileNavItem} onPress={() => scrollToSection('pointsTable')}>
               <Text style={styles.mobileNavText}>📊 Standings & Points Table</Text>
             </TouchableOpacity>
@@ -679,7 +793,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={styles.mobileNavItem} onPress={() => scrollToSection('players')}>
               <Text style={styles.mobileNavText}>👥 District Talent Directory</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mobileNavItem} onPress={() => scrollToSection('about')}>
               <Text style={styles.mobileNavText}>🏛️ About CFVD Heritage</Text>
             </TouchableOpacity>
@@ -756,7 +870,7 @@ export default function HomeScreen() {
           {/* Right Links */}
           {!isMobile && (
             <View style={styles.tickerLinksRow}>
-              
+
               <TouchableOpacity
                 style={styles.tickerLinkItem}
                 onPress={() =>
@@ -870,7 +984,7 @@ export default function HomeScreen() {
                 <Text style={styles.heroBtnNavyText}>Match Centre Live</Text>
               </TouchableOpacity>
 
-              
+
 
               {/* 3. Live Scorecard (Solid Crisp White) */}
               <TouchableOpacity
@@ -885,7 +999,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            
+
           </View>
         </View>
 
@@ -1082,8 +1196,8 @@ export default function HomeScreen() {
                               m.format === '3-DAY'
                                 ? styles.formatBadgeMulti
                                 : m.format === 'ODI' || m.format === '50-OVERS'
-                                ? styles.formatBadgeOneDay
-                                : styles.formatBadgeT20
+                                  ? styles.formatBadgeOneDay
+                                  : styles.formatBadgeT20
                             }
                           >
                             <Text style={styles.formatBadgeText}>{m.format || 'T20'}</Text>
@@ -1194,10 +1308,10 @@ export default function HomeScreen() {
                             {isLive
                               ? '👁️ View Live Scorecard & Toss'
                               : isCompleted
-                              ? '📄 View Result Scoresheet'
-                              : isUpcoming
-                              ? '🔔 View Fixture Logistics'
-                              : 'ℹ️ View Match Details'}
+                                ? '📄 View Result Scoresheet'
+                                : isUpcoming
+                                  ? '🔔 View Fixture Logistics'
+                                  : 'ℹ️ View Match Details'}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -1288,10 +1402,10 @@ export default function HomeScreen() {
                             isGold
                               ? styles.rankBadgeGold
                               : isSilver
-                              ? styles.rankBadgeSilver
-                              : isBronze
-                              ? styles.rankBadgeBronze
-                              : null
+                                ? styles.rankBadgeSilver
+                                : isBronze
+                                  ? styles.rankBadgeBronze
+                                  : null
                           ]}
                         >
                           <Text style={styles.rankBadgeText}>{standNum}</Text>
@@ -1321,8 +1435,8 @@ export default function HomeScreen() {
                               String(f).toLowerCase() === 'w'
                                 ? styles.formPillW
                                 : String(f).toLowerCase() === 'l'
-                                ? styles.formPillL
-                                : styles.formPillNR
+                                  ? styles.formPillL
+                                  : styles.formPillNR
                             ]}
                           >
                             <Text style={styles.formPillText}>{String(f).toUpperCase()}</Text>
@@ -1715,7 +1829,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            
+
           </View>
         </View>
 
@@ -2176,10 +2290,10 @@ export default function HomeScreen() {
                   {realScorecardData?.match?.result || activeScorecardMatchData?.result
                     ? `🏆 Result: ${realScorecardData?.match?.result || activeScorecardMatchData?.result}`
                     : realScorecardData?.match?.toss_winner_name
-                    ? `🪙 Toss: ${realScorecardData.match.toss_winner_name} won the toss and elected to ${realScorecardData.match.toss_decision || 'bat'}`
-                    : activeScorecardMatchData
-                    ? `🪙 Scheduled Match: ${activeScorecardMatchData.teamA} vs ${activeScorecardMatchData.teamB} (${activeScorecardMatchData.format || 'T20'})`
-                    : '🪙 Toss: Sivakasi Super Kings won the toss and elected to bat first (20.0 Overs).'}
+                      ? `🪙 Toss: ${realScorecardData.match.toss_winner_name} won the toss and elected to ${realScorecardData.match.toss_decision || 'bat'}`
+                      : activeScorecardMatchData
+                        ? `🪙 Scheduled Match: ${activeScorecardMatchData.teamA} vs ${activeScorecardMatchData.teamB} (${activeScorecardMatchData.format || 'T20'})`
+                        : '🪙 Toss: Sivakasi Super Kings won the toss and elected to bat first (20.0 Overs).'}
                 </Text>
               </View>
 
@@ -2607,6 +2721,98 @@ const styles = StyleSheet.create({
     color: '#081225',
     fontSize: 13,
     fontWeight: '900'
+  },
+  headerUserPill: {
+    backgroundColor: 'rgba(212, 175, 55, 0.16)',
+    borderColor: '#d4af37',
+    borderWidth: 1.2,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  headerUserNameText: {
+    color: '#f5c43d',
+    fontSize: 12.5,
+    fontWeight: '800',
+    maxWidth: 140
+  },
+  headerUserRoleBadge: {
+    backgroundColor: '#d4af37',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4
+  },
+  headerUserRoleBadgeText: {
+    color: '#081225',
+    fontSize: 9.5,
+    fontWeight: '900',
+    letterSpacing: 0.3
+  },
+  headerLogoutBtn: {
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.5)',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6
+  },
+  headerLogoutBtnText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  mobileUserCard: {
+    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10
+  },
+  mobileUserCardGreeting: {
+    color: '#ffffff',
+    fontSize: 13.5,
+    marginBottom: 4
+  },
+  mobileUserCardRole: {
+    color: '#94a3b8',
+    fontSize: 11.5,
+    fontWeight: '600',
+    marginBottom: 10
+  },
+  mobileUserActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center'
+  },
+  mobilePortalBtn: {
+    backgroundColor: '#d4af37',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    flex: 1,
+    alignItems: 'center'
+  },
+  mobilePortalBtnText: {
+    color: '#081225',
+    fontSize: 12,
+    fontWeight: '800'
+  },
+  mobileLogoutBtn: {
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6
+  },
+  mobileLogoutBtnText: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '700'
   },
   hamburgerBtn: {
     padding: 6,
