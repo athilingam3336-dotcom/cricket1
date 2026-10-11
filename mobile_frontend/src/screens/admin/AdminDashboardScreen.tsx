@@ -437,6 +437,12 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const scorerSegments = getDonutSegments(scorerApproved, scorerPending, scorerRejected, scorerTotal);
   const teamSegments = getDonutSegments(teamApproved, teamPending, teamRejected, teamTotal);
 
+  const totalOverall = scorerTotal + teamTotal;
+  const overallApproved = scorerApproved + teamApproved;
+  const overallPending = scorerPending + teamPending;
+  const overallRejected = scorerRejected + teamRejected;
+  const overallSegments = getDonutSegments(overallApproved, overallPending, overallRejected, totalOverall);
+
   return (
     <View style={styles.rootContainer}>
       {/* ─────────────────────────────────────────────────────────────
@@ -611,17 +617,26 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <Text style={styles.statCardTitle}>Status Distribution</Text>
                   </View>
 
-                  {/* Donut Chart with CSS Conic Gradient on Web */}
+                  {/* Donut Chart with CSS Conic Gradient on Web / Multi-border Ring on Native */}
                   <View style={styles.donutWrapper}>
                     <View
                       style={[
                         styles.donutOuterRing,
                         !isDesktop && { width: 140, height: 140, borderRadius: 70 },
-                        Platform.OS === 'web' &&
-                          ({
-                            background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
-                            backgroundImage: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`
-                          } as any)
+                        Platform.OS === 'web'
+                          ? ({
+                              background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
+                              backgroundImage: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`
+                            } as any)
+                          : {
+                              borderWidth: 10,
+                              borderColor: '#10b981',
+                              borderTopColor: '#10b981',
+                              borderRightColor: scorerSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                              borderBottomColor: scorerSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                              borderLeftColor: '#10b981',
+                              backgroundColor: '#071026'
+                            }
                       ]}
                     >
                       {/* Center Hole */}
@@ -632,19 +647,39 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     </View>
                   </View>
 
+                  {/* Dynamic Proportional Distribution Bar (drawn dynamically across all platforms) */}
+                  <View style={styles.distributionBarWrapper}>
+                    <View style={styles.distributionBarTrack}>
+                      {scorerSegments.appPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                      )}
+                      {scorerSegments.pendPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                      )}
+                      {scorerSegments.rejPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                      )}
+                    </View>
+                    <View style={styles.distributionPctRow}>
+                      <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{scorerSegments.appPct}% Authorized</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{scorerSegments.pendPct}% Pending</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{scorerSegments.rejPct}% Rejected</Text>
+                    </View>
+                  </View>
+
                   {/* 3-Color Legend */}
                   <View style={styles.donutLegendRow}>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Authorized</Text>
+                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Authorized ({scorerApproved})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending</Text>
+                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending ({scorerPending})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected</Text>
+                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected ({scorerRejected})</Text>
                     </View>
                   </View>
                 </View>
@@ -839,7 +874,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
           {activeTab === 'teams' && (
             <View>
               {/* TOP TWO SIDE-BY-SIDE HIGHLIGHT CARDS FOR TEAMS */}
-              <View style={styles.highlightCardsRow}>
+              <View style={[styles.highlightCardsRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                 {/* Left Card: Team Registrations Stats */}
                 <View style={styles.navyStatCard}>
                   <View style={styles.statCardHeader}>
@@ -899,32 +934,62 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <View
                       style={[
                         styles.donutOuterRing,
-                        Platform.OS === 'web' &&
-                          ({
-                            background: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`,
-                            backgroundImage: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`
-                          } as any)
+                        !isDesktop && { width: 140, height: 140, borderRadius: 70 },
+                        Platform.OS === 'web'
+                          ? ({
+                              background: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`,
+                              backgroundImage: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`
+                            } as any)
+                          : {
+                              borderWidth: 10,
+                              borderColor: '#10b981',
+                              borderTopColor: '#10b981',
+                              borderRightColor: teamSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                              borderBottomColor: teamSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                              borderLeftColor: '#10b981',
+                              backgroundColor: '#071026'
+                            }
                       ]}
                     >
-                      <View style={styles.donutHole}>
-                        <Text style={styles.donutNumber}>{teamTotal}</Text>
-                        <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }]}>TEAMS</Text>
+                      <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                        <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{teamTotal}</Text>
+                        <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }, !isDesktop && { fontSize: 8 }]}>TEAMS</Text>
                       </View>
+                    </View>
+                  </View>
+
+                  {/* Dynamic Proportional Distribution Bar */}
+                  <View style={styles.distributionBarWrapper}>
+                    <View style={styles.distributionBarTrack}>
+                      {teamSegments.appPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                      )}
+                      {teamSegments.pendPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                      )}
+                      {teamSegments.rejPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                      )}
+                    </View>
+                    <View style={styles.distributionPctRow}>
+                      <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{teamSegments.appPct}% Approved</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{teamSegments.pendPct}% Pending</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{teamSegments.rejPct}% Rejected</Text>
                     </View>
                   </View>
 
                   <View style={styles.donutLegendRow}>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved</Text>
+                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved ({teamApproved})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending</Text>
+                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending ({teamPending})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected</Text>
+                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected ({teamRejected})</Text>
                     </View>
                   </View>
                 </View>
@@ -1233,6 +1298,77 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                   <Text style={styles.summaryCardTitle}>Rejected Scorers</Text>
                   <Text style={styles.summaryCardDesc}>Non-compliant or expired certification profiles</Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* OVERVIEW STATUS DISTRIBUTION CHART (Responsive & Dynamic for All Members/Admins) */}
+              <View style={[styles.navyStatCard, styles.donutCardAlign, { marginVertical: 20, width: '100%' }]}>
+                <View style={styles.donutHeader}>
+                  <Text style={{ fontSize: 16, marginRight: 6 }}>📊</Text>
+                  <Text style={styles.statCardTitle}>District Registration Status Distribution</Text>
+                </View>
+
+                <View style={styles.donutWrapper}>
+                  <View
+                    style={[
+                      styles.donutOuterRing,
+                      !isDesktop && { width: 140, height: 140, borderRadius: 70 },
+                      Platform.OS === 'web'
+                        ? ({
+                            background: `conic-gradient(#10b981 0% ${overallSegments.appPct}%, #f59e0b ${overallSegments.appPct}% ${overallSegments.appPct + overallSegments.pendPct}%, #ef4444 ${overallSegments.appPct + overallSegments.pendPct}% 100%)`,
+                            backgroundImage: `conic-gradient(#10b981 0% ${overallSegments.appPct}%, #f59e0b ${overallSegments.appPct}% ${overallSegments.appPct + overallSegments.pendPct}%, #ef4444 ${overallSegments.appPct + overallSegments.pendPct}% 100%)`
+                          } as any)
+                        : {
+                            borderWidth: 10,
+                            borderColor: '#10b981',
+                            borderTopColor: '#10b981',
+                            borderRightColor: overallSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                            borderBottomColor: overallSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                            borderLeftColor: '#10b981',
+                            backgroundColor: '#071026'
+                          }
+                    ]}
+                  >
+                    <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                      <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{totalOverall}</Text>
+                      <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }, !isDesktop && { fontSize: 8 }]}>TOTAL</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Dynamic Proportional Distribution Bar */}
+                <View style={styles.distributionBarWrapper}>
+                  <View style={styles.distributionBarTrack}>
+                    {overallSegments.appPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                    )}
+                    {overallSegments.pendPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                    )}
+                    {overallSegments.rejPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                    )}
+                  </View>
+                  <View style={styles.distributionPctRow}>
+                    <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{overallSegments.appPct}% Approved ({overallApproved})</Text>
+                    <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{overallSegments.pendPct}% Pending ({overallPending})</Text>
+                    <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{overallSegments.rejPct}% Rejected ({overallRejected})</Text>
+                  </View>
+                </View>
+
+                <View style={styles.donutLegendRow}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                    <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved: {overallApproved}</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+                    <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending: {overallPending}</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
+                    <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected: {overallRejected}</Text>
+                  </View>
+                </View>
               </View>
 
               {/* Quick Action Banner */}
@@ -1835,13 +1971,15 @@ const styles = StyleSheet.create({
   },
   navyStatCard: {
     flex: 1,
-    minWidth: 320,
+    minWidth: 260,
+    width: '100%',
     backgroundColor: '#0a1432',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(254, 215, 102, 0.45)',
-    padding: 22,
-    boxShadow: '0 6px 24px rgba(10, 20, 50, 0.15)'
+    padding: 20,
+    boxShadow: '0 6px 24px rgba(10, 20, 50, 0.15)',
+    elevation: 3
   },
   statCardHeader: {
     flexDirection: 'row',
@@ -1950,7 +2088,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 0 30px rgba(59,130,246,0.3)'
+    boxShadow: '0 0 30px rgba(59,130,246,0.3)',
+    elevation: 4
   },
   donutHole: {
     position: 'absolute',
@@ -1976,10 +2115,36 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     marginTop: 2
   },
+  distributionBarWrapper: {
+    width: '100%',
+    marginVertical: 14,
+    paddingHorizontal: 8
+  },
+  distributionBarTrack: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    flexDirection: 'row',
+    overflow: 'hidden'
+  },
+  distributionBarSegment: {
+    height: '100%'
+  },
+  distributionPctRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  distributionPctText: {
+    fontSize: 11.5,
+    fontWeight: '700'
+  },
   donutLegendRow: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 18,
+    marginTop: 10,
     flexWrap: 'wrap',
     justifyContent: 'center'
   },
