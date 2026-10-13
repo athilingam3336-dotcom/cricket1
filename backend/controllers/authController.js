@@ -131,8 +131,8 @@ class AuthController {
   // Register Scorer
   async registerScorer(req, res) {
     try {
-      const { name, email, mobile } = req.body;
-      const result = await authService.registerScorer({ name, email, mobile });
+      const { name, email, mobile, taluk, certificationLevel, pin } = req.body;
+      const result = await authService.registerScorer({ name, email, mobile, taluk, certificationLevel, pin });
       res.status(201).json(result);
     } catch (err) {
       const status = err.status || 400;

@@ -71,6 +71,9 @@ async function sendOtpEmail({ toEmail, userName, otp }) {
       return { success: true, message: `OTP sent to ${toEmail} via Nodemailer` };
     } catch (err) {
       console.error(`❌ Nodemailer delivery note to ${toEmail}:`, err.message);
+      if (err.message.includes('Application-specific password') || err.message.includes('534')) {
+        console.warn(`💡 [GMAIL SETUP TIP] Gmail requires a 16-character App Password (not your normal password). Generate one at https://myaccount.google.com/apppasswords and set SMTP_PASSWORD in backend/.env`);
+      }
       return { 
         success: false, 
         message: `Failed to deliver email: ${err.message}`, 

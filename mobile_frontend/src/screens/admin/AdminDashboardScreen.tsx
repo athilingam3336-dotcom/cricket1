@@ -27,7 +27,7 @@ import {
   TextInput,
   Modal,
   Platform,
-  Dimensions,
+  useWindowDimensions,
   ActivityIndicator,
   Alert
 } from 'react-native';
@@ -173,7 +173,7 @@ const INITIAL_TEAMS_DATA = [
 ];
 
 export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
-  const { width } = Dimensions.get('window');
+  const { width } = useWindowDimensions();
   const isDesktop = width > 768;
   const insetsTop = Platform.OS === 'android' ? 40 : Platform.OS === 'ios' ? 50 : 0;
 

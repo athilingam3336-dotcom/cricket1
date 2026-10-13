@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Platform
+  Platform,
+  useWindowDimensions
 } from 'react-native';
 import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
@@ -60,6 +61,9 @@ const SAMPLE_15_SQUAD: Array<{ name: string; email: string; role: string }> = [
 
 export default function RegistrationScreen() {
   const { navigate, goBack, params } = useAppNavigation();
+  const { width } = useWindowDimensions();
+  // Responsive card width: mobile < 480, tablet < 800, desktop
+  const cardMaxWidth = width < 480 ? '100%' : width < 800 ? 600 : 720;
 
   const getInitialRole = (): RegistrationRole => {
     const r = (params?.initialRole as string)?.toUpperCase();
@@ -75,6 +79,7 @@ export default function RegistrationScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
+  const [isNetworkError, setIsNetworkError] = useState<boolean>(false);
 
   // -------------------------------------------------------------
   // 1. PLAYER REGISTRATION STATE (PDF Module 2)
@@ -120,8 +125,11 @@ export default function RegistrationScreen() {
 
   const switchRole = (role: RegistrationRole) => {
     setActiveRole(role);
-    setStatusMessage(null);
-    setStatusType(null);
+    // Only clear non-network error messages on tab switch
+    if (!isNetworkError) {
+      setStatusMessage(null);
+      setStatusType(null);
+    }
   };
 
   // =============================================================
@@ -176,6 +184,7 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
+      setIsNetworkError(false);
       setStatusMessage(resp?.message || '✓ Player Registration Submitted! Awaiting Admin Approval.');
       setStatusType('success');
 
@@ -195,7 +204,13 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'PLAYER' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-      setStatusMessage(err?.message || 'Player registration failed. Please try again.');
+      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
+      setIsNetworkError(netError);
+      setStatusMessage(
+        netError
+          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
+          : (err?.message || 'Player registration failed. Please try again.')
+      );
       setStatusType('error');
     }
   };
@@ -344,6 +359,7 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
+      setIsNetworkError(false);
       setStatusMessage(`✓ Team "${teamName.trim()}" Submitted! Awaiting Admin Approval.`);
       setStatusType('success');
 
@@ -362,7 +378,13 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'TEAM' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-      setStatusMessage(err?.message || 'Team registration failed.');
+      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
+      setIsNetworkError(netError);
+      setStatusMessage(
+        netError
+          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
+          : (err?.message || 'Team registration failed.')
+      );
       setStatusType('error');
     }
   };
@@ -412,6 +434,7 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
+      setIsNetworkError(false);
       setStatusMessage(resp?.message || '✓ Scorer Registration Submitted! Awaiting Admin Approval.');
       setStatusType('success');
 
@@ -430,7 +453,13 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'SCORER' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-      setStatusMessage(err?.message || 'Scorer registration failed.');
+      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
+      setIsNetworkError(netError);
+      setStatusMessage(
+        netError
+          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
+          : (err?.message || 'Scorer registration failed.')
+      );
       setStatusType('error');
     }
   };
@@ -515,21 +544,32 @@ export default function RegistrationScreen() {
                 <View
                   style={[
                     styles.statusBanner,
-                    statusType === 'error' && styles.statusError,
+                    statusType === 'error' && (isNetworkError ? styles.statusNetworkError : styles.statusError),
                     statusType === 'success' && styles.statusSuccess,
                     statusType === 'info' && styles.statusInfo
                   ]}
                 >
+                  {isNetworkError && (
+                    <Text style={styles.statusNetworkIcon}>🔌 Backend Offline</Text>
+                  )}
                   <Text
                     style={[
                       styles.statusText,
-                      statusType === 'error' && styles.statusTextError,
+                      statusType === 'error' && (isNetworkError ? styles.statusTextNetworkError : styles.statusTextError),
                       statusType === 'success' && styles.statusTextSuccess,
                       statusType === 'info' && styles.statusTextInfo
                     ]}
                   >
                     {statusMessage}
                   </Text>
+                  {isNetworkError && (
+                    <TouchableOpacity
+                      style={styles.dismissBtn}
+                      onPress={() => { setStatusMessage(null); setStatusType(null); setIsNetworkError(false); }}
+                    >
+                      <Text style={styles.dismissBtnText}>Dismiss</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               )}
 
@@ -1068,7 +1108,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     width: '100%',
-    maxWidth: 580,
+    maxWidth: Platform.OS === 'web' ? 720 : 580,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -1080,12 +1120,17 @@ const styles = StyleSheet.create({
 
   statusBanner: { padding: 12, borderRadius: 6, marginBottom: 16, borderWidth: 1 },
   statusError: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
+  statusNetworkError: { backgroundColor: '#fdf4ff', borderColor: '#d946ef', borderWidth: 1.5 },
   statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
   statusInfo: { backgroundColor: '#eff6ff', borderColor: '#93c5fd' },
-  statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center' },
+  statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 19 },
   statusTextError: { color: '#b91c1c' },
+  statusTextNetworkError: { color: '#7c3aed', fontWeight: '700' },
   statusTextSuccess: { color: '#15803d' },
   statusTextInfo: { color: '#1d4ed8' },
+  statusNetworkIcon: { color: '#d946ef', fontWeight: '900', fontSize: 13, textAlign: 'center', marginBottom: 4 },
+  dismissBtn: { marginTop: 8, alignSelf: 'center', backgroundColor: '#f3e8ff', borderRadius: 6, paddingHorizontal: 16, paddingVertical: 5, borderWidth: 1, borderColor: '#c084fc' },
+  dismissBtnText: { color: '#7c3aed', fontSize: 12, fontWeight: '700' },
 
   sectionHeaderBox: {
     backgroundColor: '#f1f5f9',

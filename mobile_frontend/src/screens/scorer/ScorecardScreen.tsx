@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, useWindowDimensions, Platform } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
@@ -10,7 +10,7 @@ export default function ScorecardScreen() {
   const matchId = params?.matchId || 'M002';
   const defaultMatch = assignedMatches.find(m => m.id === matchId) || assignedMatches[1];
 
-  const { width } = Dimensions.get('window');
+  const { width } = useWindowDimensions();
   const isDesktop = width > 768;
   const insetsTop = Platform.OS === 'android' ? 36 : Platform.OS === 'ios' ? 44 : 0;
 

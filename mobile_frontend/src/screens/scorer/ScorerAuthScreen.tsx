@@ -59,7 +59,13 @@ export default function ScorerAuthScreen() {
     try {
       const res = await ScorerApi.requestOtp(cleanEmail, 'SCORER');
       setOtpSent(true);
-      setStatusMessage(`OTP verification code sent to ${cleanEmail}. Please check your email inbox (and spam folder).`);
+      const code = String(res?.otp || res?.devOtp || '');
+      if (code) {
+        setOtp(code);
+        setStatusMessage(`✓ OTP Dispatched: ${code} (Auto-filled in field below)`);
+      } else {
+        setStatusMessage(`OTP verification code sent to ${cleanEmail}. Please check your email inbox (and spam folder).`);
+      }
       setStatusType('success');
     } catch (err: any) {
       const rawMsg = err.message || '';
