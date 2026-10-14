@@ -34,17 +34,37 @@ export default function LiveScoringScreen() {
   const [selectedFieldPosition, setSelectedFieldPosition] = useState<string>('Cover');
   const [aiCommentary, setAiCommentary] = useState<string>('');
   const [isLoadingCommentary, setIsLoadingCommentary] = useState<boolean>(false);
+  const [sideFilter, setSideFilter] = useState<'ALL' | 'OFF' | 'LEG'>('ALL');
 
-  const FIELDING_ANGLE_MAP: Record<string, number> = {
-    'Point': 270,
-    'Cover': 315,
-    'Mid-Off': 348,
-    'Mid-On': 12,
-    'Midwicket': 55,
-    'Slips': 240,
-    'Third Man': 220,
-    'Fine Leg': 140
+  const FIELDING_ANGLE_MAP: Record<string, { angle: number; side: 'OFF' | 'LEG' }> = {
+    'Long Off': { angle: 340, side: 'OFF' },
+    'Long On': { angle: 20, side: 'LEG' },
+    'Cover': { angle: 315, side: 'OFF' },
+    'Deep Extra Cover': { angle: 320, side: 'OFF' },
+    'Mid-Off': { angle: 348, side: 'OFF' },
+    'Mid-On': { angle: 12, side: 'LEG' },
+    'Midwicket': { angle: 55, side: 'LEG' },
+    'Point': { angle: 270, side: 'OFF' },
+    'Square Leg': { angle: 95, side: 'LEG' },
+    'Third Man': { angle: 220, side: 'OFF' },
+    'Slips': { angle: 240, side: 'OFF' },
+    'Fine Leg': { angle: 140, side: 'LEG' }
   };
+
+  const ALL_FIELDING_POSITIONS = [
+    'Long Off',
+    'Long On',
+    'Cover',
+    'Deep Extra Cover',
+    'Mid-Off',
+    'Mid-On',
+    'Midwicket',
+    'Point',
+    'Square Leg',
+    'Third Man',
+    'Slips',
+    'Fine Leg'
+  ];
 
   const getOvers = (b: number) => {
     const overs = Math.floor(b / 6);
@@ -160,7 +180,7 @@ export default function LiveScoringScreen() {
       overs: ballToAdd > 0 ? parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1)) : bowler.overs
     });
 
-    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition] || 315;
+    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition]?.angle || 315;
     const batterRuns = isExtra && type !== 'noball' ? 0 : run;
 
     // Track shot trajectory locally for immediate live Wagon Wheel rendering
@@ -248,7 +268,7 @@ export default function LiveScoringScreen() {
       overs: parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1))
     });
 
-    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition] || 315;
+    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition]?.angle || 315;
     const newWicketDel = {
       id: `del-${Date.now()}`,
       strikerId: striker.id,
@@ -431,7 +451,108 @@ export default function LiveScoringScreen() {
               <Text style={styles.scoreText}>{runs}/{wickets}</Text>
               <Text style={styles.oversText}>({getOvers(balls)})</Text>
             </View>
-            <Text style={styles.rrText}>CRR: {balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00'}</Text>
+            <View style={styles.scoreboardMetaRow}>
+              <Text style={styles.rrText}>CRR: {balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00'}</Text>
+              <View style={[
+                styles.shotSideBadge,
+                (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side || 'OFF') === 'OFF' ? styles.shotSideOff : styles.shotSideLeg
+              ]}>
+                <Text style={styles.shotSideBadgeText}>
+                  {(FIELDING_ANGLE_MAP[selectedFieldPosition]?.side || 'OFF') === 'OFF' ? '🔵 OFF SIDE' : '🟠 LEG SIDE'}: {selectedFieldPosition} ({FIELDING_ANGLE_MAP[selectedFieldPosition]?.angle || 315}°)
+                </Text>
+              </View>
+            </View>
+
+            {/* QUICK SHOT SIDE & POSITION CONTROLS IN SCOREBOARD */}
+            <View style={styles.scoreboardPositionsRow}>
+              {/* Off / Leg Side Switches */}
+              <View style={styles.scoreboardSideRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.scoreboardSideBtn,
+                    styles.scoreboardSideBtnOff,
+                    sideFilter === 'OFF' && styles.scoreboardSideBtnActiveOff
+                  ]}
+                  onPress={() => {
+                    setSideFilter('OFF');
+                    if (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side !== 'OFF') {
+                      handleSelectFieldPosition('Long Off');
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.scoreboardSideBtnText,
+                    sideFilter === 'OFF' && styles.scoreboardSideBtnTextActive
+                  ]}>
+                    🔵 Off Side (7)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.scoreboardSideBtn,
+                    styles.scoreboardSideBtnLeg,
+                    sideFilter === 'LEG' && styles.scoreboardSideBtnActiveLeg
+                  ]}
+                  onPress={() => {
+                    setSideFilter('LEG');
+                    if (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side !== 'LEG') {
+                      handleSelectFieldPosition('Long On');
+                    }
+                  }}
+                >
+                  <Text style={[
+                    styles.scoreboardSideBtnText,
+                    sideFilter === 'LEG' && styles.scoreboardSideBtnTextActive
+                  ]}>
+                    🟠 Leg Side (5)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Long Off & Long On Direct Buttons */}
+              <View style={styles.scoreboardKeyPositionsRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.quickPosChip,
+                    styles.quickPosChipOff,
+                    selectedFieldPosition === 'Long Off' && styles.quickPosChipActiveOff
+                  ]}
+                  onPress={() => handleSelectFieldPosition('Long Off')}
+                >
+                  <Text style={[
+                    styles.quickPosChipText,
+                    selectedFieldPosition === 'Long Off' && styles.quickPosChipTextActive
+                  ]}>
+                    Long Off (340°)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.quickPosChip,
+                    styles.quickPosChipLeg,
+                    selectedFieldPosition === 'Long On' && styles.quickPosChipActiveLeg
+                  ]}
+                  onPress={() => handleSelectFieldPosition('Long On')}
+                >
+                  <Text style={[
+                    styles.quickPosChipText,
+                    selectedFieldPosition === 'Long On' && styles.quickPosChipTextActive
+                  ]}>
+                    Long On (20°)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Direct Wagon Wheel 2-Slide Button */}
+              <TouchableOpacity
+                style={styles.scoreboardWagonBtn}
+                onPress={() => setShowWagonModal(true)}
+              >
+                <Text style={styles.scoreboardWagonBtnText}>🎯 Wagon Wheel & Percentages (2 Slides)</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.playersContainer}>
@@ -515,20 +636,59 @@ export default function LiveScoringScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* FIELDING POSITION SELECTOR (Requirement 9) */}
-            <Text style={styles.sectionTitle}>FIELDING POSITIONS (AI COMMENTARY & SHOT DIRECTION)</Text>
+            {/* FIELDING POSITION SELECTOR WITH OFF/LEG SIDE TABS */}
+            <View style={styles.sideFilterHeader}>
+              <Text style={styles.sectionTitle}>FIELDING POSITIONS & SHOT DIRECTION</Text>
+              <View style={styles.sideToggleRow}>
+                <TouchableOpacity
+                  style={[styles.sideToggleBtn, sideFilter === 'ALL' && styles.sideToggleBtnActive]}
+                  onPress={() => setSideFilter('ALL')}
+                >
+                  <Text style={[styles.sideToggleBtnText, sideFilter === 'ALL' && styles.sideToggleBtnTextActive]}>
+                    All ({ALL_FIELDING_POSITIONS.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.sideToggleBtn, sideFilter === 'OFF' && styles.sideToggleBtnActiveOff]}
+                  onPress={() => setSideFilter('OFF')}
+                >
+                  <Text style={[styles.sideToggleBtnText, sideFilter === 'OFF' && styles.sideToggleBtnTextActive]}>
+                    🔵 Off Side (7)
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.sideToggleBtn, sideFilter === 'LEG' && styles.sideToggleBtnActiveLeg]}
+                  onPress={() => setSideFilter('LEG')}
+                >
+                  <Text style={[styles.sideToggleBtnText, sideFilter === 'LEG' && styles.sideToggleBtnTextActive]}>
+                    🟠 Leg Side (5)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fieldingChipsScroll}>
-              {fieldingPositions.map((pos) => {
+              {ALL_FIELDING_POSITIONS.filter(pos => sideFilter === 'ALL' || FIELDING_ANGLE_MAP[pos]?.side === sideFilter).map((pos) => {
                 const isActive = selectedFieldPosition === pos;
-                const angle = FIELDING_ANGLE_MAP[pos];
+                const posData = FIELDING_ANGLE_MAP[pos] || { angle: 315, side: 'OFF' };
+                const isOff = posData.side === 'OFF';
                 return (
                   <TouchableOpacity
                     key={pos}
-                    style={[styles.fieldingChip, isActive && styles.fieldingChipActive]}
+                    style={[
+                      styles.fieldingChip,
+                      isOff ? styles.fieldingChipOff : styles.fieldingChipLeg,
+                      isActive && (isOff ? styles.fieldingChipActiveOff : styles.fieldingChipActiveLeg)
+                    ]}
                     onPress={() => handleSelectFieldPosition(pos)}
                   >
-                    <Text style={[styles.fieldingChipText, isActive && styles.fieldingChipTextActive]}>
-                      {pos} {isActive && angle !== undefined ? `(${angle}°)` : ''}
+                    <Text style={[
+                      styles.fieldingChipText,
+                      isActive && styles.fieldingChipTextActive
+                    ]}>
+                      {pos} ({posData.angle}°) • {posData.side}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -592,7 +752,109 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
   scoreText: { color: '#0f172a', fontSize: 56, fontWeight: '900' },
   oversText: { color: '#475569', fontSize: 22, marginLeft: 12, fontWeight: '700' },
-  rrText: { color: '#64748b', fontSize: 14, marginTop: 8, fontWeight: '700', backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  rrText: { color: '#64748b', fontSize: 13, fontWeight: '700', backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  scoreboardMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+  shotSideBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
+  shotSideOff: { backgroundColor: 'rgba(2, 132, 199, 0.12)', borderColor: '#0284c7' },
+  shotSideLeg: { backgroundColor: 'rgba(234, 88, 12, 0.12)', borderColor: '#ea580c' },
+  shotSideBadgeText: { fontSize: 12, fontWeight: '800', color: '#0f172a' },
+  
+  scoreboardPositionsRow: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    width: '100%',
+    alignItems: 'center',
+    gap: 8
+  },
+  scoreboardSideRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    justifyContent: 'center'
+  },
+  scoreboardSideBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1
+  },
+  scoreboardSideBtnOff: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd'
+  },
+  scoreboardSideBtnLeg: {
+    backgroundColor: '#fff7ed',
+    borderColor: '#fed7aa'
+  },
+  scoreboardSideBtnActiveOff: {
+    backgroundColor: '#0284c7',
+    borderColor: '#0369a1'
+  },
+  scoreboardSideBtnActiveLeg: {
+    backgroundColor: '#ea580c',
+    borderColor: '#c2410c'
+  },
+  scoreboardSideBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155'
+  },
+  scoreboardSideBtnTextActive: {
+    color: '#ffffff'
+  },
+  scoreboardKeyPositionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+    justifyContent: 'center',
+    flexWrap: 'wrap'
+  },
+  quickPosChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1
+  },
+  quickPosChipOff: {
+    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+    borderColor: '#7dd3fc'
+  },
+  quickPosChipLeg: {
+    backgroundColor: 'rgba(234, 88, 12, 0.08)',
+    borderColor: '#fdba74'
+  },
+  quickPosChipActiveOff: {
+    backgroundColor: '#0284c7',
+    borderColor: '#0369a1'
+  },
+  quickPosChipActiveLeg: {
+    backgroundColor: '#ea580c',
+    borderColor: '#c2410c'
+  },
+  quickPosChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569'
+  },
+  quickPosChipTextActive: {
+    color: '#ffffff'
+  },
+  scoreboardWagonBtn: {
+    marginTop: 4,
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderWidth: 1,
+    borderColor: '#0284c7',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20
+  },
+  scoreboardWagonBtnText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: '#0284c7'
+  },
   
   playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 16, justifyContent: 'space-between' },
   playerCard: { backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', flex: 1, justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
@@ -624,7 +886,15 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   // BOTTOM SECTION
   controlsSection: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.65)', borderRadius: 8, padding: 20, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', justifyContent: 'space-between', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   controlPanel: { flex: 1, justifyContent: 'center' },
-  sectionTitle: { color: '#64748b', fontSize: 11, fontWeight: 'bold', marginBottom: 10, letterSpacing: 1 },
+  sectionTitle: { color: '#64748b', fontSize: 11, fontWeight: 'bold', letterSpacing: 1 },
+  sideFilterHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 },
+  sideToggleRow: { flexDirection: 'row', gap: 6 },
+  sideToggleBtn: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
+  sideToggleBtnActive: { backgroundColor: '#334155', borderColor: '#1e293b' },
+  sideToggleBtnActiveOff: { backgroundColor: '#0284c7', borderColor: '#0369a1' },
+  sideToggleBtnActiveLeg: { backgroundColor: '#ea580c', borderColor: '#c2410c' },
+  sideToggleBtnText: { fontSize: 11, fontWeight: '600', color: '#475569' },
+  sideToggleBtnTextActive: { color: '#ffffff', fontWeight: 'bold' },
   controlsGrid: { flexDirection: 'row', gap: 10, marginBottom: 16, flexWrap: 'wrap' },
   
   scoreBtn: { flex: 1, minWidth: 44, height: 50, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
@@ -645,10 +915,14 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   extraBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
 
   fieldingChipsScroll: { flexDirection: 'row', gap: 8, paddingVertical: 4, marginBottom: 16 },
-  fieldingChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' },
+  fieldingChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, borderWidth: 1 },
+  fieldingChipOff: { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' },
+  fieldingChipLeg: { backgroundColor: '#fff7ed', borderColor: '#fed7aa' },
   fieldingChipActive: { backgroundColor: '#fef3c7', borderColor: '#b45309' },
+  fieldingChipActiveOff: { backgroundColor: '#0284c7', borderColor: '#0369a1' },
+  fieldingChipActiveLeg: { backgroundColor: '#ea580c', borderColor: '#c2410c' },
   fieldingChipText: { fontSize: 11, fontWeight: '600', color: '#475569' },
-  fieldingChipTextActive: { color: '#b45309', fontWeight: 'bold' },
+  fieldingChipTextActive: { color: '#ffffff', fontWeight: 'bold' },
 
   actionPanel: { flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginTop: 10 },
   actionBtn: { flex: 1, padding: 14, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },

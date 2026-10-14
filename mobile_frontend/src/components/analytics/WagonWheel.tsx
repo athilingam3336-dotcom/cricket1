@@ -84,6 +84,8 @@ export default function WagonWheel({
     }
   }, [selectedBatterId, batters]);
 
+  // Active slide: 'wheel' (Slide 1: Wagon Wheel trajectories) | 'percentage' (Slide 2: Playing Area Percentages)
+  const [activeSlide, setActiveSlide] = useState<'wheel' | 'percentage'>('wheel');
   // Selected Run filter: 'ALL', 1, 2, 3, 4, 6, 0
   const [runFilter, setRunFilter] = useState<string>('ALL');
   // Selected Sector highlight filter
@@ -320,300 +322,390 @@ export default function WagonWheel({
         </View>
       )}
 
-      {/* Run Filter Pills */}
-      <View style={styles.filterBar}>
-        <Text style={styles.filterLabel}>SHOTS FILTER:</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === 'ALL' && styles.filterPillActive]}
-            onPress={() => setRunFilter('ALL')}
-          >
-            <Text style={[styles.filterPillText, runFilter === 'ALL' && styles.filterPillTextActive]}>
-              All ({runCounts.total})
-            </Text>
-          </TouchableOpacity>
+      {/* 2-SLIDE NAVIGATION TABS */}
+      <View style={styles.slideTabBar}>
+        <TouchableOpacity
+          style={[styles.slideTab, activeSlide === 'wheel' && styles.slideTabActive]}
+          onPress={() => setActiveSlide('wheel')}
+        >
+          <Text style={styles.slideTabIcon}>🎯</Text>
+          <View style={{ flexShrink: 1 }}>
+            <View style={styles.slideTabTitleRow}>
+              <Text style={[styles.slideTabTitle, activeSlide === 'wheel' && styles.slideTabTitleActive]}>
+                Slide 1: Wagon Wheel
+              </Text>
+              <View style={[styles.slidePillBadge, activeSlide === 'wheel' && styles.slidePillBadgeActive]}>
+                <Text style={[styles.slidePillBadgeText, activeSlide === 'wheel' && styles.slidePillBadgeTextActive]}>
+                  {displayedDeliveries.length} Shots
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.slideTabSubtitle}>Trajectories (1, 2, 3, 4, 6, dots) on Ground</Text>
+          </View>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === '6' && styles.filterPillActiveSix]}
-            onPress={() => setRunFilter(runFilter === '6' ? 'ALL' : '6')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#ec4899' }]} />
-            <Text style={[styles.filterPillText, runFilter === '6' && styles.filterPillTextActive]}>
-              6s ({runCounts.sixes})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === '4' && styles.filterPillActiveFour]}
-            onPress={() => setRunFilter(runFilter === '4' ? 'ALL' : '4')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#10b981' }]} />
-            <Text style={[styles.filterPillText, runFilter === '4' && styles.filterPillTextActive]}>
-              4s ({runCounts.fours})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === '3' && styles.filterPillActiveThree]}
-            onPress={() => setRunFilter(runFilter === '3' ? 'ALL' : '3')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#f59e0b' }]} />
-            <Text style={[styles.filterPillText, runFilter === '3' && styles.filterPillTextActive]}>
-              3s ({runCounts.threes})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === '2' && styles.filterPillActiveTwo]}
-            onPress={() => setRunFilter(runFilter === '2' ? 'ALL' : '2')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#3b82f6' }]} />
-            <Text style={[styles.filterPillText, runFilter === '2' && styles.filterPillTextActive]}>
-              2s ({runCounts.twos})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === '1' && styles.filterPillActiveOne]}
-            onPress={() => setRunFilter(runFilter === '1' ? 'ALL' : '1')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#06b6d4' }]} />
-            <Text style={[styles.filterPillText, runFilter === '1' && styles.filterPillTextActive]}>
-              1s ({runCounts.ones})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterPill, runFilter === 'DOT' && styles.filterPillActiveDot]}
-            onPress={() => setRunFilter(runFilter === 'DOT' ? 'ALL' : 'DOT')}
-          >
-            <View style={[styles.dotMarker, { backgroundColor: '#94a3b8' }]} />
-            <Text style={[styles.filterPillText, runFilter === 'DOT' && styles.filterPillTextActive]}>
-              Dots ({runCounts.dots})
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
+        <TouchableOpacity
+          style={[styles.slideTab, activeSlide === 'percentage' && styles.slideTabActive]}
+          onPress={() => setActiveSlide('percentage')}
+        >
+          <Text style={styles.slideTabIcon}>📊</Text>
+          <View style={{ flexShrink: 1 }}>
+            <View style={styles.slideTabTitleRow}>
+              <Text style={[styles.slideTabTitle, activeSlide === 'percentage' && styles.slideTabTitleActive]}>
+                Slide 2: Playing Areas (%)
+              </Text>
+              <View style={[styles.slidePillBadge, activeSlide === 'percentage' && styles.slidePillBadgeActive]}>
+                <Text style={[styles.slidePillBadgeText, activeSlide === 'percentage' && styles.slidePillBadgeTextActive]}>
+                  8 Sectors
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.slideTabSubtitle}>Off-Side ({stats.offPct}%) vs Leg-Side ({stats.legPct}%)</Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Main Content: Split into Wagon Wheel on Left + Area Percentage on Right on Desktop */}
-      <View style={[styles.mainLayout, isDesktop && styles.mainLayoutDesktop]}>
-        {/* LEFT COLUMN: THE WAGON WHEEL CANVAS */}
-        <View style={styles.wheelWrapper}>
-          <View style={[styles.groundContainer, { width: displaySize, height: displaySize }]}>
-            {/* Standard SVG Rendering (Works flawlessly on React Native Web & Native) */}
-            <svg
-              width={displaySize}
-              height={displaySize}
-              viewBox={`0 0 ${baseSize} ${baseSize}`}
-              style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}
-            >
-              <defs>
-                {/* Stadium Grass Gradient */}
-                <radialGradient id="turfGradient" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#0b381e" />
-                  <stop offset="70%" stopColor="#062613" />
-                  <stop offset="100%" stopColor="#02140a" />
-                </radialGradient>
-                {/* Pitch Texture */}
-                <linearGradient id="pitchGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#c5a880" />
-                  <stop offset="50%" stopColor="#d8b991" />
-                  <stop offset="100%" stopColor="#c5a880" />
-                </linearGradient>
-                {/* Glow Filter for Boundaries */}
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 1: WAGON WHEEL SHOT TRAJECTORIES
+          ───────────────────────────────────────────────────────────── */}
+      {activeSlide === 'wheel' && (
+        <View style={styles.slideContent}>
+          {/* Run Filter Pills */}
+          <View style={styles.filterBar}>
+            <Text style={styles.filterLabel}>SHOTS FILTER:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === 'ALL' && styles.filterPillActive]}
+                onPress={() => setRunFilter('ALL')}
+              >
+                <Text style={[styles.filterPillText, runFilter === 'ALL' && styles.filterPillTextActive]}>
+                  All ({runCounts.total})
+                </Text>
+              </TouchableOpacity>
 
-              {/* 1. Main Outfield Circle */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={radius}
-                fill="url(#turfGradient)"
-                stroke="#10b981"
-                strokeWidth="2.5"
-                strokeDasharray="4 2"
-              />
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === '6' && styles.filterPillActiveSix]}
+                onPress={() => setRunFilter(runFilter === '6' ? 'ALL' : '6')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#ec4899' }]} />
+                <Text style={[styles.filterPillText, runFilter === '6' && styles.filterPillTextActive]}>
+                  6s ({runCounts.sixes})
+                </Text>
+              </TouchableOpacity>
 
-              {/* 2. Outer Boundary Rope Border */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={radius + 4}
-                fill="none"
-                stroke="rgba(245, 158, 11, 0.4)"
-                strokeWidth="1.5"
-              />
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === '4' && styles.filterPillActiveFour]}
+                onPress={() => setRunFilter(runFilter === '4' ? 'ALL' : '4')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#10b981' }]} />
+                <Text style={[styles.filterPillText, runFilter === '4' && styles.filterPillTextActive]}>
+                  4s ({runCounts.fours})
+                </Text>
+              </TouchableOpacity>
 
-              {/* 3. 8 Sector Divider Lines & Sector Labels */}
-              {SECTORS.map(s => {
-                const borderCoord = getCoordinates(s.startAngle, 100);
-                const labelCoord = getCoordinates((s.startAngle + 22.5) % 360, 84);
-                const isSelected = sectorFilter === s.key;
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === '3' && styles.filterPillActiveThree]}
+                onPress={() => setRunFilter(runFilter === '3' ? 'ALL' : '3')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#f59e0b' }]} />
+                <Text style={[styles.filterPillText, runFilter === '3' && styles.filterPillTextActive]}>
+                  3s ({runCounts.threes})
+                </Text>
+              </TouchableOpacity>
 
-                return (
-                  <g key={s.key}>
-                    {/* Radial divider */}
-                    <line
-                      x1={cx}
-                      y1={cy}
-                      x2={borderCoord.x}
-                      y2={borderCoord.y}
-                      stroke="rgba(255, 255, 255, 0.12)"
-                      strokeWidth="1"
-                      strokeDasharray="3 3"
-                    />
-                    {/* Sector Name Watermark inside field */}
-                    <text
-                      x={labelCoord.x}
-                      y={labelCoord.y}
-                      fill={isSelected ? '#38bdf8' : 'rgba(255, 255, 255, 0.45)'}
-                      fontSize={isDesktop ? 9 : 8}
-                      fontWeight={isSelected ? 'bold' : 'normal'}
-                      textAnchor="middle"
-                      style={{ pointerEvents: 'none', userSelect: 'none' }}
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === '2' && styles.filterPillActiveTwo]}
+                onPress={() => setRunFilter(runFilter === '2' ? 'ALL' : '2')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#3b82f6' }]} />
+                <Text style={[styles.filterPillText, runFilter === '2' && styles.filterPillTextActive]}>
+                  2s ({runCounts.twos})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === '1' && styles.filterPillActiveOne]}
+                onPress={() => setRunFilter(runFilter === '1' ? 'ALL' : '1')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#06b6d4' }]} />
+                <Text style={[styles.filterPillText, runFilter === '1' && styles.filterPillTextActive]}>
+                  1s ({runCounts.ones})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterPill, runFilter === 'DOT' && styles.filterPillActiveDot]}
+                onPress={() => setRunFilter(runFilter === 'DOT' ? 'ALL' : 'DOT')}
+              >
+                <View style={[styles.dotMarker, { backgroundColor: '#94a3b8' }]} />
+                <Text style={[styles.filterPillText, runFilter === 'DOT' && styles.filterPillTextActive]}>
+                  Dots ({runCounts.dots})
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          {/* THE WAGON WHEEL CANVAS */}
+          <View style={styles.wheelWrapper}>
+            <View style={[styles.groundContainer, { width: displaySize, height: displaySize }]}>
+              {/* Standard SVG Rendering (Works flawlessly on React Native Web & Native) */}
+              <svg
+                width={displaySize}
+                height={displaySize}
+                viewBox={`0 0 ${baseSize} ${baseSize}`}
+                style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}
+              >
+                <defs>
+                  {/* Stadium Grass Gradient */}
+                  <radialGradient id="turfGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#0b381e" />
+                    <stop offset="70%" stopColor="#062613" />
+                    <stop offset="100%" stopColor="#02140a" />
+                  </radialGradient>
+                  {/* Pitch Texture */}
+                  <linearGradient id="pitchGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#c5a880" />
+                    <stop offset="50%" stopColor="#d8b991" />
+                    <stop offset="100%" stopColor="#c5a880" />
+                  </linearGradient>
+                  {/* Glow Filter for Boundaries */}
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+
+                {/* 1. Main Outfield Circle */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={radius}
+                  fill="url(#turfGradient)"
+                  stroke="#10b981"
+                  strokeWidth="2.5"
+                  strokeDasharray="4 2"
+                />
+
+                {/* 2. Outer Boundary Rope Border */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={radius + 4}
+                  fill="none"
+                  stroke="rgba(245, 158, 11, 0.4)"
+                  strokeWidth="1.5"
+                />
+
+                {/* 3. 8 Sector Divider Lines & Sector Labels */}
+                {SECTORS.map(s => {
+                  const borderCoord = getCoordinates(s.startAngle, 100);
+                  const labelCoord = getCoordinates((s.startAngle + 22.5) % 360, 84);
+                  const isSelected = sectorFilter === s.key;
+
+                  return (
+                    <g key={s.key}>
+                      {/* Radial divider */}
+                      <line
+                        x1={cx}
+                        y1={cy}
+                        x2={borderCoord.x}
+                        y2={borderCoord.y}
+                        stroke="rgba(255, 255, 255, 0.12)"
+                        strokeWidth="1"
+                        strokeDasharray="3 3"
+                      />
+                      {/* Sector Name Watermark inside field */}
+                      <text
+                        x={labelCoord.x}
+                        y={labelCoord.y}
+                        fill={isSelected ? '#38bdf8' : 'rgba(255, 255, 255, 0.45)'}
+                        fontSize={isDesktop ? 9 : 8}
+                        fontWeight={isSelected ? 'bold' : 'normal'}
+                        textAnchor="middle"
+                        style={{ pointerEvents: 'none', userSelect: 'none' }}
+                      >
+                        {s.name.split(' / ')[0]}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {/* 4. 30-Yard Infield Circle */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={innerCircleR}
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.28)"
+                  strokeWidth="1.5"
+                  strokeDasharray="5 4"
+                />
+
+                {/* 5. Central Cricket Pitch */}
+                <rect
+                  x={cx - pitchW / 2}
+                  y={cy - pitchH / 2}
+                  width={pitchW}
+                  height={pitchH}
+                  fill="url(#pitchGrad)"
+                  rx="2"
+                  stroke="#8d6e63"
+                  strokeWidth="1"
+                />
+                {/* Bowling Crease & Stumps */}
+                <line x1={cx - pitchW / 2} y1={cy - pitchH / 2 + 5} x2={cx + pitchW / 2} y2={cy - pitchH / 2 + 5} stroke="#ffffff" strokeWidth="1" />
+                {/* Batting Crease (Striker) */}
+                <line x1={cx - pitchW / 2} y1={cy + pitchH / 2 - 5} x2={cx + pitchW / 2} y2={cy + pitchH / 2 - 5} stroke="#ffffff" strokeWidth="1" />
+                {/* Stumps Marker */}
+                <circle cx={cx} cy={cy + pitchH / 2 - 3} r="1.5" fill="#e11d48" />
+
+                {/* 6. Wagon Wheel Shot Trajectory Lines */}
+                {displayedDeliveries.map((del, idx) => {
+                  const runs = Number(del.runsBatter) || 0;
+                  const angle = typeof del.shotAngle === 'number' ? del.shotAngle : 315;
+                  const dist = typeof del.shotDistance === 'number' ? del.shotDistance : (runs === 6 ? 108 : runs === 4 ? 94 : 45);
+                  const end = getCoordinates(angle, dist);
+                  const color = getShotColor(runs);
+                  const isCurrentActive = activeShot?.id === del.id;
+
+                  const strokeWidth = runs === 6 ? 2.5 : runs === 4 ? 2.0 : 1.3;
+                  const strokeDash = runs === 6 ? '4 2' : runs === 0 ? '2 2' : 'none';
+
+                  return (
+                    <g
+                      key={del.id || `shot-${idx}`}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setActiveShot(del)}
                     >
-                      {s.name.split(' / ')[0]}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* 4. 30-Yard Infield Circle */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={innerCircleR}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.28)"
-                strokeWidth="1.5"
-                strokeDasharray="5 4"
-              />
-
-              {/* 5. Central Cricket Pitch */}
-              <rect
-                x={cx - pitchW / 2}
-                y={cy - pitchH / 2}
-                width={pitchW}
-                height={pitchH}
-                fill="url(#pitchGrad)"
-                rx="2"
-                stroke="#8d6e63"
-                strokeWidth="1"
-              />
-              {/* Bowling Crease & Stumps */}
-              <line x1={cx - pitchW / 2} y1={cy - pitchH / 2 + 5} x2={cx + pitchW / 2} y2={cy - pitchH / 2 + 5} stroke="#ffffff" strokeWidth="1" />
-              {/* Batting Crease (Striker) */}
-              <line x1={cx - pitchW / 2} y1={cy + pitchH / 2 - 5} x2={cx + pitchW / 2} y2={cy + pitchH / 2 - 5} stroke="#ffffff" strokeWidth="1" />
-              {/* Stumps Marker */}
-              <circle cx={cx} cy={cy + pitchH / 2 - 3} r="1.5" fill="#e11d48" />
-
-              {/* 6. Wagon Wheel Shot Trajectory Lines */}
-              {displayedDeliveries.map((del, idx) => {
-                const runs = Number(del.runsBatter) || 0;
-                const angle = typeof del.shotAngle === 'number' ? del.shotAngle : 315;
-                const dist = typeof del.shotDistance === 'number' ? del.shotDistance : (runs === 6 ? 108 : runs === 4 ? 94 : 45);
-                const end = getCoordinates(angle, dist);
-                const color = getShotColor(runs);
-                const isCurrentActive = activeShot?.id === del.id;
-
-                const strokeWidth = runs === 6 ? 2.5 : runs === 4 ? 2.0 : 1.3;
-                const strokeDash = runs === 6 ? '4 2' : runs === 0 ? '2 2' : 'none';
-
-                return (
-                  <g
-                    key={del.id || `shot-${idx}`}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => setActiveShot(del)}
-                  >
-                    {/* Glow backdrop on hover */}
-                    {isCurrentActive && (
+                      {/* Glow backdrop on hover */}
+                      {isCurrentActive && (
+                        <line
+                          x1={cx}
+                          y1={cy + 8}
+                          x2={end.x}
+                          y2={end.y}
+                          stroke="#ffffff"
+                          strokeWidth={strokeWidth + 4}
+                          opacity="0.4"
+                        />
+                      )}
+                      {/* The Shot Line */}
                       <line
                         x1={cx}
                         y1={cy + 8}
                         x2={end.x}
                         y2={end.y}
-                        stroke="#ffffff"
-                        strokeWidth={strokeWidth + 4}
-                        opacity="0.4"
+                        stroke={color}
+                        strokeWidth={isCurrentActive ? strokeWidth + 1.5 : strokeWidth}
+                        strokeDasharray={strokeDash}
+                        opacity={isCurrentActive ? 1.0 : 0.85}
                       />
-                    )}
-                    {/* The Shot Line */}
-                    <line
-                      x1={cx}
-                      y1={cy + 8}
-                      x2={end.x}
-                      y2={end.y}
-                      stroke={color}
-                      strokeWidth={isCurrentActive ? strokeWidth + 1.5 : strokeWidth}
-                      strokeDasharray={strokeDash}
-                      opacity={isCurrentActive ? 1.0 : 0.85}
-                    />
-                    {/* Terminal Marker */}
-                    <circle
-                      cx={end.x}
-                      cy={end.y}
-                      r={runs === 6 ? 4.5 : runs === 4 ? 3.5 : 2.5}
-                      fill={color}
-                      stroke="#ffffff"
-                      strokeWidth={isCurrentActive ? 1.5 : 0.75}
-                    />
-                  </g>
-                );
-              })}
+                      {/* Terminal Marker */}
+                      <circle
+                        cx={end.x}
+                        cy={end.y}
+                        r={runs === 6 ? 4.5 : runs === 4 ? 3.5 : 2.5}
+                        fill={color}
+                        stroke="#ffffff"
+                        strokeWidth={isCurrentActive ? 1.5 : 0.75}
+                      />
+                    </g>
+                  );
+                })}
 
-              {/* Batter Orientations Label (Off / Leg side indicator) */}
-              <text x={cx - radius + 15} y={cy} fill="rgba(56, 189, 248, 0.7)" fontSize="10" fontWeight="bold">
-                OFF
-              </text>
-              <text x={cx + radius - 35} y={cy} fill="rgba(245, 158, 11, 0.7)" fontSize="10" fontWeight="bold">
-                LEG
-              </text>
-            </svg>
+                {/* Batter Orientations Label (Off / Leg side indicator) */}
+                <text x={cx - radius + 15} y={cy} fill="rgba(56, 189, 248, 0.7)" fontSize="10" fontWeight="bold">
+                  OFF
+                </text>
+                <text x={cx + radius - 35} y={cy} fill="rgba(245, 158, 11, 0.7)" fontSize="10" fontWeight="bold">
+                  LEG
+                </text>
+              </svg>
 
-            {/* Hovered / Tapped Shot Detail Tooltip Card */}
-            {activeShot && (
-              <View style={styles.shotTooltip}>
-                <View style={styles.tooltipHeader}>
-                  <Text style={[styles.tooltipBadge, { backgroundColor: getShotColor(activeShot.runsBatter) }]}>
-                    {activeShot.runsBatter} RUNS
+              {/* Hovered / Tapped Shot Detail Tooltip Card */}
+              {activeShot && (
+                <View style={styles.shotTooltip}>
+                  <View style={styles.tooltipHeader}>
+                    <Text style={[styles.tooltipBadge, { backgroundColor: getShotColor(activeShot.runsBatter) }]}>
+                      {activeShot.runsBatter} RUNS
+                    </Text>
+                    <TouchableOpacity onPress={() => setActiveShot(null)} style={styles.tooltipClose}>
+                      <Text style={styles.tooltipCloseText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.tooltipPosition}>
+                    Direction: {activeShot.fieldingPosition || activeShot.shotZone || 'Field'} ({activeShot.shotAngle}° angle)
                   </Text>
-                  <TouchableOpacity onPress={() => setActiveShot(null)} style={styles.tooltipClose}>
-                    <Text style={styles.tooltipCloseText}>✕</Text>
-                  </TouchableOpacity>
+                  {activeShot.overNumber !== undefined && (
+                    <Text style={styles.tooltipBall}>
+                      Over {activeShot.overNumber}.{activeShot.ballNumber}
+                    </Text>
+                  )}
+                  {activeShot.commentary ? (
+                    <Text style={styles.tooltipComm} numberOfLines={2}>
+                      "{activeShot.commentary}"
+                    </Text>
+                  ) : null}
                 </View>
-                <Text style={styles.tooltipPosition}>
-                  Direction: {activeShot.fieldingPosition || activeShot.shotZone || 'Field'} ({activeShot.shotAngle}° angle)
+              )}
+            </View>
+
+            {/* Quick Clear Filter if active */}
+            {sectorFilter && (
+              <TouchableOpacity style={styles.clearFilterBtn} onPress={() => setSectorFilter(null)}>
+                <Text style={styles.clearFilterText}>
+                  ✕ Filtered by {SECTORS.find(s => s.key === sectorFilter)?.name} (Tap to reset)
                 </Text>
-                {activeShot.overNumber !== undefined && (
-                  <Text style={styles.tooltipBall}>
-                    Over {activeShot.overNumber}.{activeShot.ballNumber}
-                  </Text>
-                )}
-                {activeShot.commentary ? (
-                  <Text style={styles.tooltipComm} numberOfLines={2}>
-                    "{activeShot.commentary}"
-                  </Text>
-                ) : null}
-              </View>
+              </TouchableOpacity>
             )}
+
+            {/* Compact Off vs Leg summary pill under wheel */}
+            <View style={styles.compactSideSummary}>
+              <View style={styles.compactSideOff}>
+                <Text style={styles.compactSideText}>🔵 Off-Side: <Text style={styles.boldText}>{stats.offRuns} runs</Text> ({stats.offPct}%)</Text>
+              </View>
+              <View style={styles.compactSideLeg}>
+                <Text style={styles.compactSideText}>🟠 Leg-Side: <Text style={styles.boldText}>{stats.legRuns} runs</Text> ({stats.legPct}%)</Text>
+              </View>
+            </View>
+
+            {/* Next Slide Action Banner */}
+            <TouchableOpacity
+              style={styles.slideNavBanner}
+              onPress={() => setActiveSlide('percentage')}
+              activeOpacity={0.85}
+            >
+              <View style={styles.slideNavInfo}>
+                <Text style={styles.slideNavBadge}>SLIDE 2 OF 2</Text>
+                <Text style={styles.slideNavTitle}>📊 View Player Playing Area Percentages (%) →</Text>
+                <Text style={styles.slideNavSubtitle}>
+                  Inspect Off vs Leg dominance and 8-zone scoring breakdown
+                </Text>
+              </View>
+              <Text style={styles.slideNavArrow}>➔</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          SLIDE 2: PLAYING AREA PERCENTAGES & 8-SECTOR BREAKDOWN
+          ───────────────────────────────────────────────────────────── */}
+      {activeSlide === 'percentage' && (
+        <View style={styles.slideContent}>
+          {/* Slide 2 Header Banner */}
+          <View style={styles.slide2HeaderCard}>
+            <View style={styles.slide2HeaderTop}>
+              <Text style={styles.slide2Title}>📊 Batsman Playing Area & Scoring Zones Breakdown</Text>
+              <View style={styles.slide2Badge}>
+                <Text style={styles.slide2BadgeText}>SLIDE 2 OF 2</Text>
+              </View>
+            </View>
+            <Text style={styles.slide2Subtitle}>
+              Exact percentage calculation of runs scored by {currentBatter?.name || 'Batsman'} ({stats.totalRuns} total runs) across Off-Side, Leg-Side and all 8 cricket field sectors
+            </Text>
           </View>
 
-          {/* Quick Clear Filter if active */}
-          {sectorFilter && (
-            <TouchableOpacity style={styles.clearFilterBtn} onPress={() => setSectorFilter(null)}>
-              <Text style={styles.clearFilterText}>
-                ✕ Filtered by {SECTORS.find(s => s.key === sectorFilter)?.name} (Tap to reset)
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* RIGHT COLUMN: PLAYING AREA PERCENTAGES & 8-SECTOR BREAKDOWN */}
-        <View style={styles.analyticsWrapper}>
           {/* 1. OFF-SIDE vs LEG-SIDE PROPORTIONAL BALANCE BAR */}
           <View style={styles.balanceCard}>
             <View style={styles.balanceHeader}>
@@ -633,10 +725,10 @@ export default function WagonWheel({
 
             <View style={styles.balanceDetailsRow}>
               <Text style={styles.offDetailText}>
-                🔵 Off-Side: <Text style={styles.boldText}>{stats.offRuns} runs</Text> ({stats.offBalls} balls)
+                🔵 Off-Side: <Text style={styles.boldText}>{stats.offRuns} runs</Text> ({stats.offBalls} balls) • {stats.offPct}% of innings
               </Text>
               <Text style={styles.legDetailText}>
-                🟠 Leg-Side: <Text style={styles.boldText}>{stats.legRuns} runs</Text> ({stats.legBalls} balls)
+                🟠 Leg-Side: <Text style={styles.boldText}>{stats.legRuns} runs</Text> ({stats.legBalls} balls) • {stats.legPct}% of innings
               </Text>
             </View>
           </View>
@@ -644,21 +736,20 @@ export default function WagonWheel({
           {/* 2. 8-SECTOR PLAYING AREA BREAKDOWN TABLE / CARDS */}
           <View style={styles.sectorTableCard}>
             <View style={styles.sectorCardHeader}>
-              <Text style={styles.sectorCardTitle}>📊 Playing Area Percentage By Sector</Text>
-              <Text style={styles.sectorCardHint}>Tap any sector to isolate shots</Text>
+              <Text style={styles.sectorCardTitle}>📊 Playing Area Percentage By Sector (8 Zones)</Text>
+              <Text style={styles.sectorCardHint}>Tap any sector to isolate & inspect in Wagon Wheel</Text>
             </View>
 
             <View style={styles.sectorGrid}>
               {stats.sectors.map(sec => {
                 const isSelected = sectorFilter === sec.key;
                 return (
-                  <TouchableOpacity
+                  <View
                     key={sec.key}
                     style={[
                       styles.sectorRowItem,
                       isSelected && styles.sectorRowSelected
                     ]}
-                    onPress={() => setSectorFilter(isSelected ? null : sec.key)}
                   >
                     <View style={styles.sectorRowTop}>
                       <View style={styles.sectorNameWrapper}>
@@ -689,17 +780,44 @@ export default function WagonWheel({
                       <Text style={styles.sectorSubText}>
                         {sec.balls} balls • {sec.fours} fours • {sec.sixes} sixes
                       </Text>
-                      <Text style={styles.sectorSideBadge}>
-                        {sec.side}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.sectorSideBadge}>
+                          {sec.side}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.sectorInspectBtn}
+                          onPress={() => {
+                            setSectorFilter(sec.key);
+                            setActiveSlide('wheel');
+                          }}
+                        >
+                          <Text style={styles.sectorInspectBtnText}>🎯 Wheel</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>
           </View>
+
+          {/* Return to Slide 1 Action Banner */}
+          <TouchableOpacity
+            style={styles.slideNavBannerBack}
+            onPress={() => setActiveSlide('wheel')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.slideNavArrowBack}>←</Text>
+            <View style={styles.slideNavInfo}>
+              <Text style={styles.slideNavBadgeBack}>SLIDE 1 OF 2</Text>
+              <Text style={styles.slideNavTitleBack}>🎯 Return to Wagon Wheel (Shot Trajectories)</Text>
+              <Text style={styles.slideNavSubtitleBack}>
+                Explore individual shot lines, boundaries (4s & 6s), and ball placements on field
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
-      </View>
+      )}
     </View>
   );
 }
@@ -1208,5 +1326,235 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4
+  },
+  // 2-SLIDE NAVIGATION STYLES
+  slideTabBar: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e293b',
+    paddingBottom: 12
+  },
+  slideTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#1e293b',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#334155'
+  },
+  slideTabActive: {
+    backgroundColor: 'rgba(2, 132, 199, 0.2)',
+    borderColor: '#0284c7'
+  },
+  slideTabIcon: {
+    fontSize: 20
+  },
+  slideTabTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  slideTabTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#94a3b8'
+  },
+  slideTabTitleActive: {
+    color: '#38bdf8'
+  },
+  slideTabSubtitle: {
+    fontSize: 10,
+    color: '#64748b',
+    marginTop: 2
+  },
+  slidePillBadge: {
+    backgroundColor: '#334155',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8
+  },
+  slidePillBadgeActive: {
+    backgroundColor: '#0284c7'
+  },
+  slidePillBadgeText: {
+    fontSize: 9.5,
+    color: '#cbd5e1',
+    fontWeight: 'bold'
+  },
+  slidePillBadgeTextActive: {
+    color: '#ffffff'
+  },
+  slideContent: {
+    width: '100%',
+    gap: 14
+  },
+  compactSideSummary: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    width: '100%',
+    maxWidth: 420
+  },
+  compactSideOff: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 132, 199, 0.15)',
+    borderWidth: 1,
+    borderColor: '#0284c7',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  compactSideLeg: {
+    flex: 1,
+    backgroundColor: 'rgba(234, 88, 12, 0.15)',
+    borderWidth: 1,
+    borderColor: '#ea580c',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  compactSideText: {
+    fontSize: 11,
+    color: '#f8fafc',
+    fontWeight: '600'
+  },
+  slideNavBanner: {
+    marginTop: 14,
+    backgroundColor: '#1e293b',
+    borderWidth: 1.5,
+    borderColor: '#38bdf8',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: 420
+  },
+  slideNavBannerBack: {
+    marginTop: 10,
+    backgroundColor: '#1e293b',
+    borderWidth: 1.5,
+    borderColor: '#0284c7',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  slideNavInfo: {
+    flex: 1
+  },
+  slideNavBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#0284c7',
+    color: '#ffffff',
+    fontSize: 9.5,
+    fontWeight: '900',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4,
+    letterSpacing: 0.5
+  },
+  slideNavBadgeBack: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#047857',
+    color: '#ffffff',
+    fontSize: 9.5,
+    fontWeight: '900',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4,
+    letterSpacing: 0.5
+  },
+  slideNavTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#38bdf8'
+  },
+  slideNavTitleBack: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#34d399'
+  },
+  slideNavSubtitle: {
+    fontSize: 10.5,
+    color: '#94a3b8',
+    marginTop: 2
+  },
+  slideNavSubtitleBack: {
+    fontSize: 10.5,
+    color: '#94a3b8',
+    marginTop: 2
+  },
+  slideNavArrow: {
+    fontSize: 18,
+    color: '#38bdf8',
+    fontWeight: 'bold',
+    marginLeft: 10
+  },
+  slideNavArrowBack: {
+    fontSize: 20,
+    color: '#34d399',
+    fontWeight: 'bold'
+  },
+  slide2HeaderCard: {
+    backgroundColor: '#1e293b',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 4
+  },
+  slide2HeaderTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4
+  },
+  slide2Title: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#f8fafc',
+    flex: 1
+  },
+  slide2Badge: {
+    backgroundColor: '#38bdf8',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6
+  },
+  slide2BadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#0f172a'
+  },
+  slide2Subtitle: {
+    fontSize: 11,
+    color: '#94a3b8',
+    lineHeight: 16
+  },
+  sectorInspectBtn: {
+    backgroundColor: 'rgba(2, 132, 199, 0.25)',
+    borderWidth: 1,
+    borderColor: '#0284c7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4
+  },
+  sectorInspectBtnText: {
+    fontSize: 9.5,
+    fontWeight: 'bold',
+    color: '#38bdf8'
   }
 });
