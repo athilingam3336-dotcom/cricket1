@@ -453,105 +453,6 @@ export default function LiveScoringScreen() {
             </View>
             <View style={styles.scoreboardMetaRow}>
               <Text style={styles.rrText}>CRR: {balls > 0 ? ((runs / balls) * 6).toFixed(2) : '0.00'}</Text>
-              <View style={[
-                styles.shotSideBadge,
-                (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side || 'OFF') === 'OFF' ? styles.shotSideOff : styles.shotSideLeg
-              ]}>
-                <Text style={styles.shotSideBadgeText}>
-                  {(FIELDING_ANGLE_MAP[selectedFieldPosition]?.side || 'OFF') === 'OFF' ? '🔵 OFF SIDE' : '🟠 LEG SIDE'}: {selectedFieldPosition} ({FIELDING_ANGLE_MAP[selectedFieldPosition]?.angle || 315}°)
-                </Text>
-              </View>
-            </View>
-
-            {/* QUICK SHOT SIDE & POSITION CONTROLS IN SCOREBOARD */}
-            <View style={styles.scoreboardPositionsRow}>
-              {/* Off / Leg Side Switches */}
-              <View style={styles.scoreboardSideRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.scoreboardSideBtn,
-                    styles.scoreboardSideBtnOff,
-                    sideFilter === 'OFF' && styles.scoreboardSideBtnActiveOff
-                  ]}
-                  onPress={() => {
-                    setSideFilter('OFF');
-                    if (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side !== 'OFF') {
-                      handleSelectFieldPosition('Long Off');
-                    }
-                  }}
-                >
-                  <Text style={[
-                    styles.scoreboardSideBtnText,
-                    sideFilter === 'OFF' && styles.scoreboardSideBtnTextActive
-                  ]}>
-                    🔵 Off Side (7)
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.scoreboardSideBtn,
-                    styles.scoreboardSideBtnLeg,
-                    sideFilter === 'LEG' && styles.scoreboardSideBtnActiveLeg
-                  ]}
-                  onPress={() => {
-                    setSideFilter('LEG');
-                    if (FIELDING_ANGLE_MAP[selectedFieldPosition]?.side !== 'LEG') {
-                      handleSelectFieldPosition('Long On');
-                    }
-                  }}
-                >
-                  <Text style={[
-                    styles.scoreboardSideBtnText,
-                    sideFilter === 'LEG' && styles.scoreboardSideBtnTextActive
-                  ]}>
-                    🟠 Leg Side (5)
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Long Off & Long On Direct Buttons */}
-              <View style={styles.scoreboardKeyPositionsRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.quickPosChip,
-                    styles.quickPosChipOff,
-                    selectedFieldPosition === 'Long Off' && styles.quickPosChipActiveOff
-                  ]}
-                  onPress={() => handleSelectFieldPosition('Long Off')}
-                >
-                  <Text style={[
-                    styles.quickPosChipText,
-                    selectedFieldPosition === 'Long Off' && styles.quickPosChipTextActive
-                  ]}>
-                    Long Off (340°)
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.quickPosChip,
-                    styles.quickPosChipLeg,
-                    selectedFieldPosition === 'Long On' && styles.quickPosChipActiveLeg
-                  ]}
-                  onPress={() => handleSelectFieldPosition('Long On')}
-                >
-                  <Text style={[
-                    styles.quickPosChipText,
-                    selectedFieldPosition === 'Long On' && styles.quickPosChipTextActive
-                  ]}>
-                    Long On (20°)
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Direct Wagon Wheel 2-Slide Button */}
-              <TouchableOpacity
-                style={styles.scoreboardWagonBtn}
-                onPress={() => setShowWagonModal(true)}
-              >
-                <Text style={styles.scoreboardWagonBtnText}>🎯 Wagon Wheel & Percentages (2 Slides)</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -951,7 +852,7 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
 
   // WAGON WHEEL MODAL
-  wagonModalContent: { width: '100%', maxWidth: isDesktop ? 960 : '100%', maxHeight: '92%', backgroundColor: '#0f172a', borderRadius: 16, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, borderWidth: 1, borderColor: '#334155' },
+  wagonModalContent: { width: '100%', maxWidth: isDesktop ? 960 : '100%', maxHeight: '94%', backgroundColor: '#0f172a', borderRadius: 16, padding: isDesktop ? 18 : 12, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, borderWidth: 1, borderColor: '#334155' },
   wagonModalContentDesktop: { minWidth: 840 },
   wagonModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#1e293b', paddingBottom: 12, marginBottom: 8 },
   wagonModalTitle: { fontSize: 16, fontWeight: 'bold', color: '#f8fafc' },

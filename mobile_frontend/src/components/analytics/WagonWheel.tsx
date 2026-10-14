@@ -70,6 +70,8 @@ export default function WagonWheel({
 }: WagonWheelProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
+  const isMobile = width <= 480;
+  const isSmallScreen = width < 380;
 
   // Active batter selection
   const defaultBatterId = selectedBatterId || (batters[0]?.id ?? '');
@@ -246,7 +248,7 @@ export default function WagonWheel({
   const innerCircleR = radius * 0.44; // 30-yard circle
   const pitchW = 18;
   const pitchH = 46;
-  const displaySize = isDesktop ? 420 : Math.min(Math.max(width - 56, 260), 380);
+  const displaySize = isDesktop ? 420 : Math.min(Math.max(width - (isSmallScreen ? 36 : 56), 230), 380);
 
   // Function to compute (x, y) coordinates for a shot
   const getCoordinates = (angleDeg: number, distancePct: number) => {
@@ -323,9 +325,9 @@ export default function WagonWheel({
       )}
 
       {/* 2-SLIDE NAVIGATION TABS */}
-      <View style={styles.slideTabBar}>
+      <View style={[styles.slideTabBar, isSmallScreen && styles.slideTabBarMobile]}>
         <TouchableOpacity
-          style={[styles.slideTab, activeSlide === 'wheel' && styles.slideTabActive]}
+          style={[styles.slideTab, isSmallScreen && styles.slideTabMobile, activeSlide === 'wheel' && styles.slideTabActive]}
           onPress={() => setActiveSlide('wheel')}
         >
           <Text style={styles.slideTabIcon}>🎯</Text>
@@ -345,7 +347,7 @@ export default function WagonWheel({
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.slideTab, activeSlide === 'percentage' && styles.slideTabActive]}
+          style={[styles.slideTab, isSmallScreen && styles.slideTabMobile, activeSlide === 'percentage' && styles.slideTabActive]}
           onPress={() => setActiveSlide('percentage')}
         >
           <Text style={styles.slideTabIcon}>📊</Text>
@@ -660,7 +662,7 @@ export default function WagonWheel({
             )}
 
             {/* Compact Off vs Leg summary pill under wheel */}
-            <View style={styles.compactSideSummary}>
+            <View style={[styles.compactSideSummary, isSmallScreen && styles.compactSideSummaryMobile]}>
               <View style={styles.compactSideOff}>
                 <Text style={styles.compactSideText}>🔵 Off-Side: <Text style={styles.boldText}>{stats.offRuns} runs</Text> ({stats.offPct}%)</Text>
               </View>
@@ -671,7 +673,7 @@ export default function WagonWheel({
 
             {/* Next Slide Action Banner */}
             <TouchableOpacity
-              style={styles.slideNavBanner}
+              style={[styles.slideNavBanner, isSmallScreen && styles.slideNavBannerMobile]}
               onPress={() => setActiveSlide('percentage')}
               activeOpacity={0.85}
             >
@@ -740,7 +742,7 @@ export default function WagonWheel({
               <Text style={styles.sectorCardHint}>Tap any sector to isolate & inspect in Wagon Wheel</Text>
             </View>
 
-            <View style={styles.sectorGrid}>
+            <View style={[styles.sectorGrid, isDesktop && styles.sectorGridDesktop]}>
               {stats.sectors.map(sec => {
                 const isSelected = sectorFilter === sec.key;
                 return (
@@ -748,6 +750,7 @@ export default function WagonWheel({
                     key={sec.key}
                     style={[
                       styles.sectorRowItem,
+                      isDesktop && styles.sectorRowItemDesktop,
                       isSelected && styles.sectorRowSelected
                     ]}
                   >
@@ -803,7 +806,7 @@ export default function WagonWheel({
 
           {/* Return to Slide 1 Action Banner */}
           <TouchableOpacity
-            style={styles.slideNavBannerBack}
+            style={[styles.slideNavBannerBack, isSmallScreen && styles.slideNavBannerBackMobile]}
             onPress={() => setActiveSlide('wheel')}
             activeOpacity={0.85}
           >
@@ -1556,5 +1559,36 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontWeight: 'bold',
     color: '#38bdf8'
+  },
+  // Responsive overrides
+  slideTabBarMobile: {
+    flexDirection: 'column',
+    gap: 8
+  },
+  slideTabMobile: {
+    width: '100%',
+    paddingVertical: 8,
+    paddingHorizontal: 10
+  },
+  compactSideSummaryMobile: {
+    flexDirection: 'column',
+    gap: 6
+  },
+  slideNavBannerMobile: {
+    padding: 10,
+    width: '100%'
+  },
+  slideNavBannerBackMobile: {
+    padding: 10,
+    width: '100%'
+  },
+  sectorGridDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between'
+  },
+  sectorRowItemDesktop: {
+    width: '49%',
+    minWidth: 260
   }
 });
