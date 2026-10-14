@@ -7,6 +7,61 @@
 const db = require('../config/db');
 const socketService = require('./socketService');
 
+const POSITION_COORDINATES = {
+  'Point': { angle: 270, zone: 'Point' },
+  'Cover': { angle: 315, zone: 'Cover / Extra Cover' },
+  'Mid-Off': { angle: 348, zone: 'Mid-Off / Long Off' },
+  'Mid-On': { angle: 12, zone: 'Mid-On / Long On' },
+  'Midwicket': { angle: 55, zone: 'Midwicket' },
+  'Slips': { angle: 240, zone: 'Third Man / Slips' },
+  'Third Man': { angle: 220, zone: 'Third Man' },
+  'Fine Leg': { angle: 140, zone: 'Fine Leg' },
+  'Square Leg': { angle: 95, zone: 'Square Leg' },
+  'Long Off': { angle: 340, zone: 'Mid-Off / Long Off' },
+  'Long On': { angle: 20, zone: 'Mid-On / Long On' },
+  'Deep Extra Cover': { angle: 315, zone: 'Cover / Extra Cover' }
+};
+
+function resolveShotGeometry(fieldingPosition, runsBatter, customAngle, customDistance, customZone) {
+  let angle = (typeof customAngle === 'number' && !isNaN(customAngle)) ? customAngle : null;
+  let zone = customZone || null;
+  
+  if (angle === null) {
+    if (fieldingPosition && POSITION_COORDINATES[fieldingPosition]) {
+      const jitter = (Math.random() - 0.5) * 8;
+      angle = Math.round((POSITION_COORDINATES[fieldingPosition].angle + jitter + 360) % 360);
+      zone = POSITION_COORDINATES[fieldingPosition].zone;
+    } else {
+      angle = 315;
+      zone = 'Cover / Extra Cover';
+    }
+  }
+
+  if (!zone) {
+    if (angle >= 337.5 || angle < 22.5) zone = 'Mid-Off / Long Off';
+    else if (angle >= 22.5 && angle < 67.5) zone = 'Mid-On / Long On';
+    else if (angle >= 67.5 && angle < 112.5) zone = 'Midwicket';
+    else if (angle >= 112.5 && angle < 157.5) zone = 'Square Leg';
+    else if (angle >= 157.5 && angle < 202.5) zone = 'Fine Leg';
+    else if (angle >= 202.5 && angle < 247.5) zone = 'Third Man';
+    else if (angle >= 247.5 && angle < 292.5) zone = 'Point';
+    else zone = 'Cover / Extra Cover';
+  }
+
+  let distance = (typeof customDistance === 'number' && !isNaN(customDistance)) ? customDistance : null;
+  if (distance === null) {
+    const runs = Number(runsBatter) || 0;
+    if (runs === 6) distance = 105 + Math.round(Math.random() * 5);
+    else if (runs === 4) distance = 94 + Math.round(Math.random() * 4);
+    else if (runs === 3) distance = 76 + Math.round(Math.random() * 6);
+    else if (runs === 2) distance = 62 + Math.round(Math.random() * 6);
+    else if (runs === 1) distance = 46 + Math.round(Math.random() * 6);
+    else distance = 28 + Math.round(Math.random() * 8);
+  }
+
+  return { angle, distance, zone };
+}
+
 let deliverySequence = 10000;
 
 class ScoringEngine {
@@ -104,6 +159,9 @@ class ScoringEngine {
       dismissedPlayerId = null,
       shotType = null,
       fieldingPosition = null,
+      shotAngle = null,
+      shotDistance = null,
+      shotZone = null,
       fielderId = null,
       fielderName = null
     } = deliveryData;
@@ -126,6 +184,9 @@ class ScoringEngine {
     let boundaryType = null;
     if (runsBatter === 4) boundaryType = 'FOUR';
     if (runsBatter === 6) boundaryType = 'SIX';
+
+    // Resolve Wagon Wheel Shot Geometry
+    const shotGeo = resolveShotGeometry(fieldingPosition, runsBatter, shotAngle, shotDistance, shotZone);
 
     // Player Names for Commentary
     const players = await db.models.Player.find({}).lean();
@@ -171,6 +232,9 @@ class ScoringEngine {
       is_legal_delivery: isLegal,
       shot_type: shotType,
       fielding_position: fieldingPosition,
+      shot_angle: shotGeo.angle,
+      shot_distance: shotGeo.distance,
+      shot_zone: shotGeo.zone,
       fielder_id: fielderId,
       fielder_name: actualFielderName,
       commentary,

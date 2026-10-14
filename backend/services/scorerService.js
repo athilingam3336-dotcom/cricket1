@@ -6,6 +6,61 @@
 
 const db = require('../config/db');
 
+const POSITION_COORDINATES = {
+  'Point': { angle: 270, zone: 'Point' },
+  'Cover': { angle: 315, zone: 'Cover / Extra Cover' },
+  'Mid-Off': { angle: 348, zone: 'Mid-Off / Long Off' },
+  'Mid-On': { angle: 12, zone: 'Mid-On / Long On' },
+  'Midwicket': { angle: 55, zone: 'Midwicket' },
+  'Slips': { angle: 240, zone: 'Third Man / Slips' },
+  'Third Man': { angle: 220, zone: 'Third Man' },
+  'Fine Leg': { angle: 140, zone: 'Fine Leg' },
+  'Square Leg': { angle: 95, zone: 'Square Leg' },
+  'Long Off': { angle: 340, zone: 'Mid-Off / Long Off' },
+  'Long On': { angle: 20, zone: 'Mid-On / Long On' },
+  'Deep Extra Cover': { angle: 315, zone: 'Cover / Extra Cover' }
+};
+
+function resolveShotGeometry(fieldingPosition, runsBatter, customAngle, customDistance, customZone) {
+  let angle = (typeof customAngle === 'number' && !isNaN(customAngle)) ? customAngle : null;
+  let zone = customZone || null;
+  
+  if (angle === null) {
+    if (fieldingPosition && POSITION_COORDINATES[fieldingPosition]) {
+      const jitter = (Math.random() - 0.5) * 8;
+      angle = Math.round((POSITION_COORDINATES[fieldingPosition].angle + jitter + 360) % 360);
+      zone = POSITION_COORDINATES[fieldingPosition].zone;
+    } else {
+      angle = 315;
+      zone = 'Cover / Extra Cover';
+    }
+  }
+
+  if (!zone) {
+    if (angle >= 337.5 || angle < 22.5) zone = 'Mid-Off / Long Off';
+    else if (angle >= 22.5 && angle < 67.5) zone = 'Mid-On / Long On';
+    else if (angle >= 67.5 && angle < 112.5) zone = 'Midwicket';
+    else if (angle >= 112.5 && angle < 157.5) zone = 'Square Leg';
+    else if (angle >= 157.5 && angle < 202.5) zone = 'Fine Leg';
+    else if (angle >= 202.5 && angle < 247.5) zone = 'Third Man';
+    else if (angle >= 247.5 && angle < 292.5) zone = 'Point';
+    else zone = 'Cover / Extra Cover';
+  }
+
+  let distance = (typeof customDistance === 'number' && !isNaN(customDistance)) ? customDistance : null;
+  if (distance === null) {
+    const runs = Number(runsBatter) || 0;
+    if (runs === 6) distance = 105 + Math.round(Math.random() * 5);
+    else if (runs === 4) distance = 94 + Math.round(Math.random() * 4);
+    else if (runs === 3) distance = 76 + Math.round(Math.random() * 6);
+    else if (runs === 2) distance = 62 + Math.round(Math.random() * 6);
+    else if (runs === 1) distance = 46 + Math.round(Math.random() * 6);
+    else distance = 28 + Math.round(Math.random() * 8);
+  }
+
+  return { angle, distance, zone };
+}
+
 class ScorerService {
   /**
    * Calculates dashboard summary counts from MongoDB
@@ -168,6 +223,34 @@ class ScorerService {
 
     const lastDelivery = deliveries && deliveries[0];
 
+    // All deliveries in current innings for real-time Wagon Wheel
+    const allInningsDeliveries = await db.models.Delivery.find({
+      innings_id: currentInnings.id
+    }).sort({ over_number: 1, ball_number: 1 }).lean();
+
+    const formattedAllDeliveries = (allInningsDeliveries || []).map(d => {
+      const geo = resolveShotGeometry(d.fielding_position, d.runs_batter, d.shot_angle, d.shot_distance, d.shot_zone);
+      return {
+        id: d.id,
+        strikerId: d.striker_id,
+        bowlerId: d.bowler_id,
+        runsBatter: d.runs_batter || 0,
+        runsExtras: d.runs_extras || 0,
+        totalRuns: d.total_runs || 0,
+        extraType: d.extra_type || 'NONE',
+        wicket: Boolean(d.wicket),
+        wicketType: d.wicket_type,
+        shotType: d.shot_type,
+        fieldingPosition: d.fielding_position,
+        shotAngle: typeof d.shot_angle === 'number' ? d.shot_angle : geo.angle,
+        shotDistance: typeof d.shot_distance === 'number' ? d.shot_distance : geo.distance,
+        shotZone: d.shot_zone || geo.zone,
+        overNumber: d.over_number,
+        ballNumber: d.ball_number,
+        commentary: d.commentary
+      };
+    });
+
     // Compute Run Rate
     const totalBallsBowled = (currentInnings.overs * 6) + currentInnings.balls;
     const runRate = totalBallsBowled > 0 ? parseFloat(((currentInnings.total_runs / totalBallsBowled) * 6).toFixed(2)) : 0.00;
@@ -242,7 +325,8 @@ class ScorerService {
         commentary: d.commentary
       })),
       battingSquad: battingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-      bowlingSquad: bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role }))
+      bowlingSquad: bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
+      deliveries: formattedAllDeliveries
     };
   }
 
@@ -353,6 +437,29 @@ class ScorerService {
         });
       }
 
+      const formattedDeliveries = (delRows || []).map(d => {
+        const geo = resolveShotGeometry(d.fielding_position, d.runs_batter, d.shot_angle, d.shot_distance, d.shot_zone);
+        return {
+          id: d.id,
+          strikerId: d.striker_id,
+          bowlerId: d.bowler_id,
+          runsBatter: d.runs_batter || 0,
+          runsExtras: d.runs_extras || 0,
+          totalRuns: d.total_runs || 0,
+          extraType: d.extra_type || 'NONE',
+          wicket: Boolean(d.wicket),
+          wicketType: d.wicket_type,
+          shotType: d.shot_type,
+          fieldingPosition: d.fielding_position,
+          shotAngle: typeof d.shot_angle === 'number' ? d.shot_angle : geo.angle,
+          shotDistance: typeof d.shot_distance === 'number' ? d.shot_distance : geo.distance,
+          shotZone: d.shot_zone || geo.zone,
+          overNumber: d.over_number,
+          ballNumber: d.ball_number,
+          commentary: d.commentary
+        };
+      });
+
       return {
         id: inn.id,
         inningsNumber: inn.innings_number,
@@ -373,7 +480,8 @@ class ScorerService {
         batters: battingCard,
         bowlers: bowlingCard,
         fallOfWickets,
-        partnerships
+        partnerships,
+        deliveries: formattedDeliveries
       };
     }));
 

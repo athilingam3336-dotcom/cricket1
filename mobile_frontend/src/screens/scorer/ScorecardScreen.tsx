@@ -4,6 +4,7 @@ import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
+import WagonWheel from '../../components/analytics/WagonWheel';
 
 export default function ScorecardScreen() {
   const { navigate, params } = useScorerNavigation();
@@ -17,6 +18,7 @@ export default function ScorecardScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [scorecardData, setScorecardData] = useState<any>(null);
   const [activeInningsTab, setActiveInningsTab] = useState<number>(0);
+  const [selectedWagonBatterId, setSelectedWagonBatterId] = useState<string>('');
 
   useEffect(() => {
     loadScorecard();
@@ -322,6 +324,7 @@ export default function ScorecardScreen() {
                   <Text style={[styles.cell, styles.colNum, styles.tableHeaderText]}>4s</Text>
                   <Text style={[styles.cell, styles.colNum, styles.tableHeaderText]}>6s</Text>
                   <Text style={[styles.cell, styles.colNum, styles.tableHeaderText]}>SR</Text>
+                  <Text style={[styles.cell, styles.colAction, styles.tableHeaderText]}>Analytics</Text>
                 </View>
 
                 {(currentInnings.batters || []).map((b: any, bIdx: number) => (
@@ -337,6 +340,22 @@ export default function ScorecardScreen() {
                     <Text style={[styles.cell, styles.colNum, styles.srText]}>
                       {typeof b.strikeRate === 'number' ? b.strikeRate.toFixed(1) : b.strikeRate}
                     </Text>
+                    <View style={styles.colAction}>
+                      <TouchableOpacity
+                        style={[
+                          styles.wagonWheelBtn,
+                          selectedWagonBatterId === b.id && styles.wagonWheelBtnActive
+                        ]}
+                        onPress={() => setSelectedWagonBatterId(b.id)}
+                      >
+                        <Text style={[
+                          styles.wagonWheelBtnText,
+                          selectedWagonBatterId === b.id && styles.wagonWheelBtnTextActive
+                        ]}>
+                          🎯 Wheel
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ))}
 
@@ -350,7 +369,19 @@ export default function ScorecardScreen() {
             </ScrollView>
           </View>
 
-          <View style={{ height: 24 }} />
+          {/* ─────────────────────────────────────────────────────────────
+              BATSMAN WAGON WHEEL & PLAYING AREA PERCENTAGE
+              ───────────────────────────────────────────────────────────── */}
+          <WagonWheel
+            deliveries={currentInnings.deliveries || []}
+            batters={currentInnings.batters || []}
+            selectedBatterId={selectedWagonBatterId}
+            onSelectBatter={(id) => setSelectedWagonBatterId(id)}
+            title={`🏏 ${currentInnings.battingTeam} - Batsman Wagon Wheel`}
+            subtitle="Interactive Shot Trajectories, 8-Sector Playing Area & Off/Leg Balance"
+          />
+
+          <View style={{ height: 16 }} />
 
           {/* ─────────────────────────────────────────────────────────────
               BOWLING SCORECARD TABLE
@@ -645,6 +676,27 @@ const styles = StyleSheet.create({
   cell: { color: '#334155', fontSize: 12.5, fontWeight: '600' },
   colName: { flex: 4, minWidth: 160 },
   colNum: { flex: 1.2, textAlign: 'center', minWidth: 36 },
+  colAction: { flex: 2, alignItems: 'center', justifyContent: 'center', minWidth: 90 },
+  wagonWheelBtn: {
+    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+    borderWidth: 1,
+    borderColor: '#0284c7',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6
+  },
+  wagonWheelBtnActive: {
+    backgroundColor: '#0284c7',
+    borderColor: '#38bdf8'
+  },
+  wagonWheelBtnText: {
+    color: '#0284c7',
+    fontSize: 11,
+    fontWeight: 'bold'
+  },
+  wagonWheelBtnTextActive: {
+    color: '#ffffff'
+  },
   playerName: { color: '#0f172a', fontWeight: 'bold', fontSize: 13.5 },
   dismissal: { color: '#b45309', fontSize: 11, fontStyle: 'italic', marginTop: 1 },
   runsText: { color: '#0f172a', fontWeight: '900', fontSize: 13.5 },

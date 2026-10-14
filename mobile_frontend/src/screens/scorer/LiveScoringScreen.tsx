@@ -4,6 +4,7 @@ import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import { assignedMatches } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi } from '../../services/api';
+import WagonWheel from '../../components/analytics/WagonWheel';
 
 export default function LiveScoringScreen() {
   const { navigate, params } = useScorerNavigation();
@@ -21,6 +22,8 @@ export default function LiveScoringScreen() {
   const [balls, setBalls] = useState(92); // 15.2 overs
   const [history, setHistory] = useState<any[]>([]);
   const [showEndModal, setShowEndModal] = useState(false);
+  const [showWagonModal, setShowWagonModal] = useState(false);
+  const [liveDeliveries, setLiveDeliveries] = useState<any[]>([]);
 
   // Batter/Bowler state
   const [striker, setStriker] = useState<any>({ id: 'P301', name: 'Suresh Kumar', runs: 42, balls: 30, fours: 4, sixes: 1 });
@@ -31,6 +34,17 @@ export default function LiveScoringScreen() {
   const [selectedFieldPosition, setSelectedFieldPosition] = useState<string>('Cover');
   const [aiCommentary, setAiCommentary] = useState<string>('');
   const [isLoadingCommentary, setIsLoadingCommentary] = useState<boolean>(false);
+
+  const FIELDING_ANGLE_MAP: Record<string, number> = {
+    'Point': 270,
+    'Cover': 315,
+    'Mid-Off': 348,
+    'Mid-On': 12,
+    'Midwicket': 55,
+    'Slips': 240,
+    'Third Man': 220,
+    'Fine Leg': 140
+  };
 
   const getOvers = (b: number) => {
     const overs = Math.floor(b / 6);
@@ -111,6 +125,9 @@ export default function LiveScoringScreen() {
         if (d.lastDelivery && d.lastDelivery.commentary) {
           setAiCommentary(d.lastDelivery.commentary);
         }
+        if (d.deliveries && Array.isArray(d.deliveries)) {
+          setLiveDeliveries(d.deliveries);
+        }
       }
     } catch (e) {
       // Use fallback initial mock
@@ -143,6 +160,24 @@ export default function LiveScoringScreen() {
       overs: ballToAdd > 0 ? parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1)) : bowler.overs
     });
 
+    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition] || 315;
+    const batterRuns = isExtra && type !== 'noball' ? 0 : run;
+
+    // Track shot trajectory locally for immediate live Wagon Wheel rendering
+    const newDelivery = {
+      id: `del-${Date.now()}`,
+      strikerId: striker.id,
+      runsBatter: batterRuns,
+      runsExtras: isExtra ? 1 : (type === 'bye' || type === 'legbye' ? run : 0),
+      fieldingPosition: selectedFieldPosition,
+      shotAngle: angle,
+      shotDistance: batterRuns === 6 ? 108 : batterRuns === 4 ? 94 : batterRuns === 3 ? 76 : batterRuns === 2 ? 62 : batterRuns === 1 ? 46 : 28,
+      overNumber: Math.floor(nextBalls / 6),
+      ballNumber: nextBalls % 6,
+      commentary: `${batterRuns} run(s) towards ${selectedFieldPosition}`
+    };
+    setLiveDeliveries(prev => [newDelivery, ...prev]);
+
     // Update batter if not extra
     if (!isExtra || type === 'noball') {
       if (type === 'normal') {
@@ -171,7 +206,7 @@ export default function LiveScoringScreen() {
        }
     }
 
-    // Persist delivery to pure MongoDB backend (Requirement 5 & 8)
+    // Persist delivery to pure MongoDB backend with shot geometry
     try {
       const extraTypeMap: Record<string, string> = {
         normal: 'NONE',
@@ -185,11 +220,12 @@ export default function LiveScoringScreen() {
         strikerId: striker.id,
         nonStrikerId: nonStriker.id,
         bowlerId: bowler.id,
-        runsBatter: isExtra && type !== 'noball' ? 0 : run,
+        runsBatter: batterRuns,
         runsExtras: isExtra ? 1 : (type === 'bye' || type === 'legbye' ? run : 0),
         extraType: extraTypeMap[type] || 'NONE',
         wicket: false,
-        fieldingPosition: selectedFieldPosition
+        fieldingPosition: selectedFieldPosition,
+        shotAngle: angle
       };
 
       const res = await ScorerApi.recordDelivery(matchId, payload);
@@ -211,12 +247,29 @@ export default function LiveScoringScreen() {
       wickets: bowler.wickets + 1,
       overs: parseFloat(getOvers((Math.floor(bowler.overs) * 6) + Math.round((bowler.overs % 1) * 10) + 1))
     });
+
+    const angle = FIELDING_ANGLE_MAP[selectedFieldPosition] || 315;
+    const newWicketDel = {
+      id: `del-${Date.now()}`,
+      strikerId: striker.id,
+      runsBatter: 0,
+      runsExtras: 0,
+      wicket: true,
+      wicketType: 'CAUGHT',
+      fieldingPosition: selectedFieldPosition,
+      shotAngle: angle,
+      shotDistance: 50,
+      overNumber: Math.floor((balls + 1) / 6),
+      ballNumber: (balls + 1) % 6,
+      commentary: `Wicket! Caught at ${selectedFieldPosition}`
+    };
+    setLiveDeliveries(prev => [newWicketDel, ...prev]);
     
     const benchNames = ['Vijay', 'Dinesh', 'Ashwin', 'Murugan', 'Saravanan', 'Arun', 'Prakash', 'Ganesh', 'Kamal'];
     const newBatterName = benchNames[wickets % benchNames.length];
     setStriker({ id: `P30${(wickets % 9) + 3}`, name: newBatterName, runs: 0, balls: 0, fours: 0, sixes: 0 });
 
-    // Persist wicket ball to pure MongoDB backend
+    // Persist wicket ball to pure MongoDB backend with shot geometry
     try {
       const payload = {
         strikerId: striker.id,
@@ -227,7 +280,8 @@ export default function LiveScoringScreen() {
         extraType: 'NONE',
         wicket: true,
         wicketType: 'CAUGHT',
-        fieldingPosition: selectedFieldPosition
+        fieldingPosition: selectedFieldPosition,
+        shotAngle: angle
       };
       const res = await ScorerApi.recordDelivery(matchId, payload);
       if (res && res.commentary) {
@@ -316,6 +370,41 @@ export default function LiveScoringScreen() {
         </View>
       </Modal>
 
+      {/* Interactive Wagon Wheel & Playing Area Percentage Modal */}
+      <Modal visible={showWagonModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.wagonModalContent, isDesktop && styles.wagonModalContentDesktop]}>
+            <View style={styles.wagonModalHeader}>
+              <View>
+                <Text style={styles.wagonModalTitle}>🎯 Live Batsman Wagon Wheel & Shot Analytics</Text>
+                <Text style={styles.wagonModalSubtitle}>
+                  {matchInfo.teamA} Innings • Trajectories (1, 2, 3, 4, 6, dots) & 8-Sector Playing Area %
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowWagonModal(false)}
+              >
+                <Text style={styles.modalCloseBtnText}>✕ Close</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.wagonModalScroll} showsVerticalScrollIndicator={false}>
+              <WagonWheel
+                deliveries={liveDeliveries}
+                batters={[
+                  { id: striker.id, name: `* ${striker.name}`, runs: striker.runs, balls: striker.balls, fours: striker.fours, sixes: striker.sixes },
+                  { id: nonStriker.id, name: nonStriker.name, runs: nonStriker.runs, balls: nonStriker.balls, fours: nonStriker.fours, sixes: nonStriker.sixes }
+                ]}
+                selectedBatterId={striker.id}
+                title={`Live Wagon Wheel - ${matchInfo.teamA}`}
+                subtitle="Trajectories of 1s, 2s, 3s, 4s, 6s, and Dots with Off/Leg Balance"
+              />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Header Info */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -347,7 +436,15 @@ export default function LiveScoringScreen() {
 
           <View style={styles.playersContainer}>
             <View style={styles.playerCard}>
-              <Text style={styles.playerRole}>BATTERS</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={styles.playerRole}>BATTERS</Text>
+                <TouchableOpacity
+                  style={styles.miniWheelBadge}
+                  onPress={() => setShowWagonModal(true)}
+                >
+                  <Text style={styles.miniWheelBadgeText}>🎯 Wagon Wheel</Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.playerRow}>
                 <Text style={[styles.playerName, styles.striker]}>* {striker.name}</Text>
                 <Text style={styles.playerStats}>{striker.runs} ({striker.balls})</Text>
@@ -419,10 +516,11 @@ export default function LiveScoringScreen() {
             </View>
 
             {/* FIELDING POSITION SELECTOR (Requirement 9) */}
-            <Text style={styles.sectionTitle}>FIELDING POSITIONS (AI COMMENTARY)</Text>
+            <Text style={styles.sectionTitle}>FIELDING POSITIONS (AI COMMENTARY & SHOT DIRECTION)</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fieldingChipsScroll}>
               {fieldingPositions.map((pos) => {
                 const isActive = selectedFieldPosition === pos;
+                const angle = FIELDING_ANGLE_MAP[pos];
                 return (
                   <TouchableOpacity
                     key={pos}
@@ -430,7 +528,7 @@ export default function LiveScoringScreen() {
                     onPress={() => handleSelectFieldPosition(pos)}
                   >
                     <Text style={[styles.fieldingChipText, isActive && styles.fieldingChipTextActive]}>
-                      {pos}
+                      {pos} {isActive && angle !== undefined ? `(${angle}°)` : ''}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -441,6 +539,9 @@ export default function LiveScoringScreen() {
           <View style={styles.actionPanel}>
             <TouchableOpacity style={[styles.actionBtn, styles.undoBtn]} onPress={undoLastBall} disabled={history.length === 0}>
               <Text style={[styles.actionBtnText, { color: history.length === 0 ? '#495e80' : '#FFF' }]}>Undo Last Ball</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionBtn, styles.wagonBtn]} onPress={() => setShowWagonModal(true)}>
+              <Text style={styles.wagonBtnText}>🎯 Wagon Wheel Analytics</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionBtn, styles.scorecardBtn]} onPress={() => navigate('Scorecard', { matchId })}>
                <Text style={styles.scorecardBtnText}>View Full Scorecard</Text>
@@ -553,13 +654,17 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   actionBtn: { flex: 1, padding: 14, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   undoBtn: { backgroundColor: '#e2e8f0' },
   actionBtnText: { fontWeight: 'bold', fontSize: 13 },
+  wagonBtn: { backgroundColor: '#0284c7', borderWidth: 1, borderColor: '#0369a1' },
+  wagonBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
   scorecardBtn: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1' },
   scorecardBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
   endBtn: { backgroundColor: '#dc2626' },
   endBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
+  miniWheelBadge: { backgroundColor: 'rgba(2, 132, 199, 0.12)', borderWidth: 1, borderColor: '#0284c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
+  miniWheelBadgeText: { color: '#0284c7', fontSize: 11, fontWeight: 'bold' },
   
   // MODAL
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: isDesktop ? 24 : 12 },
   modalContent: { width: '100%', maxWidth: 400, backgroundColor: '#FFF', borderRadius: 8, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 5 },
   modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1e293b', marginBottom: 8 },
   modalMessage: { fontSize: 14, color: '#64748b', marginBottom: 16 },
@@ -569,5 +674,15 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   modalCancelBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#f1f5f9' },
   modalCancelText: { color: '#475569', fontWeight: 'bold', fontSize: 13 },
   modalConfirmBtn: { padding: 10, paddingHorizontal: 16, borderRadius: 6, backgroundColor: '#dc2626' },
-  modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 }
+  modalConfirmText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
+
+  // WAGON WHEEL MODAL
+  wagonModalContent: { width: '100%', maxWidth: isDesktop ? 960 : '100%', maxHeight: '92%', backgroundColor: '#0f172a', borderRadius: 16, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 16, elevation: 10, borderWidth: 1, borderColor: '#334155' },
+  wagonModalContentDesktop: { minWidth: 840 },
+  wagonModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#1e293b', paddingBottom: 12, marginBottom: 8 },
+  wagonModalTitle: { fontSize: 16, fontWeight: 'bold', color: '#f8fafc' },
+  wagonModalSubtitle: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  modalCloseBtn: { backgroundColor: '#334155', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  modalCloseBtnText: { color: '#f8fafc', fontWeight: 'bold', fontSize: 12 },
+  wagonModalScroll: { maxHeight: '82%' }
 });
