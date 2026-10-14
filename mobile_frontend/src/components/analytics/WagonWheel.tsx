@@ -717,10 +717,10 @@ export default function WagonWheel({
 
             {/* Duel Split Progress Bar */}
             <View style={styles.duelBarTrack}>
-              <View style={[styles.duelBarOff, { width: `${stats.offPct}%` }]}>
+              <View style={[styles.duelBarOff, { flexBasis: `${stats.offPct}%`, flexGrow: 0, flexShrink: 0 }]}>
                 <Text style={styles.duelBarText}>{stats.offPct}% OFF</Text>
               </View>
-              <View style={[styles.duelBarLeg, { width: `${stats.legPct}%` }]}>
+              <View style={[styles.duelBarLeg, { flexBasis: `${stats.legPct}%`, flexGrow: 0, flexShrink: 0 }]}>
                 <Text style={styles.duelBarText}>{stats.legPct}% LEG</Text>
               </View>
             </View>
@@ -774,7 +774,7 @@ export default function WagonWheel({
                       <View
                         style={[
                           styles.sectorBarFill,
-                          { width: `${Math.max(sec.pct, 2)}%`, backgroundColor: sec.color }
+                          { flexBasis: `${Math.max(sec.pct, 2)}%`, flexGrow: 0, flexShrink: 0, height: 5, backgroundColor: sec.color }
                         ]}
                       />
                     </View>
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#f8fafc'
   },
@@ -1309,7 +1309,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden'
   },
   sectorBarFill: {
-    height: '100%',
+    height: 5,
     borderRadius: 3
   },
   sectorSubRow: {
@@ -1402,7 +1402,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
     width: '100%',
-    maxWidth: 420
   },
   compactSideOff: {
     flex: 1,
@@ -1440,7 +1439,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    maxWidth: 420
   },
   slideNavBannerBack: {
     marginTop: 10,

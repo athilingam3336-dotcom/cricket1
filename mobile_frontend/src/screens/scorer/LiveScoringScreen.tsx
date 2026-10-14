@@ -651,111 +651,10 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   },
   battingTeam: { color: '#b45309', fontSize: 14, fontWeight: '800', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline' },
-  scoreText: { color: '#0f172a', fontSize: 56, fontWeight: '900' },
-  oversText: { color: '#475569', fontSize: 22, marginLeft: 12, fontWeight: '700' },
+  scoreText: { color: '#0f172a', fontSize: isDesktop ? 56 : 44, fontWeight: '900' },
+  oversText: { color: '#475569', fontSize: isDesktop ? 22 : 18, marginLeft: 12, fontWeight: '700' },
   rrText: { color: '#64748b', fontSize: 13, fontWeight: '700', backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   scoreboardMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  shotSideBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, borderWidth: 1 },
-  shotSideOff: { backgroundColor: 'rgba(2, 132, 199, 0.12)', borderColor: '#0284c7' },
-  shotSideLeg: { backgroundColor: 'rgba(234, 88, 12, 0.12)', borderColor: '#ea580c' },
-  shotSideBadgeText: { fontSize: 12, fontWeight: '800', color: '#0f172a' },
-  
-  scoreboardPositionsRow: {
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    width: '100%',
-    alignItems: 'center',
-    gap: 8
-  },
-  scoreboardSideRow: {
-    flexDirection: 'row',
-    gap: 8,
-    width: '100%',
-    justifyContent: 'center'
-  },
-  scoreboardSideBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1
-  },
-  scoreboardSideBtnOff: {
-    backgroundColor: '#f0f9ff',
-    borderColor: '#bae6fd'
-  },
-  scoreboardSideBtnLeg: {
-    backgroundColor: '#fff7ed',
-    borderColor: '#fed7aa'
-  },
-  scoreboardSideBtnActiveOff: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0369a1'
-  },
-  scoreboardSideBtnActiveLeg: {
-    backgroundColor: '#ea580c',
-    borderColor: '#c2410c'
-  },
-  scoreboardSideBtnText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#334155'
-  },
-  scoreboardSideBtnTextActive: {
-    color: '#ffffff'
-  },
-  scoreboardKeyPositionsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    width: '100%',
-    justifyContent: 'center',
-    flexWrap: 'wrap'
-  },
-  quickPosChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 14,
-    borderWidth: 1
-  },
-  quickPosChipOff: {
-    backgroundColor: 'rgba(2, 132, 199, 0.08)',
-    borderColor: '#7dd3fc'
-  },
-  quickPosChipLeg: {
-    backgroundColor: 'rgba(234, 88, 12, 0.08)',
-    borderColor: '#fdba74'
-  },
-  quickPosChipActiveOff: {
-    backgroundColor: '#0284c7',
-    borderColor: '#0369a1'
-  },
-  quickPosChipActiveLeg: {
-    backgroundColor: '#ea580c',
-    borderColor: '#c2410c'
-  },
-  quickPosChipText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#475569'
-  },
-  quickPosChipTextActive: {
-    color: '#ffffff'
-  },
-  scoreboardWagonBtn: {
-    marginTop: 4,
-    backgroundColor: 'rgba(2, 132, 199, 0.1)',
-    borderWidth: 1,
-    borderColor: '#0284c7',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 20
-  },
-  scoreboardWagonBtnText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#0284c7'
-  },
   
   playersContainer: { flex: isDesktop ? 1.5 : undefined, gap: 16, justifyContent: 'space-between' },
   playerCard: { backgroundColor: 'rgba(255, 255, 255, 0.65)', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', flex: 1, justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
@@ -796,9 +695,9 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   sideToggleBtnActiveLeg: { backgroundColor: '#ea580c', borderColor: '#c2410c' },
   sideToggleBtnText: { fontSize: 11, fontWeight: '600', color: '#475569' },
   sideToggleBtnTextActive: { color: '#ffffff', fontWeight: 'bold' },
-  controlsGrid: { flexDirection: 'row', gap: 10, marginBottom: 16, flexWrap: 'wrap' },
+  controlsGrid: { flexDirection: 'row', gap: isDesktop ? 10 : 8, marginBottom: 16, flexWrap: 'wrap' },
   
-  scoreBtn: { flex: 1, minWidth: 44, height: 50, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  scoreBtn: { flex: 1, minWidth: isDesktop ? 52 : 40, height: isDesktop ? 56 : 48, borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
   scoreBtnNormal: { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' },
   scoreBtnDot: { backgroundColor: '#f1f5f9', borderColor: '#94a3b8' },
   scoreBtnFour: { backgroundColor: '#fef3c7', borderColor: '#fde68a' },
@@ -811,8 +710,8 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   scoreBtnTextBoundary: { color: '#b45309' },
   wicketBtnText: { color: '#FFF' },
   
-  extrasGrid: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  extraBtn: { flex: 1, height: 40, backgroundColor: '#f1f5f9', borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
+  extrasGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
+  extraBtn: { minWidth: isDesktop ? 90 : 70, flex: 1, height: 40, backgroundColor: '#f1f5f9', borderRadius: 6, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
   extraBtnText: { color: '#334155', fontWeight: 'bold', fontSize: 13 },
 
   fieldingChipsScroll: { flexDirection: 'row', gap: 8, paddingVertical: 4, marginBottom: 16 },
@@ -825,8 +724,8 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   fieldingChipText: { fontSize: 11, fontWeight: '600', color: '#475569' },
   fieldingChipTextActive: { color: '#ffffff', fontWeight: 'bold' },
 
-  actionPanel: { flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginTop: 10 },
-  actionBtn: { flex: 1, padding: 14, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  actionPanel: { flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginTop: 10, flexWrap: 'wrap' },
+  actionBtn: { flex: 1, minWidth: isDesktop ? 120 : '100%', padding: isDesktop ? 14 : 12, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   undoBtn: { backgroundColor: '#e2e8f0' },
   actionBtnText: { fontWeight: 'bold', fontSize: 13 },
   wagonBtn: { backgroundColor: '#0284c7', borderWidth: 1, borderColor: '#0369a1' },
