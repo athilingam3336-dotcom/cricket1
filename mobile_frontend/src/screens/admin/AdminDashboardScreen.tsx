@@ -50,7 +50,7 @@ type FilterStatus = 'all' | 'Pending' | 'Approved' | 'Rejected';
 const INITIAL_SCORERS_DATA = [
   {
     scorerId: 'SCORER-101',
-    scorerName: 'Thiru. K. Sundararajan',
+    scorerName: 'Thiru. ',
     email: 'sundararajan@cfvd.org',
     phone: '+91 94431 12345',
     grade: 'BCCI Level 1 Digital Scorer',
