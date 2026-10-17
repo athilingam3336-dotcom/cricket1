@@ -154,8 +154,18 @@ export default function PlayerDashboardScreen({ onExit, initialParams }: PlayerD
   };
 
   useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'PLAYER' && role !== 'ADMIN') {
+      if (onExit) onExit();
+      return;
+    }
     loadPlayerData();
-  }, []);
+  }, [onExit]);
 
   // Save Profile Updates
   const handleSaveProfile = async () => {

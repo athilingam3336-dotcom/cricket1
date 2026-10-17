@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, SafeAreaView, Platform, Alert } from 'react-native';
+import { getCurrentUser } from '../services/api';
 
 import ScorerAuthScreen from '../screens/scorer/ScorerAuthScreen';
 import ScorerDashboardScreen from '../screens/scorer/ScorerDashboardScreen';
@@ -17,13 +18,26 @@ import {
 export { ScreenName, ScorerNavigationContext, useScorerNavigation };
 
 interface Props {
-  onExit: () => void;
+  onExit: (targetScreen?: any) => void;
   initialParams?: any;
 }
 
 export default function ScorerNavigator({ onExit, initialParams }: Props) {
   const [currentScreen, setCurrentScreen] = useState<ScreenName>(initialParams?.initialScreen || 'Dashboard');
   const [params, setParams] = useState<any>(initialParams || null);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'SCORER' && role !== 'ADMIN' && role !== 'UMPIRE') {
+      if (onExit) onExit();
+      return;
+    }
+  }, [onExit]);
 
   const navigate = (screen: ScreenName, screenParams?: any) => {
     setCurrentScreen(screen);

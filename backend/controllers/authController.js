@@ -167,6 +167,23 @@ class AuthController {
     }
   }
 
+  // Register Umpire
+  async registerUmpire(req, res) {
+    try {
+      const result = await authService.registerUmpire(req.body);
+      if (result.token) {
+        setAuthCookies(res, result.token);
+      }
+      res.status(201).json(result);
+    } catch (err) {
+      const status = err.status || 400;
+      res.status(status).json({
+        success: false,
+        message: err.message || 'Umpire registration failed'
+      });
+    }
+  }
+
   // Register Player
   async registerPlayer(req, res) {
     try {
@@ -247,8 +264,9 @@ class AuthController {
 
   async getAllRegistrations(req, res) {
     try {
-      const result = await authService.getAllRegistrations();
-      res.status(200).json({ success: true, ...result });
+      const { status, role } = req.query || {};
+      const result = await authService.getAllRegistrations(status, role);
+      res.status(200).json({ success: true, registrations: result, count: (result || []).length });
     } catch (err) {
       res.status(500).json({ success: false, message: err.message });
     }

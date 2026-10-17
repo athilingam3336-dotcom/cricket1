@@ -34,6 +34,7 @@ router.post('/register', (req, res) => authController.registerScorer(req, res));
 router.post('/register-player', (req, res) => authController.registerPlayer(req, res));
 router.post('/register-team', (req, res) => authController.registerTeam(req, res));
 router.post('/register-scorer', (req, res) => authController.registerScorer(req, res));
+router.post('/register-umpire', (req, res) => authController.registerUmpire(req, res));
 router.post('/register-content', (req, res) => authController.registerContentStaff(req, res));
 
 // 5. Admin & Management (Strictly Protected with requireAdminAuth)

@@ -16,7 +16,7 @@ import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
 import { ScorerApi } from '../../services/api';
 
-export type RegistrationRole = 'PLAYER' | 'TEAM' | 'SCORER';
+export type RegistrationRole = 'PLAYER' | 'TEAM' | 'SCORER' | 'UMPIRE';
 
 export interface SquadPlayer {
   id: string;
@@ -41,6 +41,7 @@ const BOWLING_STYLES = ['Right Arm Fast/Medium', 'Right Arm Spin', 'Left Arm Ort
 const TALUKS = ['Virudhunagar', 'Sivakasi', 'Rajapalayam', 'Srivilliputhur', 'Aruppukottai', 'Sattur', 'Watrap'];
 const TALUK_OPTIONS = [...TALUKS, 'Other'];
 const SCORER_LEVELS = ['District Certified', 'State Panel', 'Club Scorer', 'Trainee Scorer'];
+const UMPIRE_LEVELS = ['Panel A - Senior', 'Senior Panel', 'Panel A', 'Level 2 Certified', 'District Certified', 'Trainee Umpire'];
 
 const SAMPLE_15_SQUAD: Array<{ name: string; email: string; role: string }> = [
   { name: 'R. Saravanan', email: 'saravanan.r@strikerscc.org', role: 'Captain' },
@@ -68,6 +69,7 @@ export default function RegistrationScreen() {
     if (r === 'PLAYER') return 'PLAYER';
     if (r === 'TEAM' || r === 'COACH') return 'TEAM';
     if (r === 'SCORER') return 'SCORER';
+    if (r === 'UMPIRE') return 'UMPIRE';
     return 'PLAYER';
   };
 
@@ -122,6 +124,15 @@ export default function RegistrationScreen() {
   const [sLevel, setSLevel] = useState<string>('District Certified');
   const [sAgreed, setSAgreed] = useState<boolean>(true);
 
+  // 4. UMPIRE REGISTRATION STATE
+  const [uName, setUName] = useState<string>('');
+  const [uEmail, setUEmail] = useState<string>('');
+  const [uMobile, setUMobile] = useState<string>('');
+  const [uTaluk, setUTaluk] = useState<string>('Virudhunagar');
+  const [uCustomTaluk, setUCustomTaluk] = useState<string>('');
+  const [uLevel, setULevel] = useState<string>('Panel A - Senior');
+  const [uAgreed, setUAgreed] = useState<boolean>(true);
+
   // Modal Dropdown State
   const [pickerState, setPickerState] = useState<{
     visible: boolean;
@@ -138,13 +149,15 @@ export default function RegistrationScreen() {
   const getTargetEmail = (): string => {
     if (activeRole === 'PLAYER') return pEmail.trim().toLowerCase();
     if (activeRole === 'TEAM') return coachEmail.trim().toLowerCase();
-    return sEmail.trim().toLowerCase();
+    if (activeRole === 'SCORER') return sEmail.trim().toLowerCase();
+    return uEmail.trim().toLowerCase();
   };
 
   const getTargetName = (): string => {
     if (activeRole === 'PLAYER') return pName.trim();
     if (activeRole === 'TEAM') return coachName.trim();
-    return sName.trim();
+    if (activeRole === 'SCORER') return sName.trim();
+    return uName.trim();
   };
 
   const switchRole = (role: RegistrationRole) => {
@@ -554,6 +567,89 @@ export default function RegistrationScreen() {
     }
   };
 
+  // 4. Submit Umpire Registration
+  const handleUmpireSubmit = async () => {
+    setStatusMessage(null);
+    setStatusType(null);
+
+    const name = uName.trim();
+    const email = uEmail.trim().toLowerCase();
+    const mobile = uMobile.trim();
+    const targetTaluk = uTaluk === 'Other' ? uCustomTaluk.trim() : uTaluk;
+
+    if (!name) {
+      setStatusMessage('Please enter Umpire Full Name.');
+      setStatusType('error');
+      return;
+    }
+    if (!email || !validateEmail(email)) {
+      setStatusMessage('Please enter a valid Umpire Email address.');
+      setStatusType('error');
+      return;
+    }
+    if (!mobile || mobile.length < 10) {
+      setStatusMessage('Please enter a valid 10-digit Mobile Number.');
+      setStatusType('error');
+      return;
+    }
+    if (uTaluk === 'Other' && !targetTaluk) {
+      setStatusMessage('Please type your Umpire Taluk name.');
+      setStatusType('error');
+      return;
+    }
+    if (!isEmailVerified) {
+      setStatusMessage('Please verify your email with the OTP code first.');
+      setStatusType('error');
+      return;
+    }
+    if (!password || password.length < 4) {
+      setStatusMessage('Please enter a password of at least 4 characters.');
+      setStatusType('error');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setStatusMessage('Passwords do not match.');
+      setStatusType('error');
+      return;
+    }
+    if (!uAgreed) {
+      setStatusMessage('Please accept the official umpire code of conduct declaration.');
+      setStatusType('error');
+      return;
+    }
+
+    setIsLoading(true);
+    setStatusMessage('Registering Official Umpire...');
+    setStatusType('info');
+
+    try {
+      const resp = await ScorerApi.registerUmpire({
+        name,
+        email,
+        password,
+        mobile,
+        taluk: targetTaluk,
+        certificationLevel: uLevel,
+        otp: otpCode.trim()
+      });
+
+      setIsLoading(false);
+      setStatusMessage(resp?.message || '✓ Umpire Registration Successful!');
+      setStatusType('success');
+
+      if (Platform.OS === 'web') {
+        alert(`✓ Umpire Registration Complete!\n\nWelcome Umpire ${name}! Your password is saved. You can now sign in.`);
+      } else {
+        Alert.alert('Registration Successful', `Welcome Umpire ${name}! You can now sign in with your credentials.`);
+      }
+      setTimeout(() => navigate('Login', { initialRole: 'UMPIRE' }), 1200);
+    } catch (err: any) {
+      setIsLoading(false);
+      setStatusMessage(err?.message || 'Umpire registration failed. Please try again.');
+      setStatusType('error');
+    }
+  };
+
   // Reusable Dropdown Component
   const DropdownField = ({
     label,
@@ -770,6 +866,15 @@ export default function RegistrationScreen() {
                 >
                   <Text style={[styles.roleTabText, activeRole === 'SCORER' && styles.roleTabTextActive]}>
                     📋 Scorer
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.roleTab, activeRole === 'UMPIRE' && styles.roleTabActive]}
+                  onPress={() => switchRole('UMPIRE')}
+                >
+                  <Text style={[styles.roleTabText, activeRole === 'UMPIRE' && styles.roleTabTextActive]}>
+                    ⚖️ Umpire
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1182,6 +1287,124 @@ export default function RegistrationScreen() {
                       <ActivityIndicator color="#000000" size="small" />
                     ) : (
                       <Text style={styles.submitBtnText}>Submit Scorer Registration</Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* ========================================================= */}
+              {/* 4. UMPIRE FORM */}
+              {/* ========================================================= */}
+              {activeRole === 'UMPIRE' && (
+                <>
+                  <View style={styles.sectionHeaderBox}>
+                    <Text style={styles.sectionHeaderText}>⚖️ OFFICIAL MATCH UMPIRE REGISTRATION</Text>
+                  </View>
+
+                  {/* Row 1: Umpire Full Name (left) & Mobile Number (right) */}
+                  <View style={styles.formRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.label}>Umpire Full Name *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={uName}
+                        onChangeText={setUName}
+                        placeholder="e.g. Thiru. K. Sundaram"
+                        placeholderTextColor="#94a3b8"
+                        autoCapitalize="words"
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.label}>Mobile Number (10 Digits) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={uMobile}
+                        onChangeText={setUMobile}
+                        placeholder="e.g. 9876543210"
+                        keyboardType="phone-pad"
+                        placeholderTextColor="#94a3b8"
+                        maxLength={10}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Row 2: Official Umpire Email */}
+                  <View style={styles.formRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.label}>Official Umpire Email *</Text>
+                      <TextInput
+                        style={styles.input}
+                        value={uEmail}
+                        onChangeText={setUEmail}
+                        placeholder="e.g. sundaram.umpire@cfvd.org"
+                        keyboardType="email-address"
+                        placeholderTextColor="#94a3b8"
+                        autoCapitalize="none"
+                      />
+                    </View>
+                  </View>
+
+                  {/* Row 3: Certification Level (left) & Taluk Jurisdiction (right) Dropdowns */}
+                  <View style={styles.formRow}>
+                    <DropdownField
+                      label="Certification Level"
+                      value={uLevel}
+                      options={UMPIRE_LEVELS}
+                      onSelect={setULevel}
+                    />
+                    <DropdownField
+                      label="Taluk Jurisdiction"
+                      value={uTaluk}
+                      options={TALUK_OPTIONS}
+                      onSelect={(val) => {
+                        setUTaluk(val);
+                        if (val !== 'Other') setUCustomTaluk('');
+                      }}
+                    />
+                  </View>
+
+                  {/* Custom Taluk Input if "Other" is chosen */}
+                  {uTaluk === 'Other' && (
+                    <View style={styles.formRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.label}>Specify Umpire Taluk Name *</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={uCustomTaluk}
+                          onChangeText={setUCustomTaluk}
+                          placeholder="Type your taluk name here..."
+                          placeholderTextColor="#94a3b8"
+                          autoCapitalize="words"
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Verification & Password Setup */}
+                  {renderVerificationAndPasswordBlock()}
+
+                  <TouchableOpacity
+                    style={styles.checkboxRow}
+                    onPress={() => setUAgreed(!uAgreed)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.checkbox, uAgreed && styles.checkboxChecked]}>
+                      {uAgreed && <Text style={styles.checkmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.checkboxLabel}>
+                      I agree to abide by the MCC Laws of Cricket, BCCI / TNCA and District Umpires Association Code of Conduct.
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.submitBtn, (!isEmailVerified || isLoading) && styles.submitBtnDisabled]}
+                    onPress={handleUmpireSubmit}
+                    disabled={!isEmailVerified || isLoading}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#000000" size="small" />
+                    ) : (
+                      <Text style={styles.submitBtnText}>Submit Umpire Registration</Text>
                     )}
                   </TouchableOpacity>
                 </>

@@ -25,7 +25,7 @@ const UserSchema = new mongoose.Schema({
   password_hash: { type: String, default: null },
   role: { 
     type: String, 
-    enum: ['ADMIN', 'COACH', 'TEAM', 'PLAYER', 'SCORER', 'CONTENT', 'USER'], 
+    enum: ['ADMIN', 'COACH', 'TEAM', 'PLAYER', 'SCORER', 'UMPIRE', 'CONTENT', 'USER'], 
     default: 'USER',
     index: true 
   },
@@ -46,6 +46,10 @@ const UserSchema = new mongoose.Schema({
   },
   scorer_details: {
     certification_level: { type: String, default: 'District Certified' },
+    taluk: { type: String, default: 'Virudhunagar' }
+  },
+  umpire_details: {
+    certification_level: { type: String, default: 'Panel A - Senior' },
     taluk: { type: String, default: 'Virudhunagar' }
   },
   otp_hash: { type: String, default: null },

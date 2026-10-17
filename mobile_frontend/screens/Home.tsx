@@ -26,7 +26,7 @@ import {
 import { io } from 'socket.io-client';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppNavigation } from '../src/navigation/AppNavigator';
-import { ScorerApi, getCurrentUser, setCurrentUser, SOCKET_URL } from '../src/services/api';
+import { ScorerApi, getCurrentUser, setCurrentUser, setAuthToken, SOCKET_URL } from '../src/services/api';
 
 // ─── ASSET REFERENCES ──────────────────────────────────────────────────────────
 const IMG_LOGO = require('../assets/logo_transparent.png');
@@ -340,6 +340,8 @@ export default function HomeScreen() {
     try {
       await ScorerApi.logout();
     } catch (_e) { }
+    setAuthToken(null);
+    setCurrentUser(null);
     setSessionUser(null);
   };
 
@@ -348,7 +350,7 @@ export default function HomeScreen() {
     const role = (sessionUser.role || '').toUpperCase();
     if (role === 'ADMIN') {
       navigate('Admin', { user: sessionUser });
-    } else if (role === 'SCORER') {
+    } else if (role === 'SCORER' || role === 'UMPIRE') {
       navigate('Scorer', { user: sessionUser });
     } else if (role === 'PLAYER') {
       navigate('Player', { user: sessionUser, playerName: sessionUser.name });

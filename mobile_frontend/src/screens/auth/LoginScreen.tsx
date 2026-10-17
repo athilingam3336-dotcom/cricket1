@@ -14,7 +14,7 @@ import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
 import { ScorerApi, setAuthToken, setCurrentUser } from '../../services/api';
 
-type UserRole = 'PLAYER' | 'TEAM' | 'SCORER' | 'ADMIN';
+type UserRole = 'PLAYER' | 'TEAM' | 'SCORER' | 'UMPIRE';
 
 export default function LoginScreen() {
   const { navigate, goBack, params } = useAppNavigation();
@@ -35,13 +35,8 @@ export default function LoginScreen() {
     setActiveRole(newRole);
     setStatusMessage(null);
     setStatusType(null);
-    if (newRole === 'ADMIN') {
-      setEmailOrUser('admin@cfvd.org');
-      setPassword('admin123');
-    } else {
-      setEmailOrUser('');
-      setPassword('');
-    }
+    setEmailOrUser('');
+    setPassword('');
   };
 
   // Quick fill helper for demo/testing
@@ -55,9 +50,9 @@ export default function LoginScreen() {
     } else if (activeRole === 'SCORER') {
       setEmailOrUser('ramesh@gmail.com');
       setPassword('1234');
-    } else if (activeRole === 'ADMIN') {
-      setEmailOrUser('admin@cfvd.org');
-      setPassword('admin123');
+    } else if (activeRole === 'UMPIRE') {
+      setEmailOrUser('sundaram.umpire@cfvd.org');
+      setPassword('1234');
     }
   };
 
@@ -71,12 +66,12 @@ export default function LoginScreen() {
 
     if (!input) {
       setStatusMessage(
-        activeRole === 'ADMIN'
-          ? 'Please enter your Administrator Email.'
-          : activeRole === 'TEAM'
+        activeRole === 'TEAM'
           ? 'Please enter your Coach Email or Team Name.'
           : activeRole === 'SCORER'
           ? 'Please enter your Scorer Email.'
+          : activeRole === 'UMPIRE'
+          ? 'Please enter your Umpire Email.'
           : 'Please enter your Player Email or Name.'
       );
       setStatusType('error');
@@ -94,13 +89,7 @@ export default function LoginScreen() {
     setStatusType('info');
 
     try {
-      let res: any;
-
-      if (activeRole === 'ADMIN') {
-        res = await ScorerApi.adminLogin(input, pass);
-      } else {
-        res = await ScorerApi.loginWithPassword(input, pass, activeRole);
-      }
+      const res = await ScorerApi.loginWithPassword(input, pass, activeRole);
 
       if (res?.token) {
         setAuthToken(res.token);
@@ -116,10 +105,8 @@ export default function LoginScreen() {
           navigate('Player', { user: res?.user, playerName: input });
         } else if (activeRole === 'TEAM') {
           navigate('Team', { user: res?.user, teamName: res?.user?.teamName || input });
-        } else if (activeRole === 'SCORER') {
+        } else if (activeRole === 'SCORER' || activeRole === 'UMPIRE') {
           navigate('Scorer', { user: res?.user });
-        } else if (activeRole === 'ADMIN') {
-          navigate('Admin', { user: res?.user });
         }
       }, 500);
 
@@ -215,11 +202,11 @@ export default function LoginScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.roleTab, activeRole === 'ADMIN' && styles.roleTabActive]}
-                  onPress={() => resetFormState('ADMIN')}
+                  style={[styles.roleTab, activeRole === 'UMPIRE' && styles.roleTabActive]}
+                  onPress={() => resetFormState('UMPIRE')}
                 >
-                  <Text style={[styles.roleTabText, activeRole === 'ADMIN' && styles.roleTabTextActive]}>
-                    👑 Admin
+                  <Text style={[styles.roleTabText, activeRole === 'UMPIRE' && styles.roleTabTextActive]}>
+                    ⚖️ Umpire
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -231,7 +218,7 @@ export default function LoginScreen() {
                     {activeRole === 'PLAYER' && '🏏 PLAYER PORTAL ACCESS'}
                     {activeRole === 'TEAM' && '🛡️ TEAM & COACH MANAGEMENT ACCESS'}
                     {activeRole === 'SCORER' && '📋 OFFICIAL SCORER LOGIN'}
-                    {activeRole === 'ADMIN' && '👑 APEX COUNCIL ADMINISTRATOR ACCESS'}
+                    {activeRole === 'UMPIRE' && '⚖️ OFFICIAL UMPIRE LOGIN'}
                   </Text>
                   <TouchableOpacity onPress={handleDemoFill}>
                     <Text style={styles.demoFillLink}>⚡ Demo Fill</Text>
@@ -244,7 +231,7 @@ export default function LoginScreen() {
                 {activeRole === 'PLAYER' && 'Registered Player Email or Full Name *'}
                 {activeRole === 'TEAM' && 'Registered Coach Email or Club Name *'}
                 {activeRole === 'SCORER' && 'Official Scorer Email Address *'}
-                {activeRole === 'ADMIN' && 'Administrator Email Address *'}
+                {activeRole === 'UMPIRE' && 'Official Umpire Email Address *'}
               </Text>
               <TextInput
                 style={styles.input}
@@ -257,7 +244,7 @@ export default function LoginScreen() {
                     ? 'e.g. coach@strikerscc.org'
                     : activeRole === 'SCORER'
                     ? 'e.g. ramesh@gmail.com'
-                    : 'admin@cfvd.org'
+                    : 'e.g. sundaram.umpire@cfvd.org'
                 }
                 placeholderTextColor="#94a3b8"
                 keyboardType="email-address"
@@ -293,23 +280,21 @@ export default function LoginScreen() {
                     {activeRole === 'PLAYER' && 'Login Here (Player Portal)'}
                     {activeRole === 'TEAM' && 'Login Here (Coach / Manager)'}
                     {activeRole === 'SCORER' && 'Login Here (Scorer Panel)'}
-                    {activeRole === 'ADMIN' && 'Login Here (Apex Council)'}
+                    {activeRole === 'UMPIRE' && 'Login Here (Umpire Panel)'}
                   </Text>
                 )}
               </TouchableOpacity>
 
               {/* Register Prompt */}
-              {activeRole !== 'ADMIN' && (
-                <View style={styles.registerPromptRow}>
-                  <Text style={styles.promptNormalText}>Don't have an account? </Text>
-                  <TouchableOpacity
-                    onPress={() => navigate('Registration', { initialRole: activeRole })}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.registerLinkText}>Register Here</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+              <View style={styles.registerPromptRow}>
+                <Text style={styles.promptNormalText}>Don't have an account? </Text>
+                <TouchableOpacity
+                  onPress={() => navigate('Registration', { initialRole: activeRole })}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.registerLinkText}>Register Here</Text>
+                </TouchableOpacity>
+              </View>
 
             </View>
           </View>

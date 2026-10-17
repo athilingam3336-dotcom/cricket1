@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, StatusBar, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import AppNavigator, { useAppNavigation, AppScreenName } from './src/navigation/AppNavigator';
+import AppNavigator, { useAppNavigation, AppScreenName, checkScreenAccess } from './src/navigation/AppNavigator';
+import { getCurrentUser } from './src/services/api';
 import HomeScreen from './screens/Home';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import RegistrationScreen from './src/screens/auth/RegistrationScreen';
@@ -9,6 +10,7 @@ import ScorerNavigator from './src/navigation/ScorerNavigator';
 import PlayerDashboardScreen from './src/screens/player/PlayerDashboardScreen';
 import TeamDashboardScreen from './src/screens/team/TeamDashboardScreen';
 import AdminDashboardScreen from './src/screens/admin/AdminDashboardScreen';
+import AdminLoginPage from './src/admin/pages/AdminLoginPage';
 
 function MainAppShell() {
   const { currentScreen, navigate, goBack, params } = useAppNavigation();
@@ -18,7 +20,13 @@ function MainAppShell() {
       const handleMessage = (event: MessageEvent) => {
         if (!event.data) return;
 
-        if (event.data.type === 'OPEN_SCORER_MODULE' || event.data.route === '/scorer') {
+        if (
+          event.data.type === 'OPEN_ADMIN_LOGIN' ||
+          event.data.route === '/admin/login' ||
+          event.data.route === '/admin-login'
+        ) {
+          navigate('AdminLogin');
+        } else if (event.data.type === 'OPEN_SCORER_MODULE' || event.data.route === '/scorer') {
           navigate('Scorer');
         } else if (
           event.data.type === 'OPEN_PLAYER_DASHBOARD' ||
@@ -75,6 +83,8 @@ function MainAppShell() {
             const route: string = event.data.route;
             if (route === '/' || route === '/home' || route === '') {
               navigate('Home');
+            } else if (route === '/admin/login' || route === '/admin-login') {
+              navigate('AdminLogin');
             } else if (route === '/scorer' || route === '/scorer-login') {
               navigate('Scorer');
             } else if (route === '/player') {
@@ -97,6 +107,15 @@ function MainAppShell() {
     }
   }, [navigate, goBack]);
 
+  if (currentScreen === 'AdminLogin') {
+    return (
+      <AdminLoginPage
+        onLoginSuccess={() => navigate('Admin')}
+        onBackToHome={() => navigate('Home')}
+      />
+    );
+  }
+
   if (currentScreen === 'Login') {
     return <LoginScreen />;
   }
@@ -105,20 +124,43 @@ function MainAppShell() {
     return <RegistrationScreen />;
   }
 
+  const currentUser = getCurrentUser();
+
   if (currentScreen === 'Scorer') {
-    return <ScorerNavigator onExit={() => navigate('Home')} initialParams={params} />;
+    const access = checkScreenAccess('Scorer', currentUser);
+    if (!access.allowed) {
+      return <LoginScreen />;
+    }
+    return <ScorerNavigator onExit={(target?: any) => navigate(target || 'Registration')} initialParams={params} />;
   }
 
   if (currentScreen === 'Player') {
+    const access = checkScreenAccess('Player', currentUser);
+    if (!access.allowed) {
+      return <LoginScreen />;
+    }
     return <PlayerDashboardScreen onExit={() => navigate('Home')} initialParams={params} />;
   }
 
   if (currentScreen === 'Team' || currentScreen === 'Coach') {
+    const access = checkScreenAccess('Team', currentUser);
+    if (!access.allowed) {
+      return <LoginScreen />;
+    }
     return <TeamDashboardScreen onExit={() => navigate('Home')} initialParams={params} />;
   }
 
   if (currentScreen === 'Admin') {
-    return <AdminDashboardScreen onExit={() => navigate('Home')} initialParams={params} />;
+    const access = checkScreenAccess('Admin', currentUser);
+    if (!access.allowed) {
+      return (
+        <AdminLoginPage
+          onLoginSuccess={() => navigate('Admin')}
+          onBackToHome={() => navigate('Home')}
+        />
+      );
+    }
+    return <AdminDashboardScreen onExit={() => navigate('AdminLogin')} initialParams={params} />;
   }
 
   // Home Screen rendered as pure React Native component (no iframe, no bundled.html)
@@ -131,22 +173,9 @@ function MainAppShell() {
 }
 
 export default function App() {
-  const getInitialScreen = (): AppScreenName => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const fullPath = (window.location.pathname + window.location.hash + window.location.search).toLowerCase();
-      if (fullPath.includes('scorer')) return 'Scorer';
-      if (fullPath.includes('player')) return 'Player';
-      if (fullPath.includes('team') || fullPath.includes('coach')) return 'Team';
-      if (fullPath.includes('admin')) return 'Admin';
-      if (fullPath.includes('login')) return 'Login';
-      if (fullPath.includes('register')) return 'Registration';
-    }
-    return 'Home';
-  };
-
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-      <AppNavigator initialScreen={getInitialScreen()}>
+      <AppNavigator>
         <MainAppShell />
       </AppNavigator>
     </SafeAreaProvider>

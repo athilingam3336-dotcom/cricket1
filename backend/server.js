@@ -31,6 +31,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Cricket Federation Express Backend API operational' });
 });
 
+const authController = require('./controllers/authController');
+
+// Direct Admin Login endpoint
+app.post('/api/admin/login', (req, res) => authController.adminLogin(req, res));
+
 // Authentication APIs (Password Auth & Registration Email OTP)
 app.use('/api/auth', authRoutes);
 
