@@ -27,22 +27,46 @@ const getSocketUrl = () => {
 export const API_URL = getBaseUrl();
 export const SOCKET_URL = getSocketUrl();
 
-let token: string | null =
-  Platform.OS === 'web' && typeof window !== 'undefined'
-    ? localStorage.getItem('team_token') || localStorage.getItem('auth_token') || null
-    : null;
+let token: string | null = null;
+let currentUser: any = null;
 
-let currentUser: any =
-  Platform.OS === 'web' && typeof window !== 'undefined'
-    ? (() => {
-        try {
-          const u = localStorage.getItem('auth_user') || localStorage.getItem('team_session');
-          return u ? JSON.parse(u) : null;
-        } catch (e) {
-          return null;
-        }
-      })()
-    : null;
+export const getAuthToken = (): string | null => {
+  if (token) return token;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return (
+      localStorage.getItem('auth_token') ||
+      localStorage.getItem('team_token') ||
+      localStorage.getItem('cfvd_admin_token') ||
+      sessionStorage.getItem('cfvd_admin_token') ||
+      null
+    );
+  }
+  return null;
+};
+
+export const getCurrentUser = (): any => {
+  if (currentUser) return currentUser;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    try {
+      const u =
+        localStorage.getItem('auth_user') ||
+        localStorage.getItem('cfvd_admin_user') ||
+        sessionStorage.getItem('cfvd_admin_user') ||
+        localStorage.getItem('team_session');
+      if (u) {
+        currentUser = JSON.parse(u);
+        return currentUser;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Initialize from storage on load
+token = getAuthToken();
+currentUser = getCurrentUser();
 
 let currentSocket: Socket | null = null;
 
@@ -52,20 +76,26 @@ export const setAuthToken = (newToken: string | null) => {
     if (newToken) {
       localStorage.setItem('auth_token', newToken);
       localStorage.setItem('team_token', newToken);
+      localStorage.setItem('cfvd_admin_token', newToken);
     } else {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('team_token');
+      localStorage.removeItem('cfvd_admin_token');
+      try {
+        sessionStorage.removeItem('cfvd_admin_token');
+      } catch (_e) {}
     }
   }
 };
-
-export const getAuthToken = () => token;
 
 export const setCurrentUser = (user: any) => {
   currentUser = user;
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     if (user) {
       localStorage.setItem('auth_user', JSON.stringify(user));
+      if (user.role === 'ADMIN') {
+        localStorage.setItem('cfvd_admin_user', JSON.stringify(user));
+      }
       if (user.role === 'COACH' || user.role === 'TEAM' || user.teamId) {
         localStorage.setItem(
           'team_session',
@@ -80,18 +110,30 @@ export const setCurrentUser = (user: any) => {
       }
     } else {
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('cfvd_admin_user');
+      try {
+        sessionStorage.removeItem('cfvd_admin_user');
+      } catch (_e) {}
       localStorage.removeItem('team_session');
     }
   }
 };
 
-export const getCurrentUser = () => currentUser;
-
 async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
+  const activeToken = getAuthToken();
+  const activeUser = getCurrentUser();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
+    ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+    ...(activeUser?.role
+      ? {
+          'x-user-role': String(activeUser.role).toUpperCase(),
+          'x-user-email': activeUser.email || '',
+          'x-user-id': activeUser.id || activeUser._id || ''
+        }
+      : {})
   };
 
   try {
@@ -113,12 +155,14 @@ async function request(endpoint: string, options: RequestInit = {}) {
     }
 
     if (!res.ok) {
-      throw new Error(data.message || data.error || `Request failed with status ${res.status}`);
+      const err: any = new Error(data.message || data.error || `Request failed with status ${res.status}`);
+      err.status = res.status;
+      err.data = data;
+      throw err;
     }
     return data;
   } catch (err: any) {
-    console.error(`API Error on ${endpoint}:`, err.message);
-    // Convert cryptic browser fetch errors into user-friendly messages
+    console.warn(`API Error on ${endpoint}:`, err?.message || err);
     if (
       err.message === 'Failed to fetch' ||
       err.message === 'Network request failed' ||
@@ -138,6 +182,11 @@ async function request(endpoint: string, options: RequestInit = {}) {
 export const ScorerApi = {
   // --- REAL AUTHENTICATION & PASSWORD APIs ---
   getMe: async () => {
+    const activeToken = getAuthToken();
+    const activeUser = getCurrentUser();
+    if (!activeToken && !activeUser && Platform.OS !== 'web') {
+      return { success: false, message: 'No active session' };
+    }
     return request('/auth/me');
   },
 
@@ -300,6 +349,28 @@ export const ScorerApi = {
     return res;
   },
 
+  // Umpire Registration
+  registerUmpire: async (payload: {
+    name: string;
+    email: string;
+    password?: string;
+    mobile?: string;
+    taluk?: string;
+    certificationLevel?: string;
+    pin?: string;
+    otp?: string;
+  }) => {
+    const res = await request('/auth/register-umpire', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
   // Content Staff Registration (PDF Module 7 & 10)
   registerContentStaff: async (payload: {
     name: string;
@@ -332,12 +403,8 @@ export const ScorerApi = {
     players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
     otp?: string;
   }) => {
-<<<<<<< HEAD
     const res = await request('/auth/register-team', {
-=======
-    // NOTE: Team registration lives under /team/register, not /auth/register-team
-    return request('/team/register', {
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
+
       method: 'POST',
       body: JSON.stringify(payload)
     });

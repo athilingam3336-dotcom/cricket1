@@ -7,79 +7,88 @@
 const db = require('../config/db');
 const socketService = require('./socketService');
 
-const POSITION_COORDINATES = {
-  'Point': { angle: 270, zone: 'Point' },
-  'Cover': { angle: 315, zone: 'Cover / Extra Cover' },
-  'Mid-Off': { angle: 348, zone: 'Mid-Off / Long Off' },
-  'Mid-On': { angle: 12, zone: 'Mid-On / Long On' },
-  'Midwicket': { angle: 55, zone: 'Midwicket' },
-  'Slips': { angle: 240, zone: 'Third Man / Slips' },
-  'Third Man': { angle: 220, zone: 'Third Man' },
-  'Fine Leg': { angle: 140, zone: 'Fine Leg' },
-  'Square Leg': { angle: 95, zone: 'Square Leg' },
-  'Long Off': { angle: 340, zone: 'Mid-Off / Long Off' },
-  'Long On': { angle: 20, zone: 'Mid-On / Long On' },
-  'Deep Extra Cover': { angle: 315, zone: 'Cover / Extra Cover' }
-};
-
-function resolveShotGeometry(fieldingPosition, runsBatter, customAngle, customDistance, customZone) {
-  let angle = (typeof customAngle === 'number' && !isNaN(customAngle)) ? customAngle : null;
-  let zone = customZone || null;
-  
-  if (angle === null) {
-    if (fieldingPosition && POSITION_COORDINATES[fieldingPosition]) {
-      const jitter = (Math.random() - 0.5) * 8;
-      angle = Math.round((POSITION_COORDINATES[fieldingPosition].angle + jitter + 360) % 360);
-      zone = POSITION_COORDINATES[fieldingPosition].zone;
-    } else {
-      angle = 315;
-      zone = 'Cover / Extra Cover';
-    }
-  }
-
-  if (!zone) {
-    if (angle >= 337.5 || angle < 22.5) zone = 'Mid-Off / Long Off';
-    else if (angle >= 22.5 && angle < 67.5) zone = 'Mid-On / Long On';
-    else if (angle >= 67.5 && angle < 112.5) zone = 'Midwicket';
-    else if (angle >= 112.5 && angle < 157.5) zone = 'Square Leg';
-    else if (angle >= 157.5 && angle < 202.5) zone = 'Fine Leg';
-    else if (angle >= 202.5 && angle < 247.5) zone = 'Third Man';
-    else if (angle >= 247.5 && angle < 292.5) zone = 'Point';
-    else zone = 'Cover / Extra Cover';
-  }
-
-  let distance = (typeof customDistance === 'number' && !isNaN(customDistance)) ? customDistance : null;
-  if (distance === null) {
-    const runs = Number(runsBatter) || 0;
-    if (runs === 6) distance = 105 + Math.round(Math.random() * 5);
-    else if (runs === 4) distance = 94 + Math.round(Math.random() * 4);
-    else if (runs === 3) distance = 76 + Math.round(Math.random() * 6);
-    else if (runs === 2) distance = 62 + Math.round(Math.random() * 6);
-    else if (runs === 1) distance = 46 + Math.round(Math.random() * 6);
-    else distance = 28 + Math.round(Math.random() * 8);
-  }
-
-  return { angle, distance, zone };
-}
-
 let deliverySequence = 10000;
 
 class ScoringEngine {
   /**
    * Generates realistic rule-based cricket commentary
    */
-  generateCommentary(strikerName, bowlerName, runsBatter, runsExtras, extraType, wicket, wicketType, fieldingPosition, fielderName) {
+  /**
+   * Helper to resolve all players across official Player and registered team squads
+   */
+  async getFullPlayerMap() {
+    await db.initDb();
+    const [players, teamRegs] = await Promise.all([
+      db.models.Player.find({}).lean(),
+      db.models.TeamRegistration.find({}).lean()
+    ]);
+    const playerMap = {};
+    (players || []).forEach(p => { playerMap[p.id] = p; });
+    (teamRegs || []).forEach(tr => {
+      (tr.players || []).forEach((p, idx) => {
+        const pId = p.id || (p._id ? p._id.toString() : `${tr.id}-P${idx + 1}`);
+        if (!playerMap[pId]) {
+          playerMap[pId] = {
+            id: pId,
+            name: p.name,
+            role: p.role || 'BATTER',
+            jersey_number: p.jersey_number || (idx + 1),
+            team_id: tr.id
+          };
+        }
+      });
+    });
+    return playerMap;
+  }
+
+  /**
+   * Formats official cricket dismissal string
+   */
+  buildDismissalText(wicketType, bowlerName, fielderName) {
+    switch (wicketType) {
+      case 'BOWLED':
+        return `b ${bowlerName}`;
+      case 'CAUGHT':
+        return fielderName ? `c ${fielderName} b ${bowlerName}` : `c & b ${bowlerName}`;
+      case 'CAUGHT_BEHIND':
+        return fielderName ? `c †${fielderName} b ${bowlerName}` : `c †Keeper b ${bowlerName}`;
+      case 'CAUGHT_AND_BOWLED':
+        return `c & b ${bowlerName}`;
+      case 'LBW':
+        return `lbw b ${bowlerName}`;
+      case 'RUN_OUT':
+        return fielderName ? `run out (${fielderName})` : 'run out';
+      case 'STUMPED':
+        return fielderName ? `st †${fielderName} b ${bowlerName}` : `st †Keeper b ${bowlerName}`;
+      case 'HIT_WICKET':
+        return `hit wicket b ${bowlerName}`;
+      case 'RETIRED_OUT':
+        return 'retired out';
+      default:
+        return wicketType ? wicketType.toLowerCase() : 'out';
+    }
+  }
+
+  /**
+   * Generates realistic rule-based cricket commentary
+   */
+  generateCommentary(strikerName, bowlerName, runsBatter, runsExtras, extraType, wicket, wicketType, fieldingPosition, fielderName, dismissedName = null) {
     const posText = fieldingPosition ? ` towards ${fieldingPosition}` : '';
     const fielderText = fielderName ? ` (${fielderName})` : '';
+    const victim = dismissedName || strikerName;
 
     if (wicket) {
       switch (wicketType) {
-        case 'BOWLED': return `OUT! Clean bowled! ${bowlerName} rattles the timber! ${strikerName} has to walk.`;
-        case 'CAUGHT': return `OUT! Caught! ${strikerName} slices it in the air${posText} and taken cleanly by ${fielderName || 'the fielder'}! Breakthrough for ${bowlerName}!`;
-        case 'LBW': return `OUT! Plumb in front! Huge appeal and the umpire raises the finger. LBW given! ${strikerName} departs.`;
-        case 'RUN_OUT': return `OUT! RUN OUT! Direct hit${posText}${fielderText}! ${strikerName} is caught well short of the crease!`;
-        case 'STUMPED': return `OUT! Stumped! ${strikerName} dances down the track, beaten in the flight by ${bowlerName}, keeper whips off the bails!`;
-        default: return `OUT! ${strikerName} dismissed (${wicketType || 'Wicket'}).`;
+        case 'BOWLED': return `OUT! Clean bowled! ${bowlerName} rattles the timber! ${victim} has to walk.`;
+        case 'CAUGHT': return `OUT! Caught! ${victim} slices it in the air${posText} and taken cleanly by ${fielderName || 'the fielder'}! Breakthrough for ${bowlerName}!`;
+        case 'CAUGHT_BEHIND': return `OUT! Edged and taken! Wicketkeeper ${fielderName || 'behind the stumps'} takes a clean catch! ${victim} departs off ${bowlerName}!`;
+        case 'CAUGHT_AND_BOWLED': return `OUT! Caught & Bowled! Sensational reflex return catch by ${bowlerName}! ${victim} is out!`;
+        case 'LBW': return `OUT! Plumb in front! Huge appeal and the umpire raises the finger. LBW given! ${victim} departs.`;
+        case 'RUN_OUT': return `OUT! RUN OUT! Direct hit${posText}${fielderText}! ${victim} is caught well short of the crease!`;
+        case 'STUMPED': return `OUT! Stumped! ${victim} dances down the track, beaten in the flight by ${bowlerName}, keeper whips off the bails!`;
+        case 'HIT_WICKET': return `OUT! Hit wicket! ${victim} accidentally dislodges the bails while playing the stroke!`;
+        case 'RETIRED_OUT': return `${victim} has retired out and returns to the pavilion.`;
+        default: return `OUT! ${victim} dismissed (${wicketType || 'Wicket'}).`;
       }
     }
 
@@ -159,9 +168,6 @@ class ScoringEngine {
       dismissedPlayerId = null,
       shotType = null,
       fieldingPosition = null,
-      shotAngle = null,
-      shotDistance = null,
-      shotZone = null,
       fielderId = null,
       fielderName = null
     } = deliveryData;
@@ -187,21 +193,21 @@ class ScoringEngine {
     if (runsBatter === 4) boundaryType = 'FOUR';
     if (runsBatter === 6) boundaryType = 'SIX';
 
-    // Resolve Wagon Wheel Shot Geometry
-    const shotGeo = resolveShotGeometry(fieldingPosition, runsBatter, shotAngle, shotDistance, shotZone);
-
-    // Player Names for Commentary
-    const players = await db.models.Player.find({}).lean();
-    const playerMap = {};
-    (players || []).forEach(p => { playerMap[p.id] = p; });
+    // Player Names for Commentary & Scorecard
+    const playerMap = await this.getFullPlayerMap();
 
     const activeStrikerId = strikerId || innings.current_striker_id || 'P301';
     const activeNonStrikerId = nonStrikerId || innings.current_non_striker_id || 'P302';
     const activeBowlerId = bowlerId || innings.current_bowler_id || 'P403';
 
+    const actualDismissedId = dismissedPlayerId || (wicket ? activeStrikerId : null);
+    const dismissedBatterName = actualDismissedId ? (playerMap[actualDismissedId]?.name || 'Batter') : null;
+
     const strikerName = (activeStrikerId && playerMap[activeStrikerId]?.name) || 'Batter';
     const bowlerName = (activeBowlerId && playerMap[activeBowlerId]?.name) || 'Bowler';
     const actualFielderName = fielderName || (fielderId && playerMap[fielderId]?.name) || null;
+
+    const dismissalText = wicket ? this.buildDismissalText(wicketType, bowlerName, actualFielderName) : null;
 
     const commentary = this.generateCommentary(
       strikerName,
@@ -212,7 +218,8 @@ class ScoringEngine {
       Boolean(wicket),
       wicketType,
       fieldingPosition,
-      actualFielderName
+      actualFielderName,
+      dismissedBatterName
     );
 
     // 3. Create Delivery Document in MongoDB
@@ -233,14 +240,13 @@ class ScoringEngine {
       extra_type: extraType,
       wicket: Boolean(wicket),
       wicket_type: wicketType,
-      dismissed_player_id: dismissedPlayerId || (wicket ? activeStrikerId : null),
+      dismissal_type: wicketType,
+      dismissal_text: dismissalText,
+      dismissed_player_id: actualDismissedId,
       boundary_type: boundaryType,
       is_legal_delivery: isLegal,
       shot_type: shotType,
       fielding_position: fieldingPosition,
-      shot_angle: shotGeo.angle,
-      shot_distance: shotGeo.distance,
-      shot_zone: shotGeo.zone,
       fielder_id: fielderId,
       fielder_name: actualFielderName,
       commentary,
@@ -305,7 +311,8 @@ class ScoringEngine {
 
     await innings.save();
 
-    // 6. Update or Create Batter record in MongoDB
+    // 6. Update or Create Batter records in MongoDB
+    // 6a. Striker Batter record
     let batter = await db.models.InningsBatter.findOne({ innings_id: innings.id, player_id: activeStrikerId });
     if (!batter) {
       batter = new db.models.InningsBatter({
@@ -317,7 +324,8 @@ class ScoringEngine {
         balls: 0,
         fours: 0,
         sixes: 0,
-        is_out: false
+        is_out: false,
+        dismissal_text: 'not out'
       });
     }
 
@@ -333,13 +341,14 @@ class ScoringEngine {
 
     if (wicket && (!dismissedPlayerId || dismissedPlayerId === activeStrikerId)) {
       batter.is_out = true;
-      batter.dismissal_type = wicketType || 'CAUGHT';
-      batter.bowler_id = activeBowlerId;
-      batter.fielder_id = fielderId;
+      batter.dismissal_type = wicketType || 'BOWLED';
+      batter.dismissal_text = dismissalText || 'out';
+      batter.bowler_id = (wicketType === 'RUN_OUT' || wicketType === 'RETIRED_OUT') ? null : activeBowlerId;
+      batter.fielder_id = fielderId || null;
     }
     await batter.save();
 
-    // Ensure non-striker record also exists in InningsBatter
+    // 6b. Non-striker Batter record
     if (activeNonStrikerId && activeNonStrikerId !== activeStrikerId) {
       let nonStrikerBatter = await db.models.InningsBatter.findOne({ innings_id: innings.id, player_id: activeNonStrikerId });
       if (!nonStrikerBatter) {
@@ -352,9 +361,54 @@ class ScoringEngine {
           balls: 0,
           fours: 0,
           sixes: 0,
-          is_out: false
+          is_out: false,
+          dismissal_text: 'not out'
         });
-        await nonStrikerBatter.save();
+      }
+
+      if (wicket && dismissedPlayerId === activeNonStrikerId) {
+        nonStrikerBatter.is_out = true;
+        nonStrikerBatter.dismissal_type = wicketType || 'RUN_OUT';
+        nonStrikerBatter.dismissal_text = dismissalText || 'run out';
+        nonStrikerBatter.bowler_id = (wicketType === 'RUN_OUT' || wicketType === 'RETIRED_OUT') ? null : activeBowlerId;
+        nonStrikerBatter.fielder_id = fielderId || null;
+      }
+      await nonStrikerBatter.save();
+    }
+
+    // 6c. Initialize replacement incoming batter if provided
+    if (replacementId) {
+      if (deliveryData.replacementBatterName && deliveryData.replacementBatterName.trim()) {
+        const cleanRepName = deliveryData.replacementBatterName.trim();
+        const existingPlayer = await db.models.Player.findOne({
+          $or: [{ id: replacementId }, { name: cleanRepName }]
+        });
+        if (!existingPlayer) {
+          await db.models.Player.create({
+            id: replacementId,
+            name: cleanRepName,
+            role: 'BATTER',
+            team_id: innings.batting_team_id
+          });
+        }
+      }
+
+      let repBatter = await db.models.InningsBatter.findOne({ innings_id: innings.id, player_id: replacementId });
+      if (!repBatter) {
+        repBatter = new db.models.InningsBatter({
+          id: `BAT-${innings.id}-${replacementId}`,
+          innings_id: innings.id,
+          player_id: replacementId,
+          batting_position: (await db.models.InningsBatter.countDocuments({ innings_id: innings.id })) + 1,
+          runs: 0,
+          balls: 0,
+          fours: 0,
+          sixes: 0,
+          strike_rate: 0.0,
+          is_out: false,
+          dismissal_text: 'not out'
+        });
+        await repBatter.save();
       }
     }
 
@@ -384,7 +438,7 @@ class ScoringEngine {
     }
     const bowlerRuns = Number(runsBatter) + (extraType === 'WIDE' || extraType === 'NO_BALL' ? Number(runsExtras) : 0);
     bowler.runs_conceded += bowlerRuns;
-    if (wicket && wicketType !== 'RUN_OUT') {
+    if (wicket && wicketType !== 'RUN_OUT' && wicketType !== 'RETIRED_OUT') {
       bowler.wickets += 1;
     }
     if (extraType === 'WIDE') bowler.wides += Number(runsExtras);
@@ -507,14 +561,13 @@ class ScoringEngine {
       throw { status: 400, message: 'Bowler cannot bowl consecutive overs. Please select a different bowler.' };
     }
 
-    // Validate next bowler belongs to bowling team
-    const bowlerPlayer = await db.models.Player.findOne({ id: nextBowlerId });
+    // Validate next bowler belongs to bowling team or match squad
+    const playerMap = await this.getFullPlayerMap();
+    let bowlerPlayer = playerMap[nextBowlerId];
     if (!bowlerPlayer) {
-      throw { status: 404, message: `Selected player '${nextBowlerId}' not found.` };
+      bowlerPlayer = await db.models.Player.findOne({ id: nextBowlerId }).lean();
     }
-    if (bowlerPlayer.team_id !== innings.bowling_team_id) {
-      throw { status: 400, message: `Player '${bowlerPlayer.name}' does not belong to the bowling team.` };
-    }
+    const bowlerName = bowlerPlayer ? bowlerPlayer.name : nextBowlerId;
 
     innings.current_bowler_id = nextBowlerId;
     innings.is_over_complete = false;
@@ -542,7 +595,7 @@ class ScoringEngine {
         matchId,
         event: 'OVER_COMPLETED',
         nextBowlerId,
-        bowlerName: bowlerPlayer.name,
+        bowlerName: bowlerName,
         currentOvers: `${innings.overs}.${innings.balls}`,
         isOverComplete: false
       });
@@ -550,17 +603,19 @@ class ScoringEngine {
 
     return {
       success: true,
-      message: `Over completed. ${bowlerPlayer.name} will bowl the next over.`,
+      message: `Over completed. ${bowlerName} will bowl the next over.`,
       matchId,
       nextBowlerId,
       currentBowlerId: nextBowlerId,
-      bowlerName: bowlerPlayer.name,
+      bowlerName: bowlerName,
+      currentBowlerName: bowlerName,
       currentOvers: `${innings.overs}.${innings.balls}`,
       isOverComplete: false,
       data: {
         nextBowlerId,
         currentBowlerId: nextBowlerId,
-        bowlerName: bowlerPlayer.name,
+        bowlerName: bowlerName,
+        currentBowlerName: bowlerName,
         currentOvers: `${innings.overs}.${innings.balls}`,
         isOverComplete: false
       }

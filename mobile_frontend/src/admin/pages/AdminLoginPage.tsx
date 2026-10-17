@@ -17,7 +17,8 @@ import {
 } from 'react-native';
 import { ShieldIcon, CricketBatIcon } from '../components/Icons';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminApi, setStoredAdminToken, setStoredAdminUser } from '../services/adminApi';
+import { adminApi, setStoredAdminToken, setStoredAdminUser, getStoredAdminToken, getStoredAdminUser } from '../services/adminApi';
+import { setAuthToken, setCurrentUser } from '../../services/api';
 
 export interface Props {
   onLoginSuccess?: () => void;
@@ -110,6 +111,10 @@ export const AdminLoginPage: React.FC<Props> = ({ onLoginSuccess, onBackToHome, 
     setLoading(false);
 
     if (res.success) {
+      const activeAdminUser = getStoredAdminUser();
+      const activeAdminToken = getStoredAdminToken();
+      if (activeAdminToken) setAuthToken(activeAdminToken);
+      if (activeAdminUser) setCurrentUser(activeAdminUser);
       if (onLoginSuccess) onLoginSuccess();
     } else {
       setErrorMsg(res.message || 'Invalid administrator credentials. Access denied.');

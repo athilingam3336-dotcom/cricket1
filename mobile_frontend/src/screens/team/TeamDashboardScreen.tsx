@@ -169,8 +169,18 @@ export default function TeamDashboardScreen({ onExit, initialParams }: TeamDashb
   };
 
   useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'TEAM' && role !== 'COACH' && role !== 'ADMIN') {
+      if (onExit) onExit();
+      return;
+    }
     loadTeamData();
-  }, []);
+  }, [onExit]);
 
   // Save Profile Updates (Safe fields only)
   const handleSaveProfile = async () => {

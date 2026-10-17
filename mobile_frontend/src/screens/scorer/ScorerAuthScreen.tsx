@@ -198,7 +198,7 @@ export default function ScorerAuthScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onExit} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => onExit()} style={styles.backBtn}>
           <Text style={styles.backText}>← Exit to Main</Text>
         </TouchableOpacity>
       </View>
@@ -472,6 +472,7 @@ const styles = StyleSheet.create({
   secondaryLinkText: { color: '#64748b', fontSize: 13, fontWeight: '500' },
   actionBtn: { backgroundColor: '#eab308', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 4, shadowColor: '#eab308', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5 },
   actionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 },
+  btnDisabled: { opacity: 0.6 },
   linkBtn: { marginTop: 24, alignItems: 'center' },
   linkText: { color: '#b45309', textDecorationLine: 'underline', fontSize: 14, fontWeight: '500' }
 });

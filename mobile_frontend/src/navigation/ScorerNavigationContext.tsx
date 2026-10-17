@@ -5,8 +5,7 @@ export type ScreenName = 'Auth' | 'Dashboard' | 'MatchSetup' | 'LiveScoring' | '
 export interface ScorerNavigationContextType {
   currentScreen: ScreenName;
   navigate: (screen: ScreenName, params?: any) => void;
-  params: any;
-  onExit: () => void;
+  onExit: (targetScreen?: string) => void;
 }
 
 export const ScorerNavigationContext = createContext<ScorerNavigationContextType>({

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, useWindowDimensions, Platform, ActivityIndicator } from 'react-native';
 import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import MatchCard from '../../components/scorer/MatchCard';
-import { assignedMatches as defaultAssignedMatches, mockScorerProfile } from '../../data/scorerMockData';
+import { mockScorerProfile } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
 import { ScorerApi, getCurrentUser } from '../../services/api';
 
@@ -12,7 +12,8 @@ export default function ScorerDashboardScreen() {
   const isDesktop = width > 768;
   const styles = getStyles(isDesktop);
 
-  const [matches, setMatches] = useState<any[]>(defaultAssignedMatches);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [profile, setProfile] = useState<any>(params?.user || getCurrentUser() || mockScorerProfile);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
@@ -21,17 +22,36 @@ export default function ScorerDashboardScreen() {
   }, []);
 
   const loadDashboardData = async () => {
+    setIsLoading(true);
+    let loadedMatches: any[] = [];
+
+    // 1. Try authenticated Scorer Dashboard API
     try {
       const res = await ScorerApi.getDashboard();
-      if (res && res.data) {
-        if (Array.isArray(res.data.matches) && res.data.matches.length > 0) {
-          setMatches(res.data.matches);
-        }
+      if (res && res.data && Array.isArray(res.data.matches)) {
+        loadedMatches = res.data.matches;
       }
-    } catch (e) {
-      // Gracefully maintain matches from default
+    } catch (_e) {
+      // Auth or network error
     }
 
+    // 2. If no matches returned or unauthenticated, fetch public matches from MongoDB
+    if (loadedMatches.length === 0) {
+      try {
+        const pubRes = await ScorerApi.getPublicMatches();
+        const pubData = pubRes?.data || pubRes?.matches || (Array.isArray(pubRes) ? pubRes : []);
+        if (Array.isArray(pubData) && pubData.length > 0) {
+          loadedMatches = pubData;
+        }
+      } catch (_err) {
+        // Fallback keeps empty array
+      }
+    }
+
+    setMatches(loadedMatches);
+    setIsLoading(false);
+
+    // Load profile
     try {
       const user = getCurrentUser();
       if (user) {
@@ -42,7 +62,7 @@ export default function ScorerDashboardScreen() {
           setProfile(profRes.data);
         }
       }
-    } catch (e) {}
+    } catch (_e) {}
   };
 
   const handleLogout = () => {
@@ -166,12 +186,27 @@ export default function ScorerDashboardScreen() {
         <View style={styles.quickActionsPanel}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.primaryActionBtn} onPress={() => navigate('LiveScoring', { matchId: liveMatches.length > 0 ? liveMatches[0].id : 'M002' })}>
-              <Text style={styles.primaryActionText}>LIVE SCORING</Text>
+            <TouchableOpacity 
+              style={styles.primaryActionBtn} 
+              onPress={() => {
+                if (liveMatches.length > 0) {
+                  navigate('LiveScoring', { matchId: liveMatches[0].id });
+                } else if (upcomingMatches.length > 0) {
+                  navigate('MatchSetup', { matchId: upcomingMatches[0].id });
+                } else {
+                  const msg = 'No live or upcoming matches scheduled at the moment.';
+                  Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Scoring', msg);
+                }
+              }}
+            >
+              <Text style={styles.primaryActionText}>
+                {liveMatches.length > 0 ? 'CONTINUE LIVE SCORING' : (upcomingMatches.length > 0 ? 'START UPCOMING MATCH' : 'SCORING CONSOLE')}
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.secondaryActionBtn} onPress={() => {
-              const msg = 'You have 3 matches assigned this season.\n\nNext Match: Aruppukottai Avengers vs Rajapalayam Royals';
+              const nextM = upcomingMatches[0] || liveMatches[0];
+              const msg = `You have ${totalAssigned} matches in the system.\n\nNext Match: ${nextM ? `${nextM.teamA} vs ${nextM.teamB} (${nextM.tournament || 'Association Tournament'})` : 'No upcoming match scheduled'}`;
               if (Platform.OS === 'web') {
                 window.alert(msg);
               } else {
@@ -181,54 +216,73 @@ export default function ScorerDashboardScreen() {
               <Text style={styles.secondaryActionText}>ASSIGNED MATCHES</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.secondaryActionBtn} onPress={() => navigate('Scorecard', { matchId: completedMatches.length > 0 ? completedMatches[0].id : 'M001' })}>
+            <TouchableOpacity 
+              style={styles.secondaryActionBtn} 
+              onPress={() => {
+                if (completedMatches.length > 0) {
+                  navigate('Scorecard', { matchId: completedMatches[0].id });
+                } else {
+                  const msg = 'No completed matches recorded yet.';
+                  Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Scorecards', msg);
+                }
+              }}
+            >
               <Text style={styles.secondaryActionText}>RECENT SCORECARDS</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.contentGrid}>
-          {/* MAIN LEFT COLUMN - LIVE & UPCOMING */}
-          <View style={styles.mainCol}>
-            {(!selectedFilter || selectedFilter === 'Live') && liveMatches.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>LIVE MATCHES</Text>
-                {liveMatches.map(match => (
-                  <MatchCard key={match.id} match={match} variant="live" />
-                ))}
-              </View>
-            )}
-
-            {(!selectedFilter || selectedFilter === 'Upcoming') && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>UPCOMING MATCHES</Text>
-                {upcomingMatches.length > 0 ? (
-                  upcomingMatches.map(match => (
-                    <MatchCard key={match.id} match={match} variant="upcoming" />
-                  ))
-                ) : (
-                  <Text style={styles.emptyText}>No upcoming assigned matches.</Text>
-                )}
-              </View>
-            )}
+        {isLoading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#b45309" />
+            <Text style={{ marginTop: 12, color: '#64748b', fontSize: 14, fontWeight: '600' }}>
+              Loading Assigned Matches from Association Server...
+            </Text>
           </View>
+        ) : (
+          <View style={styles.contentGrid}>
+            {/* MAIN LEFT COLUMN - LIVE & UPCOMING */}
+            <View style={styles.mainCol}>
+              {(!selectedFilter || selectedFilter === 'Live') && liveMatches.length > 0 && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionHeader}>LIVE MATCHES</Text>
+                  {liveMatches.map(match => (
+                    <MatchCard key={match.id} match={match} variant="live" />
+                  ))}
+                </View>
+              )}
 
-          {/* RIGHT COLUMN - RECENT MATCHES */}
-          <View style={styles.sideCol}>
-            {(!selectedFilter || selectedFilter === 'Completed') && (
-              <View style={styles.section}>
-                <Text style={styles.sectionHeader}>RECENT MATCHES</Text>
-                {completedMatches.length > 0 ? (
-                  completedMatches.map(match => (
-                    <MatchCard key={match.id} match={match} variant="completed" />
-                  ))
-                ) : (
-                  <Text style={styles.emptyText}>No recently completed matches.</Text>
-                )}
-              </View>
-            )}
+              {(!selectedFilter || selectedFilter === 'Upcoming') && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionHeader}>UPCOMING MATCHES</Text>
+                  {upcomingMatches.length > 0 ? (
+                    upcomingMatches.map(match => (
+                      <MatchCard key={match.id} match={match} variant="upcoming" />
+                    ))
+                  ) : (
+                    <Text style={styles.emptyText}>No upcoming assigned matches.</Text>
+                  )}
+                </View>
+              )}
+            </View>
+
+            {/* RIGHT COLUMN - RECENT MATCHES */}
+            <View style={styles.sideCol}>
+              {(!selectedFilter || selectedFilter === 'Completed') && (
+                <View style={styles.section}>
+                  <Text style={styles.sectionHeader}>RECENT MATCHES</Text>
+                  {completedMatches.length > 0 ? (
+                    completedMatches.map(match => (
+                      <MatchCard key={match.id} match={match} variant="completed" />
+                    ))
+                  ) : (
+                    <Text style={styles.emptyText}>No recently completed matches.</Text>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
-        </View>
+        )}
         </View>
 
         <SharedFooter />
@@ -270,26 +324,26 @@ const getStyles = (isDesktop: boolean) => StyleSheet.create({
   contentWrapper: { padding: isDesktop ? 24 : 16, paddingBottom: 40, flex: 1 },
   
   // CHART SECTION
-  chartSectionContainer: { flexDirection: isDesktop ? 'row' : 'column-reverse', backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', padding: 24, marginBottom: 28, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 },
+  chartSectionContainer: { flexDirection: isDesktop ? 'row' : 'column-reverse', backgroundColor: 'rgba(255, 255, 255, 0.85)', borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', padding: 24, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
   chartLegendCol: { flex: 1, justifyContent: 'center', paddingRight: isDesktop ? 32 : 0 },
-  chartDiagramCol: { flex: 1, alignItems: 'center', justifyContent: 'center', borderLeftWidth: isDesktop ? 1 : 0, borderBottomWidth: isDesktop ? 0 : 1, borderColor: '#f1f5f9', paddingVertical: isDesktop ? 0 : 24, marginBottom: isDesktop ? 0 : 24 },
-  legendCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12, backgroundColor: '#ffffff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  chartDiagramCol: { flex: 1, alignItems: 'center', justifyContent: 'center', borderLeftWidth: isDesktop ? 1 : 0, borderBottomWidth: isDesktop ? 0 : 1, borderColor: '#e2e8f0', paddingVertical: isDesktop ? 0 : 24, marginBottom: isDesktop ? 0 : 24 },
+  legendCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12, backgroundColor: 'rgba(255,255,255,0.9)' },
   legendDot: { width: 14, height: 14, borderRadius: 7, marginRight: 12 },
   legendTitle: { color: '#1e293b', fontSize: 15, fontWeight: 'bold' },
   legendDesc: { color: '#64748b', fontSize: 12, marginTop: 2 },
-  legendCount: { fontSize: 24, fontWeight: '900' },
-  fallbackCircle: { width: 220, height: 220, borderRadius: 110, backgroundColor: '#f8fafc', borderWidth: 8, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3 },
-  fallbackCircleNum: { fontSize: 44, fontWeight: '900', color: '#1e293b' },
-  fallbackCircleText: { fontSize: 13, color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1.5 },
+  legendCount: { fontSize: 22, fontWeight: 'bold' },
+  fallbackCircle: { width: 220, height: 220, borderRadius: 110, backgroundColor: '#f8fafc', borderWidth: 8, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' },
+  fallbackCircleNum: { fontSize: 40, fontWeight: 'bold', color: '#1e293b' },
+  fallbackCircleText: { fontSize: 12, color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 },
   
   // QUICK ACTIONS
-  quickActionsPanel: { backgroundColor: '#ffffff', padding: 24, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 32, shadowColor: '#0f172a', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
-  sectionTitle: { color: '#b45309', fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 16 },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  primaryActionBtn: { flex: 1, minWidth: 150, backgroundColor: '#eab308', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center', shadowColor: '#ca8a04', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6, elevation: 4 },
-  primaryActionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
-  secondaryActionBtn: { flex: 1, minWidth: 150, backgroundColor: '#f8fafc', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
-  secondaryActionText: { color: '#334155', fontWeight: 'bold', fontSize: 13, letterSpacing: 0.5 },
+  quickActionsPanel: { backgroundColor: 'rgba(255, 255, 255, 0.75)', padding: 20, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(226, 232, 240, 0.8)', marginBottom: 28, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  sectionTitle: { color: '#b45309', fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
+  actionRow: { flexDirection: isDesktop ? 'row' : 'column', gap: 12 },
+  primaryActionBtn: { backgroundColor: '#eab308', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4, alignItems: 'center' },
+  primaryActionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 },
+  secondaryActionBtn: { backgroundColor: 'transparent', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 4, alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' },
+  secondaryActionText: { color: '#334155', fontWeight: 'bold', fontSize: 12, letterSpacing: 0.5 },
 
   // CONTENT GRID
   contentGrid: { flexDirection: isDesktop ? 'row' : 'column', gap: 20 },

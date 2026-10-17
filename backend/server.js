@@ -50,7 +50,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
+const authController = require('./controllers/authController');
+
+// Direct Admin Login endpoint
+app.post('/api/admin/login', (req, res) => authController.adminLogin(req, res));
+
 // Authentication APIs (Password Auth & Registration Email OTP)
 app.use('/api/auth', authRoutes);
 
@@ -93,3 +97,4 @@ if (require.main === module) {
 }
 
 module.exports = { app, server };
+

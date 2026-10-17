@@ -17,7 +17,7 @@ class TeamRegistrationModel {
    * Create a new Team Registration in PENDING status
    * Strictly validates exactly 15 squad players, email formats, and duplicates.
    */
-  async create({ teamId, teamName, coachName, coachEmail, passkey, city, taluk, players }) {
+  async create({ teamId, teamName, coachName, coachEmail, password, password_hash, passkey, city, taluk, players }) {
     await db.initDb();
 
     // 1. Validate Coach & Team Info
@@ -37,11 +37,11 @@ class TeamRegistrationModel {
       throw { status: 400, message: 'Invalid coach email address format.' };
     }
 
-    // 2. Validate Exactly 15 Players
-    if (!Array.isArray(players) || players.length !== 15) {
+    // 2. Validate Squad Players (Any number of players >= 1 allowed)
+    if (!Array.isArray(players) || players.length === 0) {
       throw { 
         status: 400, 
-        message: `Team registration requires exactly 15 squad players. Currently provided: ${(players || []).length}/15.` 
+        message: 'At least one player is required for team squad registration.' 
       };
     }
 
@@ -94,11 +94,20 @@ class TeamRegistrationModel {
     const regId = teamId || `TEAM-VRD-${Math.floor(100000 + Math.random() * 900000)}`;
     const secretPasskey = passkey || `PASS-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    let computedPasswordHash = password_hash || null;
+    if (password && !computedPasswordHash) {
+      try {
+        const bcrypt = require('bcryptjs');
+        computedPasswordHash = await bcrypt.hash(password, 10);
+      } catch (_e) {}
+    }
+
     const reg = await this.Model.create({
       id: regId,
       team_name: teamName.trim(),
       coach_name: coachName.trim(),
       coach_email: cleanCoachEmail,
+      password_hash: computedPasswordHash,
       passkey: secretPasskey,
       city: city || taluk || 'Virudhunagar',
       taluk: taluk || 'Virudhunagar',
@@ -107,11 +116,37 @@ class TeamRegistrationModel {
       created_at: new Date()
     });
 
+    // Ensure Coach User account exists with status PENDING and password_hash
+    const existingUser = await userModel.findByEmail(cleanCoachEmail);
+    if (!existingUser) {
+      await userModel.create({
+        id: `COACH-${Date.now()}`,
+        name: coachName.trim(),
+        email: cleanCoachEmail,
+        role: 'COACH',
+        status: 'PENDING',
+        password_hash: computedPasswordHash
+      });
+    } else {
+      await db.models.User.updateOne(
+        { email: cleanCoachEmail },
+        {
+          $set: {
+            name: coachName.trim(),
+            role: 'COACH',
+            status: 'PENDING',
+            ...(computedPasswordHash && { password_hash: computedPasswordHash }),
+            updated_at: new Date()
+          }
+        }
+      );
+    }
+
     // Create Admin notification for governing review
     await notificationModel.create({
       type: 'TEAM_REGISTRATION',
       title: `New Team Registration: ${teamName.trim()}`,
-      message: `Coach ${coachName.trim()} (${cleanCoachEmail}) submitted team "${teamName.trim()}" with 15 squad players. Awaiting administrative review and approval.`,
+      message: `Coach ${coachName.trim()} (${cleanCoachEmail}) submitted team "${teamName.trim()}" with ${players.length} squad players. Awaiting administrative review and approval.`,
       reference_id: regId,
       status: 'UNREAD'
     });
@@ -307,17 +342,28 @@ class TeamRegistrationModel {
       }
     }
 
-    // 3. Ensure Coach User account exists so coach can login via OTP
+    // 3. Ensure Coach User account exists so coach can login via password & OTP
     const existingCoach = await userModel.findByEmail(reg.coach_email);
     if (!existingCoach) {
       await userModel.create({
+        id: `COACH-${Date.now()}`,
         name: reg.coach_name,
         email: reg.coach_email,
         role: 'COACH',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        password_hash: reg.password_hash || null
       });
     } else {
-      await userModel.updateStatus(existingCoach.id, 'ACTIVE');
+      await db.models.User.updateOne(
+        { email: reg.coach_email },
+        {
+          $set: {
+            status: 'ACTIVE',
+            ...(reg.password_hash && !existingCoach.password_hash && { password_hash: reg.password_hash }),
+            updated_at: new Date()
+          }
+        }
+      );
     }
 
     // 4. Create Notification
@@ -348,6 +394,12 @@ class TeamRegistrationModel {
     reg.rejection_reason = reason;
     (reg.players || []).forEach(p => { p.status = 'REJECTED'; });
     await reg.save();
+
+    // Update Coach User account in User collection to REJECTED
+    await db.models.User.updateOne(
+      { email: reg.coach_email },
+      { $set: { status: 'REJECTED', rejection_reason: reason, updated_at: new Date() } }
+    );
 
     await notificationModel.create({
       type: 'TEAM_REJECTED',

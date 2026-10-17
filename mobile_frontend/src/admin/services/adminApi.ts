@@ -93,7 +93,7 @@ async function adminRequest(endpoint: string, options: RequestInit = {}) {
 
     return data;
   } catch (err: any) {
-    console.error(`[AdminApi] ${endpoint} error:`, err.message);
+    console.warn(`[AdminApi] ${endpoint} error:`, err?.message || err);
     throw err;
   }
 }

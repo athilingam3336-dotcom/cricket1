@@ -154,8 +154,18 @@ export default function PlayerDashboardScreen({ onExit, initialParams }: PlayerD
   };
 
   useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'PLAYER' && role !== 'ADMIN') {
+      if (onExit) onExit();
+      return;
+    }
     loadPlayerData();
-  }, []);
+  }, [onExit]);
 
   // Save Profile Updates
   const handleSaveProfile = async () => {
@@ -1479,7 +1489,6 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flexDirection: 'row',
-<<<<<<< HEAD
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -1487,11 +1496,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: '#cbd5e1'
-=======
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-    gap: 16
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
   },
   tabBtnActive: {
     backgroundColor: '#d4af37',
@@ -1506,24 +1510,10 @@ const styles = StyleSheet.create({
     color: '#020612',
     fontWeight: '900'
   },
-<<<<<<< HEAD
   tabBadgeBlue: {
     backgroundColor: '#dbeafe',
     paddingHorizontal: 6,
     paddingVertical: 2,
-=======
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16
-  },
-  actionBtn: {
-    flex: 1,
-    minWidth: 140,
-    backgroundColor: '#0b1329',
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
     borderRadius: 10,
     marginLeft: 6
   },

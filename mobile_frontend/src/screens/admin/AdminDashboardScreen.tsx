@@ -31,7 +31,7 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { ScorerApi, getCurrentUser, setAuthToken, setCurrentUser } from '../../services/api';
+import { ScorerApi, getCurrentUser, getAuthToken, setAuthToken, setCurrentUser } from '../../services/api';
 
 // Asset references
 const IMG_LOGO = require('../../../assets/logo_transparent.png');
@@ -45,35 +45,7 @@ export interface AdminDashboardProps {
 
 type AdminTab = 'overview' | 'teams' | 'scorers' | 'content' | 'schedules';
 type FilterStatus = 'all' | 'Pending' | 'Approved' | 'Rejected';
-<<<<<<< HEAD
 type MatchFilterStatus = 'all' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
-
-export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
-  // Authenticated Admin User Check with fallback to District Administrator
-  const storedUser = getCurrentUser();
-  const currentUser = (storedUser && (storedUser.role || '').toUpperCase() === 'ADMIN')
-    ? storedUser
-    : (initialParams?.user || {
-        id: 'ADM-1002',
-        name: 'Chief Administrator',
-        email: 'admin@cfvd.org',
-        role: 'ADMIN',
-        status: 'ACTIVE'
-      });
-  const isAdmin = true;
-
-  const handleLogout = async () => {
-    try {
-      await ScorerApi.logout();
-    } catch (_e) {}
-    setAuthToken(null);
-    setCurrentUser(null);
-    if (onExit) onExit();
-  };
-
-  // Start on 'scorers' tab to immediately match the second screenshot
-  const [activeTab, setActiveTab] = useState<AdminTab>(initialParams?.tab || initialParams?.activeTab || 'scorers');
-=======
 
 // Fallback initial scorers data (matching exact counts: 2 Approved, 2 Pending, 1 Rejected = 5 Total)
 const INITIAL_SCORERS_DATA = [
@@ -206,9 +178,41 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const isDesktop = width > 768;
   const insetsTop = Platform.OS === 'android' ? 40 : Platform.OS === 'ios' ? 50 : 0;
 
+  const storedUser = getCurrentUser();
+  const currentUser = storedUser || initialParams?.user;
+  const isAdmin = (currentUser?.role || '').toUpperCase() === 'ADMIN';
+
+  useEffect(() => {
+    const user = getCurrentUser() || initialParams?.user;
+    if (initialParams?.user && !getCurrentUser()) {
+      setCurrentUser(initialParams.user);
+    }
+    if (initialParams?.token && !getAuthToken()) {
+      setAuthToken(initialParams.token);
+    }
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'ADMIN') {
+      if (onExit) onExit();
+      return;
+    }
+  }, [onExit, initialParams]);
+
+  const handleLogout = async () => {
+    try {
+      await ScorerApi.logout();
+    } catch (_e) { }
+    setAuthToken(null);
+    setCurrentUser(null);
+    if (onExit) onExit();
+  };
+
   // Start on 'scorers' tab to immediately match the user's screenshot, or allow 'overview'
-  const [activeTab, setActiveTab] = useState<AdminTab>('scorers');
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialParams?.tab || initialParams?.activeTab || 'scorers');
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -353,11 +357,24 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
     try {
       // 1. Fetch live registrations from backend
       const regRes = await ScorerApi.getAllRegistrations();
-      if (regRes && regRes.success && Array.isArray(regRes.registrations)) {
+      const rawRegs: any[] =
+        regRes && regRes.success
+          ? Array.isArray(regRes.registrations)
+            ? regRes.registrations
+            : Array.isArray(regRes.data)
+            ? regRes.data
+            : typeof regRes === 'object'
+            ? Object.keys(regRes)
+                .filter((k) => !isNaN(Number(k)))
+                .map((k) => regRes[k])
+            : []
+          : [];
+
+      if (rawRegs.length > 0) {
         const backendTeams: any[] = [];
         const backendScorers: any[] = [];
 
-        regRes.registrations.forEach((r: any, idx: number) => {
+        rawRegs.forEach((r: any, idx: number) => {
           let normStatus = 'Pending';
           const s = (r.status || '').toUpperCase();
           if (s === 'APPROVED' || s === 'ACTIVE') normStatus = 'Approved';
@@ -667,7 +684,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
     };
     try {
       await ScorerApi.createNews(item);
-    } catch (e) {}
+    } catch (e) { }
     setNewsList(prev => [item, ...prev]);
     setNewNewsTitle('');
     showNotification('✓ Official announcement published successfully.');
@@ -676,7 +693,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const handleDeleteNews = async (newsId: string) => {
     try {
       await ScorerApi.deleteNews(newsId);
-    } catch (e) {}
+    } catch (e) { }
     setNewsList(prev => prev.filter(n => n.id !== newsId));
     showNotification('Official notice deleted.');
   };
@@ -802,14 +819,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               <Text style={styles.adminExitBtnPillText}>← Exit</Text>
             </TouchableOpacity>
           </View>
-<<<<<<< HEAD
-          <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
-            <Text style={styles.adminExitBtnPillText}>— Exit Admin</Text>
-          </TouchableOpacity>
-        </View>
-=======
         )}
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       </View>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -2297,8 +2307,8 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                         selectedScorerModal?.status === 'Approved'
                           ? '#16a34a'
                           : selectedScorerModal?.status === 'Rejected'
-                          ? '#dc2626'
-                          : '#d97706'
+                            ? '#dc2626'
+                            : '#d97706'
                     }
                   ]}
                 >
@@ -2511,7 +2521,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               {/* Logistics: Venue, Date, Time */}
               <View style={styles.modalFormSection}>
                 <Text style={styles.formSectionHeading}>3. Venue & Logistics</Text>
-                
+
                 {/* Venue Selection */}
                 <Text style={styles.formLabel}>Official Stadium / Venue *</Text>
                 <View style={styles.pillsRowWrap}>
@@ -2560,7 +2570,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               {/* Format, Overs & Scorer */}
               <View style={styles.modalFormSection}>
                 <Text style={styles.formSectionHeading}>4. Match Format & Assigned Scorer</Text>
-                
+
                 <View style={styles.formRowInputs}>
                   <View style={styles.formInputCol}>
                     <Text style={styles.formLabel}>Match Format</Text>
@@ -2601,10 +2611,10 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                   {(officialsList.filter(o => o.role === 'SCORER').length > 0
                     ? officialsList.filter(o => o.role === 'SCORER')
                     : [
-                        { id: 'SCR-101', name: 'S. Ramesh (SCR-101)' },
-                        { id: 'SCR-102', name: 'K. Murugan (SCR-102)' },
-                        { id: 'SCR-103', name: 'Thiru. K. Sundararajan (SCORER-101)' }
-                      ]
+                      { id: 'SCR-101', name: 'S. Ramesh (SCR-101)' },
+                      { id: 'SCR-102', name: 'K. Murugan (SCR-102)' },
+                      { id: 'SCR-103', name: 'Thiru. K. Sundararajan (SCORER-101)' }
+                    ]
                   ).map((sc: any) => (
                     <TouchableOpacity
                       key={sc.id}

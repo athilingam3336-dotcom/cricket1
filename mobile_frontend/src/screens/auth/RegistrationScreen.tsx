@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-<<<<<<< HEAD
   Modal
-=======
-  useWindowDimensions
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
 } from 'react-native';
 import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
@@ -66,9 +62,6 @@ const SAMPLE_15_SQUAD: Array<{ name: string; email: string; role: string }> = [
 
 export default function RegistrationScreen() {
   const { navigate, goBack, params } = useAppNavigation();
-  const { width } = useWindowDimensions();
-  // Responsive card width: mobile < 480, tablet < 800, desktop
-  const cardMaxWidth = width < 480 ? '100%' : width < 800 ? 600 : 720;
 
   const getInitialRole = (): RegistrationRole => {
     const r = (params?.initialRole as string)?.toUpperCase();
@@ -86,7 +79,6 @@ export default function RegistrationScreen() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
-  const [isNetworkError, setIsNetworkError] = useState<boolean>(false);
 
   // OTP & Password State
   const [otpSent, setOtpSent] = useState<boolean>(false);
@@ -157,7 +149,6 @@ export default function RegistrationScreen() {
 
   const switchRole = (role: RegistrationRole) => {
     setActiveRole(role);
-<<<<<<< HEAD
     setOtpSent(false);
     setOtpCode('');
     setIsEmailVerified(false);
@@ -165,13 +156,6 @@ export default function RegistrationScreen() {
     setConfirmPassword('');
     setStatusMessage(null);
     setStatusType(null);
-=======
-    // Only clear non-network error messages on tab switch
-    if (!isNetworkError) {
-      setStatusMessage(null);
-      setStatusType(null);
-    }
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
   };
 
   // Step 1: Send Email Verification OTP
@@ -309,12 +293,7 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
       setStatusMessage(resp?.message || '✓ Player Account Created! You can now log in.');
-=======
-      setIsNetworkError(false);
-      setStatusMessage(resp?.message || '✓ Player Registration Submitted! Awaiting Admin Approval.');
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       setStatusType('success');
 
       if (Platform.OS === 'web') {
@@ -325,13 +304,7 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'PLAYER' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
-      setIsNetworkError(netError);
-      setStatusMessage(
-        netError
-          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
-          : (err?.message || 'Player registration failed. Please try again.')
-      );
+      setStatusMessage(err?.message || 'Player registration failed. Please try again.');
       setStatusType('error');
     }
   };
@@ -365,12 +338,6 @@ export default function RegistrationScreen() {
       setStatusType('error');
       return;
     }
-    if (players.length >= 15) {
-      setStatusMessage('Squad roster is already full with 15 players.');
-      setStatusType('error');
-      return;
-    }
-
     const newPlayer: SquadPlayer = {
       id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
       name,
@@ -383,7 +350,7 @@ export default function RegistrationScreen() {
     setSquadPlayerEmail('');
 
     const newCount = players.length + 1;
-    setStatusMessage(`✓ Added ${name} (${role}) to squad! (${newCount}/15 players added)`);
+    setStatusMessage(`✓ Added ${name} (${role}) to squad! (${newCount} players in squad)`);
     setStatusType('info');
   };
 
@@ -449,8 +416,8 @@ export default function RegistrationScreen() {
       setStatusType('error');
       return;
     }
-    if (players.length < 15) {
-      setStatusMessage(`Team registration requires exactly 15 squad players (Currently ${players.length}/15).`);
+    if (players.length === 0) {
+      setStatusMessage('Please add at least one squad player to your team.');
       setStatusType('error');
       return;
     }
@@ -482,33 +449,19 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(resp?.message || '✓ Team and Coach Account Registered!');
-=======
-      setIsNetworkError(false);
-      setStatusMessage(`✓ Team "${teamName.trim()}" Submitted! Awaiting Admin Approval.`);
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
+      const teamNotice = `✓ Registration Request Submitted!\n\nTeam "${teamName.trim()}" registration is PENDING Admin approval.\n\nOnce approved by District Administrator, Coach ${coachName} can log in with password.`;
+      setStatusMessage(resp?.message || teamNotice);
       setStatusType('success');
 
       if (Platform.OS === 'web') {
-        alert(`✓ Team Registration Complete!\n\nCoach ${coachName}, your password is saved. You can now sign in.`);
+        alert(teamNotice);
       } else {
-        Alert.alert('Team Registration Complete', `Coach ${coachName}, you can now sign in with your password.`);
+        Alert.alert('Registration Request Submitted', `Team "${teamName.trim()}" registration is PENDING Admin approval.\n\nOnce approved by District Administrator, Coach ${coachName} can log in.`);
       }
-      setTimeout(() => navigate('Login', { initialRole: 'TEAM' }), 1200);
+      setTimeout(() => navigate('Login', { initialRole: 'TEAM' }), 1500);
     } catch (err: any) {
       setIsLoading(false);
-<<<<<<< HEAD
       setStatusMessage(err?.message || 'Team registration failed. Please try again.');
-=======
-      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
-      setIsNetworkError(netError);
-      setStatusMessage(
-        netError
-          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
-          : (err?.message || 'Team registration failed.')
-      );
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       setStatusType('error');
     }
   };
@@ -580,33 +533,19 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(resp?.message || '✓ Scorer Registration Successful!');
-=======
-      setIsNetworkError(false);
-      setStatusMessage(resp?.message || '✓ Scorer Registration Submitted! Awaiting Admin Approval.');
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
+      const scorerNotice = `✓ Registration Request Submitted!\n\nWelcome ${name}! Your scorer registration request is PENDING Admin approval.\n\nOnce approved by District Administrator, you can log in with password.`;
+      setStatusMessage(resp?.message || scorerNotice);
       setStatusType('success');
 
       if (Platform.OS === 'web') {
-        alert(`✓ Scorer Registration Complete!\n\nWelcome ${name}! Your password is saved. You can now sign in.`);
+        alert(scorerNotice);
       } else {
-        Alert.alert('Registration Successful', `Welcome ${name}! You can now sign in with your password.`);
+        Alert.alert('Registration Request Submitted', `Welcome ${name}! Your scorer registration request is PENDING Admin approval.\n\nOnce approved by District Administrator, you can log in.`);
       }
-      setTimeout(() => navigate('Login', { initialRole: 'SCORER' }), 1200);
+      setTimeout(() => navigate('Login', { initialRole: 'SCORER' }), 1500);
     } catch (err: any) {
       setIsLoading(false);
-<<<<<<< HEAD
       setStatusMessage(err?.message || 'Scorer registration failed. Please try again.');
-=======
-      const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
-      setIsNetworkError(netError);
-      setStatusMessage(
-        netError
-          ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
-          : (err?.message || 'Scorer registration failed.')
-      );
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       setStatusType('error');
     }
   };
@@ -775,7 +714,7 @@ export default function RegistrationScreen() {
             <View style={styles.card}>
               <Text style={styles.title}>Register Here</Text>
               <Text style={styles.subtitle}>
-                District player registration, 15-player team squad submissions, and certified scorer enrollment
+                District player registration, team squad submissions, and certified scorer enrollment
               </Text>
 
               {/* Status Banner */}
@@ -783,32 +722,21 @@ export default function RegistrationScreen() {
                 <View
                   style={[
                     styles.statusBanner,
-                    statusType === 'error' && (isNetworkError ? styles.statusNetworkError : styles.statusError),
+                    statusType === 'error' && styles.statusError,
                     statusType === 'success' && styles.statusSuccess,
                     statusType === 'info' && styles.statusInfo
                   ]}
                 >
-                  {isNetworkError && (
-                    <Text style={styles.statusNetworkIcon}>🔌 Backend Offline</Text>
-                  )}
                   <Text
                     style={[
                       styles.statusText,
-                      statusType === 'error' && (isNetworkError ? styles.statusTextNetworkError : styles.statusTextError),
+                      statusType === 'error' && styles.statusTextError,
                       statusType === 'success' && styles.statusTextSuccess,
                       statusType === 'info' && styles.statusTextInfo
                     ]}
                   >
                     {statusMessage}
                   </Text>
-                  {isNetworkError && (
-                    <TouchableOpacity
-                      style={styles.dismissBtn}
-                      onPress={() => { setStatusMessage(null); setStatusType(null); setIsNetworkError(false); }}
-                    >
-                      <Text style={styles.dismissBtnText}>Dismiss</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
               )}
 
@@ -1038,10 +966,10 @@ export default function RegistrationScreen() {
                   {/* 15 Squad Players Builder */}
                   <View style={styles.squadHeaderRow}>
                     <Text style={styles.squadSectionTitle}>
-                      Squad Players ({players.length}/15 added)
+                      Squad Players ({players.length} added)
                     </Text>
                     <TouchableOpacity style={styles.autoFillBtn} onPress={handleAutoFillSampleSquad}>
-                      <Text style={styles.autoFillBtnText}>⚡ Fill 15 Players</Text>
+                      <Text style={styles.autoFillBtnText}>⚡ Fill Sample Squad</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -1119,14 +1047,14 @@ export default function RegistrationScreen() {
                       {teamAgreed && <Text style={styles.checkmark}>✓</Text>}
                     </View>
                     <Text style={styles.checkboxLabel}>
-                      I confirm that all 15 squad players have verified identity documents.
+                      I confirm that all squad players have verified identity documents.
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.submitBtn, (!isEmailVerified || players.length < 15 || isLoading) && styles.submitBtnDisabled]}
+                    style={[styles.submitBtn, (!isEmailVerified || players.length === 0 || isLoading) && styles.submitBtnDisabled]}
                     onPress={handleTeamSubmit}
-                    disabled={!isEmailVerified || players.length < 15 || isLoading}
+                    disabled={!isEmailVerified || players.length === 0 || isLoading}
                   >
                     {isLoading ? (
                       <ActivityIndicator color="#000000" size="small" />
@@ -1352,11 +1280,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     width: '100%',
-<<<<<<< HEAD
     maxWidth: 640,
-=======
-    maxWidth: Platform.OS === 'web' ? 720 : 580,
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -1368,21 +1292,12 @@ const styles = StyleSheet.create({
 
   statusBanner: { padding: 10, borderRadius: 6, marginBottom: 12, borderWidth: 1 },
   statusError: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
-  statusNetworkError: { backgroundColor: '#fdf4ff', borderColor: '#d946ef', borderWidth: 1.5 },
   statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
   statusInfo: { backgroundColor: '#eff6ff', borderColor: '#93c5fd' },
-<<<<<<< HEAD
   statusText: { fontSize: 12.5, fontWeight: '600', textAlign: 'center' },
-=======
-  statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 19 },
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
   statusTextError: { color: '#b91c1c' },
-  statusTextNetworkError: { color: '#7c3aed', fontWeight: '700' },
   statusTextSuccess: { color: '#15803d' },
   statusTextInfo: { color: '#1d4ed8' },
-  statusNetworkIcon: { color: '#d946ef', fontWeight: '900', fontSize: 13, textAlign: 'center', marginBottom: 4 },
-  dismissBtn: { marginTop: 8, alignSelf: 'center', backgroundColor: '#f3e8ff', borderRadius: 6, paddingHorizontal: 16, paddingVertical: 5, borderWidth: 1, borderColor: '#c084fc' },
-  dismissBtnText: { color: '#7c3aed', fontSize: 12, fontWeight: '700' },
 
   roleTabsContainer: {
     flexDirection: 'row',

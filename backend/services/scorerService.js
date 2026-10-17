@@ -6,81 +6,210 @@
 
 const db = require('../config/db');
 
-const POSITION_COORDINATES = {
-  'Point': { angle: 270, zone: 'Point' },
-  'Cover': { angle: 315, zone: 'Cover / Extra Cover' },
-  'Mid-Off': { angle: 348, zone: 'Mid-Off / Long Off' },
-  'Mid-On': { angle: 12, zone: 'Mid-On / Long On' },
-  'Midwicket': { angle: 55, zone: 'Midwicket' },
-  'Slips': { angle: 240, zone: 'Third Man / Slips' },
-  'Third Man': { angle: 220, zone: 'Third Man' },
-  'Fine Leg': { angle: 140, zone: 'Fine Leg' },
-  'Square Leg': { angle: 95, zone: 'Square Leg' },
-  'Long Off': { angle: 340, zone: 'Mid-Off / Long Off' },
-  'Long On': { angle: 20, zone: 'Mid-On / Long On' },
-  'Deep Extra Cover': { angle: 315, zone: 'Cover / Extra Cover' }
-};
-
-function resolveShotGeometry(fieldingPosition, runsBatter, customAngle, customDistance, customZone) {
-  let angle = (typeof customAngle === 'number' && !isNaN(customAngle)) ? customAngle : null;
-  let zone = customZone || null;
-  
-  if (angle === null) {
-    if (fieldingPosition && POSITION_COORDINATES[fieldingPosition]) {
-      const jitter = (Math.random() - 0.5) * 8;
-      angle = Math.round((POSITION_COORDINATES[fieldingPosition].angle + jitter + 360) % 360);
-      zone = POSITION_COORDINATES[fieldingPosition].zone;
-    } else {
-      angle = 315;
-      zone = 'Cover / Extra Cover';
-    }
-  }
-
-  if (!zone) {
-    if (angle >= 337.5 || angle < 22.5) zone = 'Mid-Off / Long Off';
-    else if (angle >= 22.5 && angle < 67.5) zone = 'Mid-On / Long On';
-    else if (angle >= 67.5 && angle < 112.5) zone = 'Midwicket';
-    else if (angle >= 112.5 && angle < 157.5) zone = 'Square Leg';
-    else if (angle >= 157.5 && angle < 202.5) zone = 'Fine Leg';
-    else if (angle >= 202.5 && angle < 247.5) zone = 'Third Man';
-    else if (angle >= 247.5 && angle < 292.5) zone = 'Point';
-    else zone = 'Cover / Extra Cover';
-  }
-
-  let distance = (typeof customDistance === 'number' && !isNaN(customDistance)) ? customDistance : null;
-  if (distance === null) {
-    const runs = Number(runsBatter) || 0;
-    if (runs === 6) distance = 105 + Math.round(Math.random() * 5);
-    else if (runs === 4) distance = 94 + Math.round(Math.random() * 4);
-    else if (runs === 3) distance = 76 + Math.round(Math.random() * 6);
-    else if (runs === 2) distance = 62 + Math.round(Math.random() * 6);
-    else if (runs === 1) distance = 46 + Math.round(Math.random() * 6);
-    else distance = 28 + Math.round(Math.random() * 8);
-  }
-
-  return { angle, distance, zone };
-}
-
 class ScorerService {
+  /**
+   * Helper to resolve all teams from Team and TeamRegistration
+   */
+  async getTeamMap() {
+    await db.initDb();
+    const [teams, teamRegs] = await Promise.all([
+      db.models.Team.find({}).lean(),
+      db.models.TeamRegistration.find({}).lean()
+    ]);
+    const teamMap = {};
+    (teams || []).forEach(t => {
+      if (t.id) teamMap[t.id] = t;
+      if (t.team_id) teamMap[t.team_id] = t;
+      if (t.name) teamMap[t.name] = t;
+    });
+    (teamRegs || []).forEach(tr => {
+      const tObj = {
+        id: tr.id,
+        team_id: tr.id,
+        name: tr.team_name || tr.club_name || tr.name || tr.id,
+        short_name: (tr.team_name || tr.id).substring(0, 3).toUpperCase(),
+        city: tr.city || tr.taluk,
+        players: tr.players
+      };
+      if (tr.id) teamMap[tr.id] = tObj;
+      if (tr.team_name) teamMap[tr.team_name] = tObj;
+    });
+    return teamMap;
+  }
+
+  /**
+   * Helper to resolve all players from Player and TeamRegistration
+   */
+  async getPlayerMap() {
+    await db.initDb();
+    const [players, teamRegs] = await Promise.all([
+      db.models.Player.find({}).lean(),
+      db.models.TeamRegistration.find({}).lean()
+    ]);
+    const playerMap = {};
+    (players || []).forEach(p => {
+      if (p.id) playerMap[p.id] = p;
+    });
+    (teamRegs || []).forEach(tr => {
+      (tr.players || []).forEach((p, idx) => {
+        const pId = p.id || (p._id ? p._id.toString() : `${tr.id}-P${idx + 1}`);
+        const pObj = {
+          id: pId,
+          name: p.name,
+          role: p.role,
+          jersey_number: p.jersey_number || (idx + 1),
+          team_id: tr.id
+        };
+        playerMap[pId] = pObj;
+        if (p.name) playerMap[p.name] = pObj;
+      });
+    });
+    return playerMap;
+  }
+
+  /**
+   * Helper to resolve a complete, robust squad of players for any team
+   * Handles Team, TeamRegistration, and guarantees full 11 Playing XI options
+   */
+  async getSquadForTeam(teamId) {
+    await db.initDb();
+    if (!teamId) return [];
+
+    const teamMap = await this.getTeamMap();
+    const team = teamMap[teamId] || {};
+
+    // All possible aliases for this team
+    const aliases = new Set([
+      teamId,
+      team.id,
+      team.team_id,
+      team.name,
+      team.team_name
+    ].filter(Boolean));
+
+    const squadMap = {};
+    const seenNames = new Set();
+
+    // 1. Fetch from official Player collection
+    const players = await db.models.Player.find({
+      $or: [
+        { team_id: { $in: Array.from(aliases) } },
+        { team_name: { $in: Array.from(aliases) } }
+      ]
+    }).lean();
+
+    players.forEach(p => {
+      if (!p || !p.name) return;
+      const cleanName = p.name.trim().toLowerCase();
+      if (seenNames.has(cleanName)) return;
+      seenNames.add(cleanName);
+
+      squadMap[p.id] = {
+        id: p.id,
+        name: p.name.trim(),
+        role: p.role || 'BATTER',
+        jersey_number: p.jersey_number || 0,
+        team_id: teamId
+      };
+    });
+
+    // 2. Fetch from TeamRegistration collection
+    const teamRegs = await db.models.TeamRegistration.find({
+      $or: [
+        { id: { $in: Array.from(aliases) } },
+        { team_name: { $in: Array.from(aliases) } }
+      ]
+    }).lean();
+
+    teamRegs.forEach(tr => {
+      (tr.players || []).forEach((p, idx) => {
+        if (!p || !p.name) return;
+        const cleanName = p.name.trim().toLowerCase();
+        if (seenNames.has(cleanName)) return;
+        seenNames.add(cleanName);
+
+        const pId = p.id || (p._id ? p._id.toString() : `${tr.id}-P${idx + 1}`);
+        squadMap[pId] = {
+          id: pId,
+          name: p.name.trim(),
+          role: p.role || 'BATTER',
+          jersey_number: p.jersey_number || (idx + 1),
+          team_id: teamId
+        };
+      });
+    });
+
+    let squad = Object.values(squadMap);
+
+    // 3. Fallback: if squad has fewer than 11 players, provide realistic squad members for full Playing XI
+    if (squad.length < 11) {
+      const teamName = team.name || team.team_name || 'Team';
+      const fallbackTemplates = [
+        { name: `${teamName} Opener 1`, role: 'BATTER', jersey_number: 1 },
+        { name: `${teamName} Opener 2`, role: 'BATTER', jersey_number: 2 },
+        { name: `${teamName} Top Order`, role: 'BATTER', jersey_number: 3 },
+        { name: `${teamName} Captain`, role: 'ALL_ROUNDER', jersey_number: 7 },
+        { name: `${teamName} Keeper`, role: 'WICKET_KEEPER', jersey_number: 10 },
+        { name: `${teamName} Finisher`, role: 'ALL_ROUNDER', jersey_number: 11 },
+        { name: `${teamName} All-Rounder`, role: 'ALL_ROUNDER', jersey_number: 18 },
+        { name: `${teamName} Spinner`, role: 'BOWLER', jersey_number: 21 },
+        { name: `${teamName} Fast Bowler 1`, role: 'BOWLER', jersey_number: 24 },
+        { name: `${teamName} Fast Bowler 2`, role: 'BOWLER', jersey_number: 33 },
+        { name: `${teamName} Strike Bowler`, role: 'BOWLER', jersey_number: 99 }
+      ];
+      let fillIdx = squad.length + 1;
+      for (const fb of fallbackTemplates) {
+        if (squad.length >= 11) break;
+        if (!squad.some(s => s.name === fb.name)) {
+          squad.push({
+            id: `PLY-${teamId}-${fillIdx++}`,
+            name: fb.name,
+            role: fb.role,
+            jersey_number: fb.jersey_number,
+            team_id: teamId
+          });
+        }
+      }
+    }
+
+    return squad;
+  }
+
   /**
    * Calculates dashboard summary counts from MongoDB
    */
-  async getDashboardStats(scorerId = 'SCR-101', userEmail = null) {
+  async getDashboardStats(scorerId = null, userEmail = null, userRole = null) {
     await db.initDb();
 
-    // Query matches assigned to this scorer (or all matches if scorerId is null or 'ALL')
-    const query = (!scorerId || scorerId === 'ALL') ? {} : {
-      $or: [
-        { assigned_scorer_id: scorerId },
-        { assigned_scorer_id: 'SCR-101' },
-        { assigned_scorer_id: null }
-      ]
-    };
+    // Query matches assigned to this scorer (or all matches if scorerId is null or 'ALL' or user is ADMIN)
+    let linkedOfficialIds = [];
+    if (userEmail || scorerId) {
+      const orConds = [];
+      if (userEmail) orConds.push({ email: userEmail.toLowerCase() });
+      if (scorerId) orConds.push({ id: scorerId });
+      const off = await db.models.Official.find({ $or: orConds }).lean();
+      linkedOfficialIds = (off || []).map(o => o.id);
+    }
+
+    let query = {};
+    if (userRole === 'ADMIN' || !scorerId || scorerId === 'ALL') {
+      query = {}; // Admin sees all matches
+    } else {
+      query = {
+        $or: [
+          { assigned_scorer_id: scorerId },
+          { assigned_scorer_id: { $in: linkedOfficialIds } },
+          { assigned_scorer_id: { $in: ['SCR-101', 'SCR-102', 'SCR-103', 'OFF-01', 'OFF-02'] } },
+          { assigned_scorer_id: null },
+          { assigned_scorer_id: '' },
+          { assigned_scorer_id: 'Unassigned' },
+          { status: { $in: ['SCHEDULED', 'LIVE', 'INNINGS_BREAK', 'Scheduled', 'Live'] } }
+        ]
+      };
+    }
 
     const allMatches = await db.models.Match.find(query).sort({ match_date: -1 }).lean();
-    const teams = await db.models.Team.find({}).lean();
-    const teamMap = {};
-    (teams || []).forEach(t => { teamMap[t.id] = t; });
+    const teamMap = await this.getTeamMap();
 
     let liveCount = 0;
     let upcomingCount = 0;
@@ -155,9 +284,7 @@ class ScorerService {
     const match = await db.models.Match.findOne({ id: matchId }).lean();
     if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
 
-    const teams = await db.models.Team.find({}).lean();
-    const teamMap = {};
-    (teams || []).forEach(t => { teamMap[t.id] = t; });
+    const teamMap = await this.getTeamMap();
 
     const teamA = teamMap[match.team_a_id] || { id: match.team_a_id, name: 'Team A' };
     const teamB = teamMap[match.team_b_id] || { id: match.team_b_id, name: 'Team B' };
@@ -195,12 +322,11 @@ class ScorerService {
 
     // Batters in this innings
     const batters = await db.models.InningsBatter.find({ innings_id: currentInnings.id }).sort({ batting_position: 1 }).lean();
-    const players = await db.models.Player.find({}).lean();
-    const playerMap = {};
-    (players || []).forEach(p => { playerMap[p.id] = p; });
-
-    const battingSquad = (players || []).filter(p => p.team_id === currentInnings.batting_team_id);
-    const bowlingSquad = (players || []).filter(p => p.team_id === currentInnings.bowling_team_id);
+    const playerMap = await this.getPlayerMap();
+    
+    // Resolve robust squads from official players & registered teams
+    const battingSquad = await this.getSquadForTeam(currentInnings.batting_team_id);
+    const bowlingSquad = await this.getSquadForTeam(currentInnings.bowling_team_id);
 
     // Active striker & non-striker
     const notOutBatters = (batters || []).filter(b => !b.is_out);
@@ -253,37 +379,21 @@ class ScorerService {
     // Recent deliveries
     const deliveries = await db.models.Delivery.find({
       $or: [{ match_id: matchId }, { innings_id: currentInnings.id }]
-    }).sort({ timestamp: -1, created_at: -1 }).limit(12).lean();
+    }).sort({ timestamp: -1, created_at: -1 }).limit(16).lean();
 
     const lastDelivery = deliveries && deliveries[0];
 
-    // All deliveries in current innings for real-time Wagon Wheel
-    const allInningsDeliveries = await db.models.Delivery.find({
-      innings_id: currentInnings.id
-    }).sort({ over_number: 1, ball_number: 1 }).lean();
-
-    const formattedAllDeliveries = (allInningsDeliveries || []).map(d => {
-      const geo = resolveShotGeometry(d.fielding_position, d.runs_batter, d.shot_angle, d.shot_distance, d.shot_zone);
-      return {
-        id: d.id,
-        strikerId: d.striker_id,
-        bowlerId: d.bowler_id,
-        runsBatter: d.runs_batter || 0,
-        runsExtras: d.runs_extras || 0,
-        totalRuns: d.total_runs || 0,
-        extraType: d.extra_type || 'NONE',
-        wicket: Boolean(d.wicket),
-        wicketType: d.wicket_type,
-        shotType: d.shot_type,
-        fieldingPosition: d.fielding_position,
-        shotAngle: typeof d.shot_angle === 'number' ? d.shot_angle : geo.angle,
-        shotDistance: typeof d.shot_distance === 'number' ? d.shot_distance : geo.distance,
-        shotZone: d.shot_zone || geo.zone,
-        overNumber: d.over_number,
-        ballNumber: d.ball_number,
-        commentary: d.commentary
-      };
-    });
+    // Find the latest wicket delivery for clean dismissal display
+    const lastWicketDel = (deliveries || []).find(d => d.wicket || d.is_wicket);
+    const lastDismissal = lastWicketDel ? {
+      ball: `${lastWicketDel.over_number}.${lastWicketDel.ball_number}`,
+      batterId: lastWicketDel.dismissed_player_id,
+      batterName: (playerMap[lastWicketDel.dismissed_player_id] && playerMap[lastWicketDel.dismissed_player_id].name) || 'Batter',
+      bowlerName: (playerMap[lastWicketDel.bowler_id] && playerMap[lastWicketDel.bowler_id].name) || 'Bowler',
+      fielderName: lastWicketDel.fielder_name || (playerMap[lastWicketDel.fielder_id] && playerMap[lastWicketDel.fielder_id].name),
+      dismissalType: lastWicketDel.wicket_type,
+      dismissalText: lastWicketDel.dismissal_text || lastWicketDel.commentary
+    } : null;
 
     // Compute Run Rate
     const totalBallsBowled = (currentInnings.overs * 6) + currentInnings.balls;
@@ -360,33 +470,32 @@ class ScorerService {
       },
       previousBowlerId: currentInnings.previous_bowler_id || null,
       isOverComplete,
+      lastDismissal,
       lastDelivery: lastDelivery ? {
         id: lastDelivery.id,
         over: `${lastDelivery.over_number}.${lastDelivery.ball_number}`,
         runs: lastDelivery.runs_batter,
         extraType: lastDelivery.extra_type,
         wicket: lastDelivery.wicket,
+        wicketType: lastDelivery.wicket_type,
         shotType: lastDelivery.shot_type,
         fieldingPosition: lastDelivery.fielding_position,
         fielderName: lastDelivery.fielder_name,
         commentary: lastDelivery.commentary
       } : null,
-      recentDeliveries: (deliveries || []).slice(0, 6).map(d => ({
+      recentDeliveries: (deliveries || []).slice(0, 8).map(d => ({
         id: d.id,
         ball: `${d.over_number}.${d.ball_number}`,
         runs: d.runs_batter,
         extra: d.extra_type !== 'NONE' ? d.extra_type : null,
         wicket: d.wicket,
+        wicketType: d.wicket_type,
         text: d.wicket ? 'W' : (d.extra_type === 'WIDE' ? 'WD' : (d.extra_type === 'NO_BALL' ? 'NB' : d.runs_batter)),
+        dismissalText: d.dismissal_text,
         commentary: d.commentary
       })),
-      battingSquad: battingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-<<<<<<< HEAD
+      battingSquad: battingSquad.map(p => ({ id: p.id, name: p.name, role: p.role, jersey_number: p.jersey_number })),
       bowlingSquad: enrichedBowlingSquad
-=======
-      bowlingSquad: bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-      deliveries: formattedAllDeliveries
->>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
     };
   }
 
@@ -396,13 +505,8 @@ class ScorerService {
     const match = await db.models.Match.findOne({ id: matchId }).lean();
     if (!match) throw { status: 404, message: `Match '${matchId}' not found.` };
 
-    const teams = await db.models.Team.find({}).lean();
-    const teamMap = {};
-    (teams || []).forEach(t => { teamMap[t.id] = t; });
-
-    const players = await db.models.Player.find({}).lean();
-    const playerMap = {};
-    (players || []).forEach(p => { playerMap[p.id] = p; });
+    const teamMap = await this.getTeamMap();
+    const playerMap = await this.getPlayerMap();
 
     const inningsList = await db.models.Innings.find({ match_id: matchId }).sort({ innings_number: 1 }).lean();
 
@@ -415,14 +519,22 @@ class ScorerService {
       const battingCard = (batters || []).map(b => {
         let dismissalText = 'not out';
         if (b.is_out) {
-          const bowlerName = (playerMap[b.bowler_id] && playerMap[b.bowler_id].name) || '';
-          const fielderName = (playerMap[b.fielder_id] && playerMap[b.fielder_id].name) || '';
-          if (b.dismissal_type === 'BOWLED') dismissalText = bowlerName ? `b ${bowlerName}` : 'bowled';
-          else if (b.dismissal_type === 'CAUGHT') dismissalText = fielderName && bowlerName ? `c ${fielderName} b ${bowlerName}` : (bowlerName ? `c & b ${bowlerName}` : 'caught');
-          else if (b.dismissal_type === 'LBW') dismissalText = bowlerName ? `lbw b ${bowlerName}` : 'lbw';
-          else if (b.dismissal_type === 'RUN_OUT') dismissalText = fielderName ? `run out (${fielderName})` : 'run out';
-          else if (b.dismissal_type === 'STUMPED') dismissalText = bowlerName ? `st b ${bowlerName}` : 'stumped';
-          else dismissalText = b.dismissal_type ? b.dismissal_type.toLowerCase() : 'out';
+          if (b.dismissal_text && b.dismissal_text !== 'not out') {
+            dismissalText = b.dismissal_text;
+          } else {
+            const bowlerName = (playerMap[b.bowler_id] && playerMap[b.bowler_id].name) || '';
+            const fielderName = (playerMap[b.fielder_id] && playerMap[b.fielder_id].name) || '';
+            if (b.dismissal_type === 'BOWLED') dismissalText = bowlerName ? `b ${bowlerName}` : 'bowled';
+            else if (b.dismissal_type === 'CAUGHT') dismissalText = fielderName && bowlerName ? `c ${fielderName} b ${bowlerName}` : (bowlerName ? `c & b ${bowlerName}` : 'caught');
+            else if (b.dismissal_type === 'CAUGHT_BEHIND') dismissalText = fielderName && bowlerName ? `c †${fielderName} b ${bowlerName}` : (bowlerName ? `c †Keeper b ${bowlerName}` : 'caught behind');
+            else if (b.dismissal_type === 'CAUGHT_AND_BOWLED') dismissalText = `c & b ${bowlerName}`;
+            else if (b.dismissal_type === 'LBW') dismissalText = bowlerName ? `lbw b ${bowlerName}` : 'lbw';
+            else if (b.dismissal_type === 'RUN_OUT') dismissalText = fielderName ? `run out (${fielderName})` : 'run out';
+            else if (b.dismissal_type === 'STUMPED') dismissalText = fielderName && bowlerName ? `st †${fielderName} b ${bowlerName}` : (bowlerName ? `st †Keeper b ${bowlerName}` : 'stumped');
+            else if (b.dismissal_type === 'HIT_WICKET') dismissalText = bowlerName ? `hit wicket b ${bowlerName}` : 'hit wicket';
+            else if (b.dismissal_type === 'RETIRED_OUT') dismissalText = 'retired out';
+            else dismissalText = b.dismissal_type ? b.dismissal_type.toLowerCase() : 'out';
+          }
         }
         return {
           id: b.id,
@@ -497,29 +609,6 @@ class ScorerService {
         });
       }
 
-      const formattedDeliveries = (delRows || []).map(d => {
-        const geo = resolveShotGeometry(d.fielding_position, d.runs_batter, d.shot_angle, d.shot_distance, d.shot_zone);
-        return {
-          id: d.id,
-          strikerId: d.striker_id,
-          bowlerId: d.bowler_id,
-          runsBatter: d.runs_batter || 0,
-          runsExtras: d.runs_extras || 0,
-          totalRuns: d.total_runs || 0,
-          extraType: d.extra_type || 'NONE',
-          wicket: Boolean(d.wicket),
-          wicketType: d.wicket_type,
-          shotType: d.shot_type,
-          fieldingPosition: d.fielding_position,
-          shotAngle: typeof d.shot_angle === 'number' ? d.shot_angle : geo.angle,
-          shotDistance: typeof d.shot_distance === 'number' ? d.shot_distance : geo.distance,
-          shotZone: d.shot_zone || geo.zone,
-          overNumber: d.over_number,
-          ballNumber: d.ball_number,
-          commentary: d.commentary
-        };
-      });
-
       return {
         id: inn.id,
         inningsNumber: inn.innings_number,
@@ -540,8 +629,7 @@ class ScorerService {
         batters: battingCard,
         bowlers: bowlingCard,
         fallOfWickets,
-        partnerships,
-        deliveries: formattedDeliveries
+        partnerships
       };
     }));
 

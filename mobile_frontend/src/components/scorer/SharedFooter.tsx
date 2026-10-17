@@ -1,71 +1,58 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Platform, useWindowDimensions, TouchableOpacity } from 'react-native';
 
-export default function SharedFooter() {
+const IMG_LOGO = require('../../../assets/logo_transparent.png');
+
+interface Props {
+  style?: any;
+}
+
+export default function SharedFooter({ style }: Props) {
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
 
   return (
-    <View style={styles.footerContainer}>
-      <View style={[styles.footerGrid, isDesktop ? styles.footerGridDesktop : styles.footerGridMobile]}>
+    <View style={[styles.footerContainer, style]}>
+      <View style={[styles.innerRow, !isDesktop && styles.innerRowMobile]}>
         
-        {/* Brand Column */}
-        <View style={styles.brandCol}>
-          <View style={styles.brandHeader}>
-            <Image 
-              source={{ uri: Platform.OS === 'web' ? '/logo_transparent.png' : 'https://i.ibb.co/3sX8H3N/logo-transparent.png' }} 
-              style={styles.logo} 
-              resizeMode="contain"
-            />
-            <View>
+        {/* Left: Brand info */}
+        <View style={styles.brandRow}>
+          <Image 
+            source={IMG_LOGO} 
+            style={styles.logo} 
+            resizeMode="contain"
+          />
+          <View style={styles.brandTextWrap}>
+            <View style={styles.brandTitleLine}>
               <Text style={styles.brandTitle}>Cricket Federation of Virudhunagar District</Text>
-              <Text style={styles.brandMotto}>"Enjoy the game and chase your dreams"</Text>
+              <View style={styles.statusPill}>
+                <Text style={styles.statusPillText}>TNCA Affiliated</Text>
+              </View>
             </View>
+            <Text style={styles.brandSubtitle}>Official Scorer & Match Operations Portal</Text>
           </View>
-          <Text style={styles.brandDesc}>
-            The recognized governing cricket administration for Virudhunagar district. Dedicated to preserving the spirit of cricket, promoting collegiate competitions, and nurturing state and national champions.
+        </View>
+
+        {/* Right / Center: Copyright & Legal */}
+        <View style={[styles.metaRow, !isDesktop && styles.metaRowMobile]}>
+          <Text style={styles.copyrightText}>
+            © 2026 CFVD &bull; All Rights Reserved
           </Text>
-          <View style={styles.affilTag}>
-            <Text style={styles.affilText}>● Recognized District Cricket Governing Body</Text>
+          <View style={styles.linksRow}>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.linkText}>Privacy</Text>
+            </TouchableOpacity>
+            <Text style={styles.bullet}>&bull;</Text>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.linkText}>Terms</Text>
+            </TouchableOpacity>
+            <Text style={styles.bullet}>&bull;</Text>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.linkText}>Match Rules</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Links Column 1 */}
-        <View style={styles.linksCol}>
-          <Text style={styles.linksHeading}>MATCH CENTRE</Text>
-          <TouchableOpacity><Text style={styles.linkText}>› Live Scores</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Season Fixtures</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Recent Results</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Standings & Points</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Player Performance</Text></TouchableOpacity>
-        </View>
-
-        {/* Links Column 2 */}
-        <View style={styles.linksCol}>
-          <Text style={styles.linksHeading}>OPERATIONS HUB</Text>
-          <TouchableOpacity><Text style={styles.linkText}>› Admin Setup</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Clubs, Schools & Colleges</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Team Management</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Register Officials</Text></TouchableOpacity>
-        </View>
-
-        {/* Links Column 3 */}
-        <View style={styles.linksCol}>
-          <Text style={styles.linksHeading}>INTEGRITY & POLICIES</Text>
-          <TouchableOpacity><Text style={styles.linkText}>› District League By-Laws</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Code of Conduct</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› Player Registration</Text></TouchableOpacity>
-          <TouchableOpacity><Text style={styles.linkText}>› College / Club Affiliation</Text></TouchableOpacity>
-        </View>
-
-      </View>
-
-      <View style={styles.footerBottom}>
-        <Text style={styles.bottomText}>© 2026 Cricket Federation of Virudhunagar District. All Rights Reserved.</Text>
-        <View style={styles.bottomLinks}>
-          <Text style={styles.bottomLink}>Privacy Policy</Text>
-          <Text style={styles.bottomLink}>Terms of Use</Text>
-        </View>
       </View>
     </View>
   );
@@ -74,110 +61,95 @@ export default function SharedFooter() {
 const styles = StyleSheet.create({
   footerContainer: {
     backgroundColor: '#040a1c',
-    borderTopWidth: 2,
-    borderTopColor: '#eab308',
-    padding: 24,
-    width: '100%'
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(234, 179, 8, 0.35)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    width: '100%',
+    zIndex: 10
   },
-  footerGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 24,
-    marginBottom: 24
-  },
-  footerGridDesktop: {
-    justifyContent: 'space-between'
-  },
-  footerGridMobile: {
-    flexDirection: 'column'
-  },
-  brandCol: {
-    flex: 1.5,
-    minWidth: 280
-  },
-  brandHeader: {
+  innerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12
+    justifyContent: 'space-between',
+    maxWidth: 1200,
+    width: '100%',
+    alignSelf: 'center'
+  },
+  innerRowMobile: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 6
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
   },
   logo: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#eab308',
-    backgroundColor: 'rgba(10, 27, 61, 0.98)'
+    width: 22,
+    height: 22,
+    borderRadius: 11
+  },
+  brandTextWrap: {
+    flexDirection: 'column'
+  },
+  brandTitleLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
   brandTitle: {
     color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 14,
-    flexWrap: 'wrap',
-    maxWidth: 200
-  },
-  brandMotto: {
-    color: '#fde047',
-    fontStyle: 'italic',
+    fontWeight: '700',
     fontSize: 11,
-    marginTop: 2
+    letterSpacing: 0.2
   },
-  brandDesc: {
-    color: '#94a3b8',
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 16
-  },
-  affilTag: {
-    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+  statusPill: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.3)',
-    padding: 6,
-    borderRadius: 4,
-    alignSelf: 'flex-start'
+    borderColor: 'rgba(234, 179, 8, 0.3)'
   },
-  affilText: {
-    color: '#eab308',
-    fontSize: 11,
-    fontWeight: 'bold'
+  statusPillText: {
+    color: '#facc15',
+    fontSize: 9,
+    fontWeight: '700'
   },
-  linksCol: {
-    flex: 1,
-    minWidth: 150
+  brandSubtitle: {
+    color: '#94a3b8',
+    fontSize: 9.5,
+    marginTop: 1
   },
-  linksHeading: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-    fontSize: 13,
-    marginBottom: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: '#eab308',
-    paddingLeft: 8
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  metaRowMobile: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8
+  },
+  copyrightText: {
+    color: '#64748b',
+    fontSize: 10
+  },
+  linksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
   },
   linkText: {
     color: '#94a3b8',
-    fontSize: 12,
-    marginBottom: 8
+    fontSize: 10,
+    textDecorationLine: 'underline'
   },
-  footerBottom: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(234, 179, 8, 0.2)',
-    paddingTop: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12
-  },
-  bottomText: {
-    color: '#64748b',
-    fontSize: 11
-  },
-  bottomLinks: {
-    flexDirection: 'row',
-    gap: 12
-  },
-  bottomLink: {
-    color: '#64748b',
-    fontSize: 11
+  bullet: {
+    color: '#475569',
+    fontSize: 10
   }
 });
