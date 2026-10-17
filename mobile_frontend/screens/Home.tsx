@@ -933,11 +933,7 @@ export default function HomeScreen() {
             />
           </View>
 
-<<<<<<< HEAD
-          <View style={styles.heroContainer}>
-=======
           <View style={[styles.container, styles.heroContainer, isMobile && { alignItems: 'center' }]}>
->>>>>>> origin/main
             {/* Pretitle badges row */}
             <View style={styles.heroPretitleRow}>
               <View style={styles.heroBadgeDistrict}>
@@ -1145,8 +1141,7 @@ export default function HomeScreen() {
               return null;
             })()}
 
-<<<<<<< HEAD
-            {/* Matches Grid */}
+{/* Matches Grid */}
             {!isLoadingMatches && (
               <View style={styles.grid2Col}>
                 {publicMatches
@@ -1168,39 +1163,6 @@ export default function HomeScreen() {
 
                     const teamAShort = m.teamAShort || (m.teamA ? m.teamA.slice(0, 3).toUpperCase() : 'TMA');
                     const teamBShort = m.teamBShort || (m.teamB ? m.teamB.slice(0, 3).toUpperCase() : 'TMB');
-=======
-            {/* Matches Grid - De-congested White Responsive Scorecards */}
-            <View style={styles.grid2Col}>
-              {/* MATCH 1: LIVE T20 */}
-              {(matchFilter === 'all' || matchFilter === 'live') && (
-                <View style={[styles.matchCard, styles.matchCardLive]}>
-                  {/* Top Bar: Live indicator, tournament, format */}
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.liveIndicatorPill}>
-                      <Animated.View style={[styles.pulseRedDot, { opacity: pulseAnim }]} />
-                      <Text style={styles.liveIndicatorText}>LIVE</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>Virudhunagar Premier League • Final</Text>
-                    <View style={styles.formatBadgeT20}>
-                      <Text style={styles.formatBadgeT20Text}>T20</Text>
-                    </View>
-                  </View>
-
-                  {/* De-congested Logistics Box */}
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Oct 01, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 06:30 PM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 District Sports Complex Ground, Virudhunagar
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: K. Sundaram & M. Ramanathan • Scorer: S. Ramesh • Referee: P. Chandran
-                    </Text>
-                  </View>
->>>>>>> origin/main
 
                     return (
                       <View key={m.id} style={[styles.matchCard, isLive && styles.matchCardLive]}>
@@ -1243,7 +1205,6 @@ export default function HomeScreen() {
                             <Text style={styles.formatBadgeText}>{m.format || 'T20'}</Text>
                           </View>
                         </View>
-<<<<<<< HEAD
 
                         {/* Logistics Box */}
                         <View style={styles.logisticsBox}>
@@ -1358,380 +1319,8 @@ export default function HomeScreen() {
                       </View>
                     );
                   })}
-=======
-                        <Text style={styles.teamNameText} numberOfLines={1}>Virudhunagar Strikers</Text>
-                        <Text style={styles.battingIcon}>🏏</Text>
-                      </View>
-                      <View style={styles.teamScores}>
-                        <Text style={styles.runsText}>164/5</Text>
-                        <Text style={styles.oversText}>(18.2 ov)</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#b45309' }]}>
-                          <Text style={styles.teamMiniCrestText}>SSK</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Sivakasi Super Kings</Text>
-                      </View>
-                      <View style={styles.teamScores}>
-                        <Text style={styles.runsText}>162/8</Text>
-                        <Text style={styles.oversText}>(20.0 ov)</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Highlighted Status Banner */}
-                  <View style={styles.statusNoteLiveBox}>
-                    <Text style={styles.statusNoteLiveText}>⚡ Virudhunagar Strikers need 2 runs in 4 balls</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionPrimary}
-                    onPress={() => {
-                      setActiveScorecardMatch('match-1');
-                      setScorecardModalVisible(true);
-                    }}
-                  >
-                    <Text style={styles.btnActionPrimaryText}>👁️ View Live Scorecard & Toss</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* MATCH 2: LIVE 3-DAY */}
-              {(matchFilter === 'all' || matchFilter === 'live') && (
-                <View style={[styles.matchCard, styles.matchCardLive]}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.liveIndicatorPill}>
-                      <Animated.View style={[styles.pulseRedDot, { opacity: pulseAnim }]} />
-                      <Text style={styles.liveIndicatorText}>LIVE</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>District 1st Division League • Day 2</Text>
-                    <View style={styles.formatBadgeMulti}>
-                      <Text style={styles.formatBadgeMultiText}>3-DAY</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Oct 01, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 09:30 AM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 Sivakasi Turf Cricket Ground, Sivakasi
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: A. Gurunathan & S. Shanmugam • Scorer: K. Vijayakumar
-                    </Text>
-                  </View>
-
-                  <View style={styles.matchTeamsBox}>
-                    <View style={[styles.matchTeamRow, styles.battingNowRow]}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#065f46' }]}>
-                          <Text style={styles.teamMiniCrestText}>RCC</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Rajapalayam Cricket Club</Text>
-                        <Text style={styles.battingIcon}>🏏</Text>
-                      </View>
-                      <View style={styles.teamScores}>
-                        <Text style={styles.runsText}>312 & 45/1</Text>
-                        <Text style={styles.oversText}>(14 ov)</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#6b21a8' }]}>
-                          <Text style={styles.teamMiniCrestText}>AKS</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Aruppukottai Stars CC</Text>
-                      </View>
-                      <View style={styles.teamScores}>
-                        <Text style={styles.runsText}>220/10</Text>
-                        <Text style={styles.oversText}>(68.4 ov)</Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View style={styles.statusNoteLiveBox}>
-                    <Text style={styles.statusNoteLiveText}>ℹ️ Rajapalayam CC lead by 137 runs at Stumps Day 2</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionPrimary}
-                    onPress={() => {
-                      setActiveScorecardMatch('match-2');
-                      setScorecardModalVisible(true);
-                    }}
-                  >
-                    <Text style={styles.btnActionPrimaryText}>👁️ View Match Summary</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* MATCH 3: UPCOMING */}
-              {(matchFilter === 'all' || matchFilter === 'upcoming') && (
-                <View style={[styles.matchCard, styles.matchCardUpcoming]}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.upcomingIndicatorPill}>
-                      <Text style={styles.upcomingIndicatorText}>⏰ UPCOMING</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>Inter-College Championship Trophy</Text>
-                    <View style={styles.formatBadgeOneDay}>
-                      <Text style={styles.formatBadgeOneDayText}>50-OVERS</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Oct 03, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 09:00 AM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 VHNSN College Ground, Virudhunagar
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: T. Murugan & N. Muthuraj • Scorer: T. Balamurugan
-                    </Text>
-                  </View>
-
-                  <View style={styles.matchTeamsBox}>
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#1e3a8a' }]}>
-                          <Text style={styles.teamMiniCrestText}>VHN</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>VHNSN College Virudhunagar</Text>
-                      </View>
-                      <Text style={styles.yetToBatText}>Upcoming</Text>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#831843' }]}>
-                          <Text style={styles.teamMiniCrestText}>PSR</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>PSR Engineering College</Text>
-                      </View>
-                      <Text style={styles.yetToBatText}>Upcoming</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.statusNoteUpcomingBox}>
-                    <Text style={styles.statusNoteUpcomingText}>📅 Toss scheduled at 08:30 AM IST</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionSecondary}
-                    onPress={() =>
-                      alert(
-                        'Fixture Details:\nDate: Oct 03, 2026 | 09:00 AM\nVenue: VHNSN College Ground\nOfficials: T. Murugan & N. Muthuraj'
-                      )
-                    }
-                  >
-                    <Text style={styles.btnActionSecondaryText}>🔔 View Fixture Logistics</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* MATCH 4: UPCOMING */}
-              {(matchFilter === 'all' || matchFilter === 'upcoming') && (
-                <View style={[styles.matchCard, styles.matchCardUpcoming]}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.upcomingIndicatorPill}>
-                      <Text style={styles.upcomingIndicatorText}>⏰ UPCOMING</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>Andal Trophy Inter-School Cup</Text>
-                    <View style={styles.formatBadgeT20}>
-                      <Text style={styles.formatBadgeT20Text}>T20</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Oct 04, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 02:00 PM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 Andal Temple Ground, Srivilliputhur
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: C. Paulraj & M. Anandhakumar • Scorer: E. Balaji
-                    </Text>
-                  </View>
-
-                  <View style={styles.matchTeamsBox}>
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#0f766e' }]}>
-                          <Text style={styles.teamMiniCrestText}>KVS</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>KVS Hr Sec School, Virudhunagar</Text>
-                      </View>
-                      <Text style={styles.yetToBatText}>Upcoming</Text>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#065f46' }]}>
-                          <Text style={styles.teamMiniCrestText}>PAC</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>PACM HSS, Rajapalayam</Text>
-                      </View>
-                      <Text style={styles.yetToBatText}>Upcoming</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.statusNoteUpcomingBox}>
-                    <Text style={styles.statusNoteUpcomingText}>📅 Oct 04, 2026 at 02:00 PM IST</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionSecondary}
-                    onPress={() => alert('Fixture Details:\nDate: Oct 04, 2026 at 02:00 PM\nVenue: Andal Temple Ground')}
-                  >
-                    <Text style={styles.btnActionSecondaryText}>🔔 Set Match Reminder</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* MATCH 5: RESULTS */}
-              {(matchFilter === 'all' || matchFilter === 'results') && (
-                <View style={[styles.matchCard, styles.matchCardResult]}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.resultIndicatorPill}>
-                      <Text style={styles.resultIndicatorText}>🏁 RESULT</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>Kamarajar Memorial T20 Trophy</Text>
-                    <View style={styles.formatBadgeT20}>
-                      <Text style={styles.formatBadgeT20Text}>T20</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Sep 28, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 09:30 AM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 Sattur Town Sports Ground
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: K. Sundaram & V. Ashok • Referee: P. Chandran
-                    </Text>
-                  </View>
-
-                  <View style={styles.matchTeamsBox}>
-                    <View style={[styles.matchTeamRow, styles.winnerRow]}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#312e81' }]}>
-                          <Text style={styles.teamMiniCrestText}>SW</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Srivilliputhur Warriors</Text>
-                        <Text style={styles.winnerTrophyIcon}>🏆</Text>
-                      </View>
-                      <Text style={styles.runsText}>186/6 (20 ov)</Text>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#475569' }]}>
-                          <Text style={styles.teamMiniCrestText}>SXI</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Sattur Cricket XI</Text>
-                      </View>
-                      <Text style={styles.runsText}>144/9 (20 ov)</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.statusNoteResultBox}>
-                    <Text style={styles.statusNoteResultText}>🏆 Srivilliputhur Warriors won by 42 runs</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionSuccess}
-                    onPress={() => {
-                      setActiveScorecardMatch('match-5');
-                      setScorecardModalVisible(true);
-                    }}
-                  >
-                    <Text style={styles.btnActionSuccessText}>📄 View Result Scoresheet</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* MATCH 6: RESULTS */}
-              {(matchFilter === 'all' || matchFilter === 'results') && (
-                <View style={[styles.matchCard, styles.matchCardResult]}>
-                  <View style={styles.matchCardTop}>
-                    <View style={styles.resultIndicatorPill}>
-                      <Text style={styles.resultIndicatorText}>🏁 RESULT</Text>
-                    </View>
-                    <Text style={styles.matchTournament} numberOfLines={1}>District Premier Invitational Trophy</Text>
-                    <View style={styles.formatBadgeOneDay}>
-                      <Text style={styles.formatBadgeOneDayText}>50-OVERS</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.logisticsBox}>
-                    <View style={styles.logisticsMetaRow}>
-                      <Text style={styles.logisticsMetaItem}>📅 Sep 26, 2026</Text>
-                      <Text style={styles.logisticsDot}>•</Text>
-                      <Text style={styles.logisticsMetaItem}>⏰ 09:00 AM IST</Text>
-                    </View>
-                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
-                      📍 Sivakasi Turf Cricket Ground
-                    </Text>
-                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
-                      ⚖️ Umpires: A. Gurunathan & M. Ramanathan • Scorer: K. Vijayakumar
-                    </Text>
-                  </View>
-
-                  <View style={styles.matchTeamsBox}>
-                    <View style={[styles.matchTeamRow, styles.winnerRow]}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#1e3a8a' }]}>
-                          <Text style={styles.teamMiniCrestText}>VCC</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Virudhunagar CC</Text>
-                        <Text style={styles.winnerTrophyIcon}>🏆</Text>
-                      </View>
-                      <Text style={styles.runsText}>274/8 (50 ov)</Text>
-                    </View>
-
-                    <View style={styles.matchTeamRow}>
-                      <View style={styles.teamMeta}>
-                        <View style={[styles.teamMiniCrest, { backgroundColor: '#831843' }]}>
-                          <Text style={styles.teamMiniCrestText}>TKC</Text>
-                        </View>
-                        <Text style={styles.teamNameText} numberOfLines={1}>Thiruthangal CC</Text>
-                      </View>
-                      <Text style={styles.runsText}>198/10 (41.3 ov)</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.statusNoteResultBox}>
-                    <Text style={styles.statusNoteResultText}>🏆 Virudhunagar CC won by 76 runs</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.btnActionSuccess}
-                    onPress={() => {
-                      setActiveScorecardMatch('match-6');
-                      setScorecardModalVisible(true);
-                    }}
-                  >
-                    <Text style={styles.btnActionSuccessText}>📄 View Result Scoresheet</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -1747,12 +1336,161 @@ export default function HomeScreen() {
             <View style={styles.sectionHead}>
               <View style={styles.sectionTagBadge}>
                 <Text style={styles.sectionTagBadgeText}>🏆 LEAGUE STRUCTURE</Text>
->>>>>>> origin/main
               </View>
-            )}
+              <Text style={styles.sectionTitle}>Official Sanctioned Tournaments</Text>
+              <Text style={styles.sectionSubtitle}>
+                Promoting multi-day red-ball traditional cricket and modern white-ball collegiate and district leagues
+              </Text>
+            </View>
+
+            <View style={styles.grid2Col}>
+              {/* Tourney 1 */}
+              <View style={styles.tournamentCard}>
+                <View style={styles.tBadgeWrap}>
+                  <Text style={styles.badgeGoldPill}>Premier Division</Text>
+                  <Text style={styles.badgeBluePill}>Multi-Day</Text>
+                </View>
+                <Text style={styles.tourneyIcon}>🛡️</Text>
+                <Text style={styles.tourneyTitle}>Virudhunagar First Division League</Text>
+                <Text style={styles.tourneySub}>The G. Parthasarathy Rolling Trophy</Text>
+                <Text style={styles.tourneyDesc}>
+                  The flagship red-ball 3-day competition with 12 affiliated first-tier clubs competing for district
+                  supremacy and state trials.
+                </Text>
+                <View style={styles.tourneySpecs}>
+                  <Text style={styles.tourneySpecItem}>👥 12 Affiliated Clubs</Text>
+                  <Text style={styles.tourneySpecItem}>📅 Oct 2026 - Jan 2027</Text>
+                  <Text style={styles.tourneySpecItem}>🎖️ ₹2,50,000 Prize Purse</Text>
+                </View>
+                <View style={styles.tourneyFooter}>
+                  <TouchableOpacity
+                    style={styles.btnOutlineGoldSm}
+                    onPress={() => {
+                      setPointsTableKey('div1');
+                      scrollToSection('pointsTable');
+                    }}
+                  >
+                    <Text style={styles.btnOutlineGoldSmText}>View Table</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.btnPrimarySm}
+                    onPress={() => alert('Official 2026-27 Division 1 Fixtures downloaded!')}
+                  >
+                    <Text style={styles.btnPrimarySmText}>Fixtures PDF</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Tourney 2 */}
+              <View style={styles.tournamentCard}>
+                <View style={styles.tBadgeWrap}>
+                  <Text style={styles.badgeRedPill}>White Ball</Text>
+                  <Text style={styles.badgeGoldPill}>T20 Trophy</Text>
+                </View>
+                <Text style={styles.tourneyIcon}>⚡</Text>
+                <Text style={styles.tourneyTitle}>Kamarajar Memorial T20 Trophy</Text>
+                <Text style={styles.tourneySub}>Virudhunagar District Premier T20 Cup</Text>
+                <Text style={styles.tourneyDesc}>
+                  Fast-paced night and day T20 cricket featuring taluk teams with colored clothing and white cricket balls.
+                </Text>
+                <View style={styles.tourneySpecs}>
+                  <Text style={styles.tourneySpecItem}>👥 16 Taluk & Club Teams</Text>
+                  <Text style={styles.tourneySpecItem}>📅 Feb 2027</Text>
+                  <Text style={styles.tourneySpecItem}>📺 Live Streamed on YouTube</Text>
+                </View>
+                <View style={styles.tourneyFooter}>
+                  <TouchableOpacity
+                    style={styles.btnOutlineGoldSm}
+                    onPress={() => {
+                      setPointsTableKey('t20');
+                      scrollToSection('pointsTable');
+                    }}
+                  >
+                    <Text style={styles.btnOutlineGoldSmText}>Standings</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.btnPrimarySm}
+                    onPress={() => {
+                      setActiveScorecardMatch('match-1');
+                      setScorecardModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.btnPrimarySmText}>Latest Final</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Tourney 3 */}
+              <View style={styles.tournamentCard}>
+                <View style={styles.tBadgeWrap}>
+                  <Text style={styles.badgeBluePill}>Collegiate</Text>
+                  <Text style={styles.badgeGoldPill}>Inter-College Cup</Text>
+                </View>
+                <Text style={styles.tourneyIcon}>🎓</Text>
+                <Text style={styles.tourneyTitle}>District Inter-College Championship</Text>
+                <Text style={styles.tourneySub}>Autonomous & Engineering Colleges Shield</Text>
+                <Text style={styles.tourneyDesc}>
+                  The premier collegiate tournament featuring VHNSN, PSR, ANJAC, Rajus, Kalasalingam University, and
+                  SFR College.
+                </Text>
+                <View style={styles.tourneySpecs}>
+                  <Text style={styles.tourneySpecItem}>👥 10 District Colleges</Text>
+                  <Text style={styles.tourneySpecItem}>📅 Nov 2026</Text>
+                  <Text style={styles.tourneySpecItem}>🎖️ District Selection Gateway</Text>
+                </View>
+                <View style={styles.tourneyFooter}>
+                  <TouchableOpacity
+                    style={styles.btnOutlineGoldSm}
+                    onPress={() => {
+                      setPointsTableKey('college');
+                      scrollToSection('pointsTable');
+                    }}
+                  >
+                    <Text style={styles.btnOutlineGoldSmText}>College Points</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnPrimarySm} onPress={() => navigate('Registration')}>
+                    <Text style={styles.btnPrimarySmText}>College Entry</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Tourney 4 */}
+              <View style={styles.tournamentCard}>
+                <View style={styles.tBadgeWrap}>
+                  <Text style={styles.badgeGreenPill}>Under-16 / U-19</Text>
+                  <Text style={styles.badgeBluePill}>Junior Talent</Text>
+                </View>
+                <Text style={styles.tourneyIcon}>🏫</Text>
+                <Text style={styles.tourneyTitle}>Andal Temple Inter-School Cup</Text>
+                <Text style={styles.tourneySub}>Srivilliputhur & District Schools Shield</Text>
+                <Text style={styles.tourneyDesc}>
+                  The premier grassroots nursery identifying teenage talent for the district and state age-group trials.
+                </Text>
+                <View style={styles.tourneySpecs}>
+                  <Text style={styles.tourneySpecItem}>🏫 24 District Schools</Text>
+                  <Text style={styles.tourneySpecItem}>📅 Annual Summer Edition</Text>
+                  <Text style={styles.tourneySpecItem}>🎖️ District Academy Scholarships</Text>
+                </View>
+                <View style={styles.tourneyFooter}>
+                  <TouchableOpacity
+                    style={styles.btnOutlineGoldSm}
+                    onPress={() => {
+                      setPointsTableKey('school');
+                      scrollToSection('pointsTable');
+                    }}
+                  >
+                    <Text style={styles.btnOutlineGoldSmText}>School Points</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.btnPrimarySm} onPress={() => navigate('Registration')}>
+                    <Text style={styles.btnPrimarySmText}>School Entry</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
 
+        
         {/* ─── 6. POINTS TABLE / STANDINGS ───────────────────────────────── */}
         <View
           style={styles.section}
@@ -2696,11 +2434,7 @@ export default function HomeScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.scorecardModalBox}>
             <View style={styles.modalHeaderRow}>
-<<<<<<< HEAD
-              <View style={{ flex: 1 }}>
-=======
               <View style={{ flex: 1, marginRight: 10 }}>
->>>>>>> origin/main
                 <Text style={styles.badgeGoldText}>OFFICIAL MATCH SCORECARD</Text>
                 <Text style={styles.modalTitle}>
                   {activeScorecardMatchData
@@ -2721,13 +2455,8 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-<<<<<<< HEAD
-            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
-              {/* Toss & Match Summary Banner */}
-=======
             <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
-              {/* Toss Banner */}
->>>>>>> origin/main
+              {/* Toss & Match Summary Banner */}
               <View style={styles.scorecardTossBanner}>
                 <Text style={styles.scorecardTossText}>
                   {realScorecardData?.match?.result || activeScorecardMatchData?.result
@@ -2740,11 +2469,10 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-<<<<<<< HEAD
               {isLoadingScorecard && (
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color="#d4af37" />
-                  <Text style={{ marginTop: 8, color: '#fed966', fontSize: 12 }}>Loading scorecard details...</Text>
+                  <ActivityIndicator size="small" color="#0f2452" />
+                  <Text style={{ marginTop: 8, color: '#64748b', fontSize: 12 }}>Loading scorecard details...</Text>
                 </View>
               )}
 
@@ -2752,195 +2480,140 @@ export default function HomeScreen() {
               {realScorecardData?.innings && realScorecardData.innings.length > 0 ? (
                 realScorecardData.innings.map((inn: any, idx: number) => (
                   <View key={inn.id || idx} style={{ marginBottom: 16 }}>
-                    <Text style={[styles.inningsTitle, idx > 0 && { marginTop: 14 }]}>
-                      {inn.inningsNumber}st Innings: {inn.battingTeam} - {inn.score || `${inn.totalRuns || 0}/${inn.wickets || 0} (${inn.overs || 0} Overs)`}
-                    </Text>
+                    <View style={styles.inningsHeaderRow}>
+                      <Text style={[styles.inningsTitle, idx > 0 && { marginTop: 14 }]}>
+                        {inn.inningsNumber}st Innings: {inn.battingTeam}
+                      </Text>
+                      <Text style={styles.inningsScoreBadge}>
+                        {inn.score || `${inn.totalRuns || 0}/${inn.wickets || 0} (${inn.overs || 0} Ov)`}
+                      </Text>
+                    </View>
                     {inn.batters && inn.batters.length > 0 ? (
-                      <View style={styles.scoreTable}>
-                        <View style={styles.scoreTableHeader}>
-                          <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
-                          <Text style={[styles.scoreTh, { width: 110 }]}>Dismissal</Text>
-                          <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>R</Text>
-                          <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>B</Text>
-                          <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>4s</Text>
-                          <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>6s</Text>
-                          <Text style={[styles.scoreTh, { width: 50, textAlign: 'right' }]}>SR</Text>
-                        </View>
-                        {inn.batters.map((b: any, bIdx: number) => (
-                          <View key={b.id || bIdx} style={styles.scoreTableRow}>
-                            <Text style={[styles.scoreTd, { width: 140, fontWeight: '700' }]}>{b.name}</Text>
-                            <Text style={[styles.scoreTd, { width: 110, color: '#9bb0cf' }]}>{b.dismissalText || (b.isOut ? 'out' : 'not out')}</Text>
-                            <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', fontWeight: '800', color: '#f5c43d' }]}>
-                              {b.runs}
-                            </Text>
-                            <Text style={[styles.scoreTd, { width: 35, textAlign: 'center' }]}>{b.balls}</Text>
-                            <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{b.fours || 0}</Text>
-                            <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{b.sixes || 0}</Text>
-                            <Text style={[styles.scoreTd, { width: 50, textAlign: 'right' }]}>{b.strikeRate || '0.0'}</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
+                        <View style={styles.scoreTable}>
+                          <View style={styles.scoreTableHeader}>
+                            <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
+                            <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
+                            <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
+                            <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
+                            <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
+                            <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
+                            <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
                           </View>
-                        ))}
-                      </View>
+                          {inn.batters.map((b: any, bIdx: number) => (
+                            <View key={b.id || bIdx} style={[styles.scoreTableRow, bIdx % 2 === 1 && styles.scoreTableRowAlt]}>
+                              <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{b.name}</Text>
+                              <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{b.dismissalText || (b.isOut ? 'out' : 'not out')}</Text>
+                              <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
+                                {b.runs}
+                              </Text>
+                              <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{b.balls}</Text>
+                              <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{b.fours || 0}</Text>
+                              <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{b.sixes || 0}</Text>
+                              <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{b.strikeRate || '0.0'}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </ScrollView>
                     ) : (
-                      <View style={{ padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 6 }}>
-                        <Text style={{ color: '#cbd5e1', fontSize: 12 }}>Score: {inn.score || 'Innings in preparation'}</Text>
+                      <View style={{ padding: 12, backgroundColor: '#f8fafc', borderRadius: 6 }}>
+                        <Text style={{ color: '#475569', fontSize: 12 }}>Score: {inn.score || 'Innings in preparation'}</Text>
                       </View>
                     )}
                   </View>
                 ))
               ) : (
                 <>
-                  {/* Innings 1 Fallback/Preview */}
-                  <Text style={styles.inningsTitle}>
-                    {activeScorecardMatchData
-                      ? `1st Innings: ${activeScorecardMatchData.teamA} - ${activeScorecardMatchData.scoreA || 'Yet to bat'}`
-                      : '1st Innings: Sivakasi Super Kings - 162/8 (20.0 Overs)'}
-                  </Text>
-                  <View style={styles.scoreTable}>
-                    <View style={styles.scoreTableHeader}>
-                      <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
-                      <Text style={[styles.scoreTh, { width: 110 }]}>Dismissal</Text>
-                      <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>R</Text>
-                      <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>B</Text>
-                      <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>4s</Text>
-                      <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>6s</Text>
-                      <Text style={[styles.scoreTh, { width: 50, textAlign: 'right' }]}>SR</Text>
-                    </View>
-                    {[
-                      { name: 'M. Anandhan', dis: 'c Balaji b Praveen', r: 52, b: 38, f: 5, s: 2, sr: '136.8' },
-                      { name: 'C. Rajesh', dis: 'b Manikandan', r: 18, b: 15, f: 2, s: 0, sr: '120.0' },
-                      { name: 'S. Karthik Raja (C/WK)', dis: 'c Muthukumar b Praveen', r: 41, b: 28, f: 4, s: 1, sr: '146.4' },
-                      { name: 'D. Aravind', dis: 'run out (Saravanan)', r: 14, b: 12, f: 1, s: 0, sr: '116.7' },
-                      { name: 'M. Vignesh', dis: 'not out', r: 22, b: 15, f: 2, s: 1, sr: '146.7' }
-                    ].map((row, i) => (
-                      <View key={i} style={styles.scoreTableRow}>
-                        <Text style={[styles.scoreTd, { width: 140, fontWeight: '700' }]}>{row.name}</Text>
-                        <Text style={[styles.scoreTd, { width: 110, color: '#9bb0cf' }]}>{row.dis}</Text>
-                        <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', fontWeight: '800', color: '#f5c43d' }]}>
-                          {row.r}
-                        </Text>
-                        <Text style={[styles.scoreTd, { width: 35, textAlign: 'center' }]}>{row.b}</Text>
-                        <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{row.f}</Text>
-                        <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{row.s}</Text>
-                        <Text style={[styles.scoreTd, { width: 50, textAlign: 'right' }]}>{row.sr}</Text>
-                      </View>
-                    ))}
+                  {/* Innings 1: SSK */}
+                  <View style={styles.inningsHeaderRow}>
+                    <Text style={styles.inningsTitle}>
+                      {activeScorecardMatchData
+                        ? `1st Innings: ${activeScorecardMatchData.teamA}`
+                        : '1st Innings: Sivakasi Super Kings'}
+                    </Text>
+                    <Text style={styles.inningsScoreBadge}>
+                      {activeScorecardMatchData?.scoreA || '162/8 (20.0 Ov)'}
+                    </Text>
                   </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
+                    <View style={styles.scoreTable}>
+                      <View style={styles.scoreTableHeader}>
+                        <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
+                        <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
+                        <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
+                        <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
+                        <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
+                        <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
+                        <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
+                      </View>
+                      {[
+                        { name: 'M. Anandhan', dis: 'c Balaji b Praveen', r: 52, b: 38, f: 5, s: 2, sr: '136.8' },
+                        { name: 'C. Rajesh', dis: 'b Manikandan', r: 18, b: 15, f: 2, s: 0, sr: '120.0' },
+                        { name: 'S. Karthik Raja (C/WK)', dis: 'c Muthukumar b Praveen', r: 41, b: 28, f: 4, s: 1, sr: '146.4' },
+                        { name: 'D. Aravind', dis: 'run out (Saravanan)', r: 14, b: 12, f: 1, s: 0, sr: '116.7' },
+                        { name: 'M. Vignesh', dis: 'not out', r: 22, b: 15, f: 2, s: 1, sr: '146.7' }
+                      ].map((row, i) => (
+                        <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
+                          <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
+                          <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
+                          <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
+                            {row.r}
+                          </Text>
+                          <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
+                          <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
+                          <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
+                          <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
 
-                  {/* Innings 2 Fallback/Preview */}
-                  <Text style={[styles.inningsTitle, { marginTop: 18 }]}>
-                    {activeScorecardMatchData
-                      ? `2nd Innings: ${activeScorecardMatchData.teamB} - ${activeScorecardMatchData.scoreB || 'Yet to bat'}`
-                      : '2nd Innings: Virudhunagar Strikers - 164/5 (18.2 Overs)'}
-                  </Text>
-                  <View style={styles.scoreTable}>
-                    <View style={styles.scoreTableHeader}>
-                      <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
-                      <Text style={[styles.scoreTh, { width: 110 }]}>Dismissal</Text>
-                      <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>R</Text>
-                      <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>B</Text>
-                      <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>4s</Text>
-                      <Text style={[styles.scoreTh, { width: 30, textAlign: 'center' }]}>6s</Text>
-                      <Text style={[styles.scoreTh, { width: 50, textAlign: 'right' }]}>SR</Text>
-                    </View>
-                    {[
-                      { name: 'R. Saravanan', dis: 'c Karthik b Vignesh', r: 68, b: 42, f: 7, s: 3, sr: '161.9' },
-                      { name: 'P. Muthukumar', dis: 'b Aravind', r: 34, b: 26, f: 3, s: 1, sr: '130.8' },
-                      { name: 'S. Balaji (WK)', dis: 'lbw b Vignesh', r: 12, b: 10, f: 1, s: 0, sr: '120.0' },
-                      { name: 'T. Manikandan (C)', dis: 'not out', r: 28, b: 18, f: 3, s: 1, sr: '155.6' },
-                      { name: 'K. Ganesan', dis: 'not out', r: 14, b: 8, f: 1, s: 1, sr: '175.0' }
-                    ].map((row, i) => (
-                      <View key={i} style={styles.scoreTableRow}>
-                        <Text style={[styles.scoreTd, { width: 140, fontWeight: '700' }]}>{row.name}</Text>
-                        <Text style={[styles.scoreTd, { width: 110, color: '#9bb0cf' }]}>{row.dis}</Text>
-                        <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', fontWeight: '800', color: '#f5c43d' }]}>
-                          {row.r}
-                        </Text>
-                        <Text style={[styles.scoreTd, { width: 35, textAlign: 'center' }]}>{row.b}</Text>
-                        <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{row.f}</Text>
-                        <Text style={[styles.scoreTd, { width: 30, textAlign: 'center' }]}>{row.s}</Text>
-                        <Text style={[styles.scoreTd, { width: 50, textAlign: 'right' }]}>{row.sr}</Text>
-                      </View>
-                    ))}
+                  {/* Innings 2: VS */}
+                  <View style={[styles.inningsHeaderRow, { marginTop: 18 }]}>
+                    <Text style={styles.inningsTitle}>
+                      {activeScorecardMatchData
+                        ? `2nd Innings: ${activeScorecardMatchData.teamB}`
+                        : '2nd Innings: Virudhunagar Strikers'}
+                    </Text>
+                    <Text style={styles.inningsScoreBadge}>
+                      {activeScorecardMatchData?.scoreB || '164/5 (18.2 Ov)'}
+                    </Text>
                   </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
+                    <View style={styles.scoreTable}>
+                      <View style={styles.scoreTableHeader}>
+                        <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
+                        <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
+                        <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
+                        <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
+                        <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
+                        <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
+                        <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
+                      </View>
+                      {[
+                        { name: 'R. Saravanan', dis: 'c Karthik b Vignesh', r: 68, b: 42, f: 7, s: 3, sr: '161.9' },
+                        { name: 'P. Muthukumar', dis: 'b Aravind', r: 34, b: 26, f: 3, s: 1, sr: '130.8' },
+                        { name: 'S. Balaji (WK)', dis: 'lbw b Vignesh', r: 12, b: 10, f: 1, s: 0, sr: '120.0' },
+                        { name: 'T. Manikandan (C)', dis: 'not out', r: 28, b: 18, f: 3, s: 1, sr: '155.6' },
+                        { name: 'K. Ganesan', dis: 'not out', r: 14, b: 8, f: 1, s: 1, sr: '175.0' }
+                      ].map((row, i) => (
+                        <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
+                          <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
+                          <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
+                          <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
+                            {row.r}
+                          </Text>
+                          <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
+                          <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
+                          <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
+                          <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
                 </>
               )}
-=======
-              {/* Innings 1: SSK */}
-              <View style={styles.inningsHeaderRow}>
-                <Text style={styles.inningsTitle}>1st Innings: Sivakasi Super Kings</Text>
-                <Text style={styles.inningsScoreBadge}>162/8 (20.0 Ov)</Text>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
-                <View style={styles.scoreTable}>
-                  <View style={styles.scoreTableHeader}>
-                    <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
-                    <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
-                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
-                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
-                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
-                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
-                    <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
-                  </View>
-                  {[
-                    { name: 'M. Anandhan', dis: 'c Balaji b Praveen', r: 52, b: 38, f: 5, s: 2, sr: '136.8' },
-                    { name: 'C. Rajesh', dis: 'b Manikandan', r: 18, b: 15, f: 2, s: 0, sr: '120.0' },
-                    { name: 'S. Karthik Raja (C/WK)', dis: 'c Muthukumar b Praveen', r: 41, b: 28, f: 4, s: 1, sr: '146.4' },
-                    { name: 'D. Aravind', dis: 'run out (Saravanan)', r: 14, b: 12, f: 1, s: 0, sr: '116.7' },
-                    { name: 'M. Vignesh', dis: 'not out', r: 22, b: 15, f: 2, s: 1, sr: '146.7' }
-                  ].map((row, i) => (
-                    <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
-                      <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
-                      <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
-                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
-                        {row.r}
-                      </Text>
-                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
-                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
-                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
-                      <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
 
-              {/* Innings 2: VS */}
-              <View style={[styles.inningsHeaderRow, { marginTop: 18 }]}>
-                <Text style={styles.inningsTitle}>2nd Innings: Virudhunagar Strikers</Text>
-                <Text style={styles.inningsScoreBadge}>164/5 (18.2 Ov)</Text>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
-                <View style={styles.scoreTable}>
-                  <View style={styles.scoreTableHeader}>
-                    <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
-                    <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
-                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
-                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
-                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
-                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
-                    <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
-                  </View>
-                  {[
-                    { name: 'R. Saravanan', dis: 'c Karthik b Vignesh', r: 68, b: 42, f: 7, s: 3, sr: '161.9' },
-                    { name: 'P. Muthukumar', dis: 'b Aravind', r: 34, b: 26, f: 3, s: 1, sr: '130.8' },
-                    { name: 'S. Balaji (WK)', dis: 'lbw b Vignesh', r: 12, b: 10, f: 1, s: 0, sr: '120.0' },
-                    { name: 'T. Manikandan (C)', dis: 'not out', r: 28, b: 18, f: 3, s: 1, sr: '155.6' },
-                    { name: 'K. Ganesan', dis: 'not out', r: 14, b: 8, f: 1, s: 1, sr: '175.0' }
-                  ].map((row, i) => (
-                    <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
-                      <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
-                      <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
-                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
-                        {row.r}
-                      </Text>
-                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
-                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
-                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
-                      <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
-                    </View>
-                  ))}
-                </View>
-              </ScrollView>
->>>>>>> origin/main
             </ScrollView>
 
             <TouchableOpacity style={styles.btnActionPrimary} onPress={() => setScorecardModalVisible(false)}>

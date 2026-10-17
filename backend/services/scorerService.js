@@ -380,13 +380,8 @@ class ScorerService {
         text: d.wicket ? 'W' : (d.extra_type === 'WIDE' ? 'WD' : (d.extra_type === 'NO_BALL' ? 'NB' : d.runs_batter)),
         commentary: d.commentary
       })),
-      battingSquad: battingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-<<<<<<< HEAD
-      bowlingSquad: enrichedBowlingSquad
-=======
-      bowlingSquad: bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
-      deliveries: formattedAllDeliveries
->>>>>>> origin/main
+      bowlingSquad: (enrichedBowlingSquad && enrichedBowlingSquad.length > 0) ? enrichedBowlingSquad : bowlingSquad.map(p => ({ id: p.id, name: p.name, role: p.role })),
+      deliveries: typeof formattedAllDeliveries !== 'undefined' ? formattedAllDeliveries : []
     };
   }
 

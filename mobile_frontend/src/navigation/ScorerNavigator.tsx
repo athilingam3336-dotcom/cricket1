@@ -9,17 +9,14 @@ import LiveScoringScreen from '../screens/scorer/LiveScoringScreen';
 import ScorecardScreen from '../screens/scorer/ScorecardScreen';
 import SharedBackground from '../components/scorer/SharedBackground';
 
-<<<<<<< HEAD
 import {
   ScreenName,
   ScorerNavigationContext,
-  useScorerNavigation
+  useScorerNavigation,
+  ScorerNavigationContextType
 } from './ScorerNavigationContext';
 
 export { ScreenName, ScorerNavigationContext, useScorerNavigation };
-=======
-import { ScreenName, ScorerNavigationContext, ScorerNavigationContextType } from './ScorerNavigationContext';
->>>>>>> origin/main
 
 interface Props {
   onExit: (targetScreen?: any) => void;

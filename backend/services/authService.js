@@ -777,11 +777,7 @@ class AuthService {
    * Register Scorer (Strictly PENDING Admin approval - Requirement 1)
    * Accepts: name, email, mobile, taluk, certificationLevel, pin
    */
-<<<<<<< HEAD
   async registerScorer({ name, email, password, mobile, taluk, certificationLevel, pin }) {
-=======
-  async registerScorer({ name, email, mobile, taluk, certificationLevel, pin }) {
->>>>>>> origin/main
     if (!name || !name.trim()) {
       throw { status: 400, message: 'Scorer name is required.' };
     }
@@ -817,34 +813,25 @@ class AuthService {
       mobile: mobile || null,
       password_hash: passwordHash,
       role: 'SCORER',
-<<<<<<< HEAD
       status: 'ACTIVE',
+      taluk: taluk || 'Virudhunagar',
+      certificationLevel: certificationLevel || 'District Certified',
+      scoringPin: pin || '1234',
       scorer_details: {
         certification_level: certificationLevel || 'District Certified',
         taluk: taluk || 'Virudhunagar'
       }
-=======
-      status: initialStatus,
-      // Extended scorer fields
-      taluk: taluk || null,
-      certificationLevel: certificationLevel || 'Club Scorer',
-      scoringPin: pin || '1234'
->>>>>>> origin/main
     });
 
     await notificationModel.create({
       type: 'SCORER_REGISTRATION',
       title: `New Scorer Registration: ${name.trim()}`,
-<<<<<<< HEAD
-      message: `Scorer ${name.trim()} (${cleanEmail}) registered. Status: ACTIVE.`,
-=======
-      message: `Scorer ${name.trim()} (${cleanEmail}) — Level: ${certificationLevel || 'Club Scorer'}, Taluk: ${taluk || 'Not specified'} — submitted registration. Status: PENDING admin approval.`,
->>>>>>> origin/main
+      message: `Scorer ${name.trim()} (${cleanEmail}) — Level: ${certificationLevel || 'District Certified'}, Taluk: ${taluk || 'Virudhunagar'} — registered. Status: ACTIVE.`,
       reference_id: userId,
       status: 'UNREAD'
     });
 
-    console.log(`\n🏏 [SCORER REGISTRATION SUBMITTED] ID: ${userId} | Name: "${name.trim()}" | Email: ${cleanEmail} | Level: ${certificationLevel || 'Club Scorer'} | Taluk: ${taluk || 'N/A'} | Status: PENDING\n`);
+    console.log(`\n🏏 [SCORER REGISTRATION SUBMITTED] ID: ${userId} | Name: "${name.trim()}" | Email: ${cleanEmail} | Level: ${certificationLevel || 'District Certified'} | Taluk: ${taluk || 'N/A'} | Status: ACTIVE\n`);
 
     return {
       success: true,
@@ -854,13 +841,9 @@ class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
-<<<<<<< HEAD
+        taluk: taluk || 'Virudhunagar',
+        certificationLevel: certificationLevel || 'District Certified',
         status: 'ACTIVE'
-=======
-        taluk: taluk || null,
-        certificationLevel: certificationLevel || 'Club Scorer',
-        status: initialStatus
->>>>>>> origin/main
       }
     };
   }

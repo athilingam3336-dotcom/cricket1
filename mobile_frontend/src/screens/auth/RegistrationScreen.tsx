@@ -10,11 +10,8 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-<<<<<<< HEAD
-  Modal
-=======
+  Modal,
   useWindowDimensions
->>>>>>> origin/main
 } from 'react-native';
 import { useAppNavigation } from '../../navigation/AppNavigator';
 import SharedBackground from '../../components/scorer/SharedBackground';
@@ -170,21 +167,16 @@ export default function RegistrationScreen() {
 
   const switchRole = (role: RegistrationRole) => {
     setActiveRole(role);
-<<<<<<< HEAD
     setOtpSent(false);
     setOtpCode('');
     setIsEmailVerified(false);
     setPassword('');
     setConfirmPassword('');
-    setStatusMessage(null);
-    setStatusType(null);
-=======
     // Only clear non-network error messages on tab switch
     if (!isNetworkError) {
       setStatusMessage(null);
       setStatusType(null);
     }
->>>>>>> origin/main
   };
 
   // Step 1: Send Email Verification OTP
@@ -322,12 +314,8 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(resp?.message || '✓ Player Account Created! You can now log in.');
-=======
       setIsNetworkError(false);
-      setStatusMessage(resp?.message || '✓ Player Registration Submitted! Awaiting Admin Approval.');
->>>>>>> origin/main
+      setStatusMessage(resp?.message || '✓ Player Account Created! You can now log in.');
       setStatusType('success');
 
       if (Platform.OS === 'web') {
@@ -495,12 +483,8 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(resp?.message || '✓ Team and Coach Account Registered!');
-=======
       setIsNetworkError(false);
-      setStatusMessage(`✓ Team "${teamName.trim()}" Submitted! Awaiting Admin Approval.`);
->>>>>>> origin/main
+      setStatusMessage(resp?.message || `✓ Team "${teamName.trim()}" and Coach Account Registered!`);
       setStatusType('success');
 
       if (Platform.OS === 'web') {
@@ -511,17 +495,13 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'TEAM' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(err?.message || 'Team registration failed. Please try again.');
-=======
       const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
       setIsNetworkError(netError);
       setStatusMessage(
         netError
           ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
-          : (err?.message || 'Team registration failed.')
+          : (err?.message || 'Team registration failed. Please try again.')
       );
->>>>>>> origin/main
       setStatusType('error');
     }
   };
@@ -593,12 +573,8 @@ export default function RegistrationScreen() {
       });
 
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(resp?.message || '✓ Scorer Registration Successful!');
-=======
       setIsNetworkError(false);
-      setStatusMessage(resp?.message || '✓ Scorer Registration Submitted! Awaiting Admin Approval.');
->>>>>>> origin/main
+      setStatusMessage(resp?.message || '✓ Scorer Registration Successful!');
       setStatusType('success');
 
       if (Platform.OS === 'web') {
@@ -609,17 +585,13 @@ export default function RegistrationScreen() {
       setTimeout(() => navigate('Login', { initialRole: 'SCORER' }), 1200);
     } catch (err: any) {
       setIsLoading(false);
-<<<<<<< HEAD
-      setStatusMessage(err?.message || 'Scorer registration failed. Please try again.');
-=======
       const netError = err?.isNetworkError || err?.message === 'Failed to fetch' || err?.message === 'Network request failed';
       setIsNetworkError(netError);
       setStatusMessage(
         netError
           ? '⚠️ Backend server is offline. Start the backend first:\n→ cd backend && node server.js\n→ Then retry registration.'
-          : (err?.message || 'Scorer registration failed.')
+          : (err?.message || 'Scorer registration failed. Please try again.')
       );
->>>>>>> origin/main
       setStatusType('error');
     }
   };
@@ -1575,11 +1547,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     width: '100%',
-<<<<<<< HEAD
-    maxWidth: 640,
-=======
     maxWidth: Platform.OS === 'web' ? 720 : 580,
->>>>>>> origin/main
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -1594,11 +1562,7 @@ const styles = StyleSheet.create({
   statusNetworkError: { backgroundColor: '#fdf4ff', borderColor: '#d946ef', borderWidth: 1.5 },
   statusSuccess: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
   statusInfo: { backgroundColor: '#eff6ff', borderColor: '#93c5fd' },
-<<<<<<< HEAD
-  statusText: { fontSize: 12.5, fontWeight: '600', textAlign: 'center' },
-=======
   statusText: { fontSize: 13, fontWeight: '600', textAlign: 'center', lineHeight: 19 },
->>>>>>> origin/main
   statusTextError: { color: '#b91c1c' },
   statusTextNetworkError: { color: '#7c3aed', fontWeight: '700' },
   statusTextSuccess: { color: '#15803d' },

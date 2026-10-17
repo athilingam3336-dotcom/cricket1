@@ -26,65 +26,7 @@ export default function ScorerAuthScreen() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusType, setStatusType] = useState<'info' | 'success' | 'error' | null>(null);
 
-<<<<<<< HEAD
-=======
-  const handleSendOTP = async () => {
-    setStatusMessage(null);
-    setStatusType(null);
 
-    const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      setStatusMessage('Please enter your email address to receive an OTP.');
-      setStatusType('error');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
-      setStatusMessage('Please enter a valid email address.');
-      setStatusType('error');
-      return;
-    }
-
-    setIsSendingOtp(true);
-    setStatusMessage(`Sending OTP to ${cleanEmail}...`);
-    setStatusType('info');
-
-    try {
-      const res = await ScorerApi.requestOtp(cleanEmail, 'SCORER');
-      setOtpSent(true);
-      const code = String(res?.otp || res?.devOtp || '');
-      if (code) {
-        setOtp(code);
-        setStatusMessage(`✓ OTP Dispatched: ${code} (Auto-filled in field below)`);
-      } else {
-        setStatusMessage(`OTP verification code sent to ${cleanEmail}. Please check your email inbox (and spam folder).`);
-      }
-      setStatusType('success');
-    } catch (err: any) {
-      const rawMsg = err.message || '';
-      let displayError = 'Unable to send OTP. Server error.';
-
-      if (rawMsg.toLowerCase().includes('pending')) {
-        displayError = '⏳ Your registration is PENDING admin approval. You can only log in once an administrator approves your account.';
-      } else if (rawMsg.toLowerCase().includes('rejected') || rawMsg.toLowerCase().includes('cancelled')) {
-        displayError = '❌ Your registration was REJECTED / CANCELLED by the administrator.';
-      } else if (rawMsg.toLowerCase().includes('not registered') || rawMsg.toLowerCase().includes('not found')) {
-        displayError = 'Email not registered. Please create an account below.';
-      } else if (rawMsg.toLowerCase().includes('rate limit') || rawMsg.toLowerCase().includes('too many') || rawMsg.toLowerCase().includes('wait')) {
-        displayError = rawMsg;
-      } else if (err.message) {
-        displayError = err.message;
-      }
-
-      setStatusMessage(displayError);
-      setStatusType('error');
-    } finally {
-      setIsSendingOtp(false);
-    }
-  };
-
->>>>>>> origin/main
   const handleLogin = async () => {
     setStatusMessage(null);
     setStatusType(null);
@@ -279,13 +221,7 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 16 },
   actionBtn: { backgroundColor: '#eab308', padding: 16, borderRadius: 6, alignItems: 'center', marginTop: 6 },
   actionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, textTransform: 'uppercase', letterSpacing: 1 },
-<<<<<<< HEAD
   btnDisabled: { opacity: 0.6 },
   linkBtn: { marginTop: 20, alignItems: 'center' },
   linkText: { color: '#b45309', textDecorationLine: 'underline', fontSize: 13, fontWeight: '600' }
 });
-=======
-  linkBtn: { marginTop: 24, alignItems: 'center' },
-  linkText: { color: '#b45309', textDecorationLine: 'underline', fontSize: 14, fontWeight: '500' }
-});
->>>>>>> origin/main

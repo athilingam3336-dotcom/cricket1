@@ -45,45 +45,7 @@ export interface AdminDashboardProps {
 
 type AdminTab = 'overview' | 'teams' | 'scorers' | 'content' | 'schedules';
 type FilterStatus = 'all' | 'Pending' | 'Approved' | 'Rejected';
-<<<<<<< HEAD
 type MatchFilterStatus = 'all' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
-
-export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
-  const storedUser = getCurrentUser();
-  const currentUser = storedUser || initialParams?.user;
-  const isAdmin = (currentUser?.role || '').toUpperCase() === 'ADMIN';
-
-  useEffect(() => {
-    const user = getCurrentUser() || initialParams?.user;
-    if (initialParams?.user && !getCurrentUser()) {
-      setCurrentUser(initialParams.user);
-    }
-    if (initialParams?.token && !getAuthToken()) {
-      setAuthToken(initialParams.token);
-    }
-    if (!user) {
-      if (onExit) onExit();
-      return;
-    }
-    const role = (user.role || '').toUpperCase();
-    if (role !== 'ADMIN') {
-      if (onExit) onExit();
-      return;
-    }
-  }, [onExit, initialParams]);
-
-  const handleLogout = async () => {
-    try {
-      await ScorerApi.logout();
-    } catch (_e) { }
-    setAuthToken(null);
-    setCurrentUser(null);
-    if (onExit) onExit();
-  };
-
-  // Start on 'scorers' tab to immediately match the second screenshot
-  const [activeTab, setActiveTab] = useState<AdminTab>(initialParams?.tab || initialParams?.activeTab || 'scorers');
-=======
 
 // Fallback initial scorers data (matching exact counts: 2 Approved, 2 Pending, 1 Rejected = 5 Total)
 const INITIAL_SCORERS_DATA = [
@@ -216,9 +178,40 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const isDesktop = width > 768;
   const insetsTop = Platform.OS === 'android' ? 40 : Platform.OS === 'ios' ? 50 : 0;
 
+  const storedUser = getCurrentUser();
+  const currentUser = storedUser || initialParams?.user;
+  const isAdmin = (currentUser?.role || '').toUpperCase() === 'ADMIN';
+
+  useEffect(() => {
+    const user = getCurrentUser() || initialParams?.user;
+    if (initialParams?.user && !getCurrentUser()) {
+      setCurrentUser(initialParams.user);
+    }
+    if (initialParams?.token && !getAuthToken()) {
+      setAuthToken(initialParams.token);
+    }
+    if (!user) {
+      if (onExit) onExit();
+      return;
+    }
+    const role = (user.role || '').toUpperCase();
+    if (role !== 'ADMIN') {
+      if (onExit) onExit();
+      return;
+    }
+  }, [onExit, initialParams]);
+
+  const handleLogout = async () => {
+    try {
+      await ScorerApi.logout();
+    } catch (_e) { }
+    setAuthToken(null);
+    setCurrentUser(null);
+    if (onExit) onExit();
+  };
+
   // Start on 'scorers' tab to immediately match the user's screenshot, or allow 'overview'
-  const [activeTab, setActiveTab] = useState<AdminTab>('scorers');
->>>>>>> origin/main
+  const [activeTab, setActiveTab] = useState<AdminTab>(initialParams?.tab || initialParams?.activeTab || 'scorers');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -825,14 +818,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
               <Text style={styles.adminExitBtnPillText}>← Exit</Text>
             </TouchableOpacity>
           </View>
-<<<<<<< HEAD
-          <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
-            <Text style={styles.adminExitBtnPillText}>— Exit Admin</Text>
-          </TouchableOpacity>
-        </View>
-=======
         )}
->>>>>>> origin/main
       </View>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -1003,13 +989,6 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <View
                       style={[
                         styles.donutOuterRing,
-<<<<<<< HEAD
-                        Platform.OS === 'web' &&
-                        ({
-                          background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
-                          backgroundImage: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`
-                        } as any)
-=======
                         !isDesktop && { width: 140, height: 140, borderRadius: 70 },
                         Platform.OS === 'web'
                           ? ({
@@ -1025,7 +1004,6 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                               borderLeftColor: '#10b981',
                               backgroundColor: '#071026'
                             }
->>>>>>> origin/main
                       ]}
                     >
                       {/* Center Hole */}
@@ -1317,13 +1295,6 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <View
                       style={[
                         styles.donutOuterRing,
-<<<<<<< HEAD
-                        Platform.OS === 'web' &&
-                        ({
-                          background: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`,
-                          backgroundImage: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`
-                        } as any)
-=======
                         !isDesktop && { width: 140, height: 140, borderRadius: 70 },
                         Platform.OS === 'web'
                           ? ({
@@ -1339,7 +1310,6 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                               borderLeftColor: '#10b981',
                               backgroundColor: '#071026'
                             }
->>>>>>> origin/main
                       ]}
                     >
                       <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>

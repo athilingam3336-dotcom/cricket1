@@ -152,16 +152,10 @@ class AuthController {
 
   // Register Scorer
   async registerScorer(req, res) {
-    try {
-<<<<<<< HEAD
       const result = await authService.registerScorer(req.body);
       if (result.token) {
         setAuthCookies(res, result.token);
       }
-=======
-      const { name, email, mobile, taluk, certificationLevel, pin } = req.body;
-      const result = await authService.registerScorer({ name, email, mobile, taluk, certificationLevel, pin });
->>>>>>> origin/main
       res.status(201).json(result);
     } catch (err) {
       const status = err.status || 400;
