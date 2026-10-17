@@ -920,7 +920,7 @@ export default function HomeScreen() {
           />
 
           {/* Large Gold Watermark Crest positioned center-right */}
-          <View style={styles.heroWatermarkContainer} pointerEvents="none">
+          <View style={[styles.heroWatermarkContainer, isMobile && { right: 'auto', left: '50%', transform: [{ translateX: -270 }, { translateY: -270 }] }]} pointerEvents="none">
             {/* Outer and Inner Halo Rings */}
             <View style={styles.emblemRingOuter} />
             <View style={styles.emblemRingInner} />
@@ -931,7 +931,11 @@ export default function HomeScreen() {
             />
           </View>
 
+<<<<<<< HEAD
           <View style={styles.heroContainer}>
+=======
+          <View style={[styles.container, styles.heroContainer, isMobile && { alignItems: 'center' }]}>
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
             {/* Pretitle badges row */}
             <View style={styles.heroPretitleRow}>
               <View style={styles.heroBadgeDistrict}>
@@ -946,8 +950,8 @@ export default function HomeScreen() {
             </View>
 
             {/* Main Title */}
-            <Text style={styles.heroHeadingLine1}>CRICKET FEDERATION OF</Text>
-            <Text style={styles.heroHeadingLine2}>VIRUDHUNAGAR DISTRICT</Text>
+            <Text style={[styles.heroHeadingLine1, isMobile && { textAlign: 'center' }]}>CRICKET FEDERATION OF</Text>
+            <Text style={[styles.heroHeadingLine2, isMobile && { textAlign: 'center' }]}>VIRUDHUNAGAR DISTRICT</Text>
 
             {/* 3D Folded Golden Motto Ribbon Banner */}
             <View style={styles.ribbonWrapper}>
@@ -966,14 +970,14 @@ export default function HomeScreen() {
             </View>
 
             {/* Description */}
-            <Text style={styles.heroDescription}>
+            <Text style={[styles.heroDescription, isMobile && { textAlign: 'center' }]}>
               Governing, developing, and fostering grassroots, collegiate, and competitive cricket across
               Srivilliputhur, Sivakasi, Rajapalayam, Sattur, Aruppukottai, and Virudhunagar under the official
               authority of Cricket Federation of Virudhunagar District.
             </Text>
 
             {/* 3 Hero Action Buttons */}
-            <View style={styles.heroButtonsRow}>
+            <View style={[styles.heroButtonsRow, isMobile && { justifyContent: 'center' }]}>
               {/* 1. Match Centre Live (Solid Navy with Gold Border) */}
               <TouchableOpacity
                 style={styles.heroBtnNavy}
@@ -1139,6 +1143,7 @@ export default function HomeScreen() {
               return null;
             })()}
 
+<<<<<<< HEAD
             {/* Matches Grid */}
             {!isLoadingMatches && (
               <View style={styles.grid2Col}>
@@ -1161,6 +1166,39 @@ export default function HomeScreen() {
 
                     const teamAShort = m.teamAShort || (m.teamA ? m.teamA.slice(0, 3).toUpperCase() : 'TMA');
                     const teamBShort = m.teamBShort || (m.teamB ? m.teamB.slice(0, 3).toUpperCase() : 'TMB');
+=======
+            {/* Matches Grid - De-congested White Responsive Scorecards */}
+            <View style={styles.grid2Col}>
+              {/* MATCH 1: LIVE T20 */}
+              {(matchFilter === 'all' || matchFilter === 'live') && (
+                <View style={[styles.matchCard, styles.matchCardLive]}>
+                  {/* Top Bar: Live indicator, tournament, format */}
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.liveIndicatorPill}>
+                      <Animated.View style={[styles.pulseRedDot, { opacity: pulseAnim }]} />
+                      <Text style={styles.liveIndicatorText}>LIVE</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>Virudhunagar Premier League • Final</Text>
+                    <View style={styles.formatBadgeT20}>
+                      <Text style={styles.formatBadgeT20Text}>T20</Text>
+                    </View>
+                  </View>
+
+                  {/* De-congested Logistics Box */}
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Oct 01, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 06:30 PM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 District Sports Complex Ground, Virudhunagar
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: K. Sundaram & M. Ramanathan • Scorer: S. Ramesh • Referee: P. Chandran
+                    </Text>
+                  </View>
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
 
                     return (
                       <View key={m.id} style={[styles.matchCard, isLive && styles.matchCardLive]}>
@@ -1203,6 +1241,7 @@ export default function HomeScreen() {
                             <Text style={styles.formatBadgeText}>{m.format || 'T20'}</Text>
                           </View>
                         </View>
+<<<<<<< HEAD
 
                         {/* Logistics Box */}
                         <View style={styles.logisticsBox}>
@@ -1317,6 +1356,396 @@ export default function HomeScreen() {
                       </View>
                     );
                   })}
+=======
+                        <Text style={styles.teamNameText} numberOfLines={1}>Virudhunagar Strikers</Text>
+                        <Text style={styles.battingIcon}>🏏</Text>
+                      </View>
+                      <View style={styles.teamScores}>
+                        <Text style={styles.runsText}>164/5</Text>
+                        <Text style={styles.oversText}>(18.2 ov)</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#b45309' }]}>
+                          <Text style={styles.teamMiniCrestText}>SSK</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Sivakasi Super Kings</Text>
+                      </View>
+                      <View style={styles.teamScores}>
+                        <Text style={styles.runsText}>162/8</Text>
+                        <Text style={styles.oversText}>(20.0 ov)</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Highlighted Status Banner */}
+                  <View style={styles.statusNoteLiveBox}>
+                    <Text style={styles.statusNoteLiveText}>⚡ Virudhunagar Strikers need 2 runs in 4 balls</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionPrimary}
+                    onPress={() => {
+                      setActiveScorecardMatch('match-1');
+                      setScorecardModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.btnActionPrimaryText}>👁️ View Live Scorecard & Toss</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* MATCH 2: LIVE 3-DAY */}
+              {(matchFilter === 'all' || matchFilter === 'live') && (
+                <View style={[styles.matchCard, styles.matchCardLive]}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.liveIndicatorPill}>
+                      <Animated.View style={[styles.pulseRedDot, { opacity: pulseAnim }]} />
+                      <Text style={styles.liveIndicatorText}>LIVE</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>District 1st Division League • Day 2</Text>
+                    <View style={styles.formatBadgeMulti}>
+                      <Text style={styles.formatBadgeMultiText}>3-DAY</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Oct 01, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 09:30 AM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 Sivakasi Turf Cricket Ground, Sivakasi
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: A. Gurunathan & S. Shanmugam • Scorer: K. Vijayakumar
+                    </Text>
+                  </View>
+
+                  <View style={styles.matchTeamsBox}>
+                    <View style={[styles.matchTeamRow, styles.battingNowRow]}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#065f46' }]}>
+                          <Text style={styles.teamMiniCrestText}>RCC</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Rajapalayam Cricket Club</Text>
+                        <Text style={styles.battingIcon}>🏏</Text>
+                      </View>
+                      <View style={styles.teamScores}>
+                        <Text style={styles.runsText}>312 & 45/1</Text>
+                        <Text style={styles.oversText}>(14 ov)</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#6b21a8' }]}>
+                          <Text style={styles.teamMiniCrestText}>AKS</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Aruppukottai Stars CC</Text>
+                      </View>
+                      <View style={styles.teamScores}>
+                        <Text style={styles.runsText}>220/10</Text>
+                        <Text style={styles.oversText}>(68.4 ov)</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.statusNoteLiveBox}>
+                    <Text style={styles.statusNoteLiveText}>ℹ️ Rajapalayam CC lead by 137 runs at Stumps Day 2</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionPrimary}
+                    onPress={() => {
+                      setActiveScorecardMatch('match-2');
+                      setScorecardModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.btnActionPrimaryText}>👁️ View Match Summary</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* MATCH 3: UPCOMING */}
+              {(matchFilter === 'all' || matchFilter === 'upcoming') && (
+                <View style={[styles.matchCard, styles.matchCardUpcoming]}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.upcomingIndicatorPill}>
+                      <Text style={styles.upcomingIndicatorText}>⏰ UPCOMING</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>Inter-College Championship Trophy</Text>
+                    <View style={styles.formatBadgeOneDay}>
+                      <Text style={styles.formatBadgeOneDayText}>50-OVERS</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Oct 03, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 09:00 AM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 VHNSN College Ground, Virudhunagar
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: T. Murugan & N. Muthuraj • Scorer: T. Balamurugan
+                    </Text>
+                  </View>
+
+                  <View style={styles.matchTeamsBox}>
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#1e3a8a' }]}>
+                          <Text style={styles.teamMiniCrestText}>VHN</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>VHNSN College Virudhunagar</Text>
+                      </View>
+                      <Text style={styles.yetToBatText}>Upcoming</Text>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#831843' }]}>
+                          <Text style={styles.teamMiniCrestText}>PSR</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>PSR Engineering College</Text>
+                      </View>
+                      <Text style={styles.yetToBatText}>Upcoming</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.statusNoteUpcomingBox}>
+                    <Text style={styles.statusNoteUpcomingText}>📅 Toss scheduled at 08:30 AM IST</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionSecondary}
+                    onPress={() =>
+                      alert(
+                        'Fixture Details:\nDate: Oct 03, 2026 | 09:00 AM\nVenue: VHNSN College Ground\nOfficials: T. Murugan & N. Muthuraj'
+                      )
+                    }
+                  >
+                    <Text style={styles.btnActionSecondaryText}>🔔 View Fixture Logistics</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* MATCH 4: UPCOMING */}
+              {(matchFilter === 'all' || matchFilter === 'upcoming') && (
+                <View style={[styles.matchCard, styles.matchCardUpcoming]}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.upcomingIndicatorPill}>
+                      <Text style={styles.upcomingIndicatorText}>⏰ UPCOMING</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>Andal Trophy Inter-School Cup</Text>
+                    <View style={styles.formatBadgeT20}>
+                      <Text style={styles.formatBadgeT20Text}>T20</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Oct 04, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 02:00 PM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 Andal Temple Ground, Srivilliputhur
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: C. Paulraj & M. Anandhakumar • Scorer: E. Balaji
+                    </Text>
+                  </View>
+
+                  <View style={styles.matchTeamsBox}>
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#0f766e' }]}>
+                          <Text style={styles.teamMiniCrestText}>KVS</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>KVS Hr Sec School, Virudhunagar</Text>
+                      </View>
+                      <Text style={styles.yetToBatText}>Upcoming</Text>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#065f46' }]}>
+                          <Text style={styles.teamMiniCrestText}>PAC</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>PACM HSS, Rajapalayam</Text>
+                      </View>
+                      <Text style={styles.yetToBatText}>Upcoming</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.statusNoteUpcomingBox}>
+                    <Text style={styles.statusNoteUpcomingText}>📅 Oct 04, 2026 at 02:00 PM IST</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionSecondary}
+                    onPress={() => alert('Fixture Details:\nDate: Oct 04, 2026 at 02:00 PM\nVenue: Andal Temple Ground')}
+                  >
+                    <Text style={styles.btnActionSecondaryText}>🔔 Set Match Reminder</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* MATCH 5: RESULTS */}
+              {(matchFilter === 'all' || matchFilter === 'results') && (
+                <View style={[styles.matchCard, styles.matchCardResult]}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.resultIndicatorPill}>
+                      <Text style={styles.resultIndicatorText}>🏁 RESULT</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>Kamarajar Memorial T20 Trophy</Text>
+                    <View style={styles.formatBadgeT20}>
+                      <Text style={styles.formatBadgeT20Text}>T20</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Sep 28, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 09:30 AM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 Sattur Town Sports Ground
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: K. Sundaram & V. Ashok • Referee: P. Chandran
+                    </Text>
+                  </View>
+
+                  <View style={styles.matchTeamsBox}>
+                    <View style={[styles.matchTeamRow, styles.winnerRow]}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#312e81' }]}>
+                          <Text style={styles.teamMiniCrestText}>SW</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Srivilliputhur Warriors</Text>
+                        <Text style={styles.winnerTrophyIcon}>🏆</Text>
+                      </View>
+                      <Text style={styles.runsText}>186/6 (20 ov)</Text>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#475569' }]}>
+                          <Text style={styles.teamMiniCrestText}>SXI</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Sattur Cricket XI</Text>
+                      </View>
+                      <Text style={styles.runsText}>144/9 (20 ov)</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.statusNoteResultBox}>
+                    <Text style={styles.statusNoteResultText}>🏆 Srivilliputhur Warriors won by 42 runs</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionSuccess}
+                    onPress={() => {
+                      setActiveScorecardMatch('match-5');
+                      setScorecardModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.btnActionSuccessText}>📄 View Result Scoresheet</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* MATCH 6: RESULTS */}
+              {(matchFilter === 'all' || matchFilter === 'results') && (
+                <View style={[styles.matchCard, styles.matchCardResult]}>
+                  <View style={styles.matchCardTop}>
+                    <View style={styles.resultIndicatorPill}>
+                      <Text style={styles.resultIndicatorText}>🏁 RESULT</Text>
+                    </View>
+                    <Text style={styles.matchTournament} numberOfLines={1}>District Premier Invitational Trophy</Text>
+                    <View style={styles.formatBadgeOneDay}>
+                      <Text style={styles.formatBadgeOneDayText}>50-OVERS</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logisticsBox}>
+                    <View style={styles.logisticsMetaRow}>
+                      <Text style={styles.logisticsMetaItem}>📅 Sep 26, 2026</Text>
+                      <Text style={styles.logisticsDot}>•</Text>
+                      <Text style={styles.logisticsMetaItem}>⏰ 09:00 AM IST</Text>
+                    </View>
+                    <Text style={styles.logisticsVenueText} numberOfLines={1}>
+                      📍 Sivakasi Turf Cricket Ground
+                    </Text>
+                    <Text style={styles.logisticsOfficialsText} numberOfLines={1}>
+                      ⚖️ Umpires: A. Gurunathan & M. Ramanathan • Scorer: K. Vijayakumar
+                    </Text>
+                  </View>
+
+                  <View style={styles.matchTeamsBox}>
+                    <View style={[styles.matchTeamRow, styles.winnerRow]}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#1e3a8a' }]}>
+                          <Text style={styles.teamMiniCrestText}>VCC</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Virudhunagar CC</Text>
+                        <Text style={styles.winnerTrophyIcon}>🏆</Text>
+                      </View>
+                      <Text style={styles.runsText}>274/8 (50 ov)</Text>
+                    </View>
+
+                    <View style={styles.matchTeamRow}>
+                      <View style={styles.teamMeta}>
+                        <View style={[styles.teamMiniCrest, { backgroundColor: '#831843' }]}>
+                          <Text style={styles.teamMiniCrestText}>TKC</Text>
+                        </View>
+                        <Text style={styles.teamNameText} numberOfLines={1}>Thiruthangal CC</Text>
+                      </View>
+                      <Text style={styles.runsText}>198/10 (41.3 ov)</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.statusNoteResultBox}>
+                    <Text style={styles.statusNoteResultText}>🏆 Virudhunagar CC won by 76 runs</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.btnActionSuccess}
+                    onPress={() => {
+                      setActiveScorecardMatch('match-6');
+                      setScorecardModalVisible(true);
+                    }}
+                  >
+                    <Text style={styles.btnActionSuccessText}>📄 View Result Scoresheet</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* ─── 5. SANCTIONED TOURNAMENTS ─────────────────────────────────── */}
+        <View
+          style={styles.section}
+          onLayout={e => {
+            const layout = e.nativeEvent.layout;
+            setSectionPositions(prev => ({ ...prev, tournaments: layout.y }));
+          }}
+        >
+          <View style={styles.container}>
+            <View style={styles.sectionHead}>
+              <View style={styles.sectionTagBadge}>
+                <Text style={styles.sectionTagBadgeText}>🏆 LEAGUE STRUCTURE</Text>
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
               </View>
             )}
           </View>
@@ -2265,7 +2694,11 @@ export default function HomeScreen() {
         <View style={styles.modalBackdrop}>
           <View style={styles.scorecardModalBox}>
             <View style={styles.modalHeaderRow}>
+<<<<<<< HEAD
               <View style={{ flex: 1 }}>
+=======
+              <View style={{ flex: 1, marginRight: 10 }}>
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
                 <Text style={styles.badgeGoldText}>OFFICIAL MATCH SCORECARD</Text>
                 <Text style={styles.modalTitle}>
                   {activeScorecardMatchData
@@ -2278,13 +2711,21 @@ export default function HomeScreen() {
                     : 'Virudhunagar Premier League Final • DSC Ground'}
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setScorecardModalVisible(false)}>
+              <TouchableOpacity
+                style={styles.modalCloseCircleBtn}
+                onPress={() => setScorecardModalVisible(false)}
+              >
                 <Text style={styles.modalCloseBtn}>✕</Text>
               </TouchableOpacity>
             </View>
 
+<<<<<<< HEAD
             <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
               {/* Toss & Match Summary Banner */}
+=======
+            <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+              {/* Toss Banner */}
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
               <View style={styles.scorecardTossBanner}>
                 <Text style={styles.scorecardTossText}>
                   {realScorecardData?.match?.result || activeScorecardMatchData?.result
@@ -2297,6 +2738,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
+<<<<<<< HEAD
               {isLoadingScorecard && (
                 <View style={{ paddingVertical: 20, alignItems: 'center' }}>
                   <ActivityIndicator size="small" color="#d4af37" />
@@ -2420,10 +2862,87 @@ export default function HomeScreen() {
                   </View>
                 </>
               )}
+=======
+              {/* Innings 1: SSK */}
+              <View style={styles.inningsHeaderRow}>
+                <Text style={styles.inningsTitle}>1st Innings: Sivakasi Super Kings</Text>
+                <Text style={styles.inningsScoreBadge}>162/8 (20.0 Ov)</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
+                <View style={styles.scoreTable}>
+                  <View style={styles.scoreTableHeader}>
+                    <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
+                    <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
+                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
+                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
+                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
+                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
+                    <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
+                  </View>
+                  {[
+                    { name: 'M. Anandhan', dis: 'c Balaji b Praveen', r: 52, b: 38, f: 5, s: 2, sr: '136.8' },
+                    { name: 'C. Rajesh', dis: 'b Manikandan', r: 18, b: 15, f: 2, s: 0, sr: '120.0' },
+                    { name: 'S. Karthik Raja (C/WK)', dis: 'c Muthukumar b Praveen', r: 41, b: 28, f: 4, s: 1, sr: '146.4' },
+                    { name: 'D. Aravind', dis: 'run out (Saravanan)', r: 14, b: 12, f: 1, s: 0, sr: '116.7' },
+                    { name: 'M. Vignesh', dis: 'not out', r: 22, b: 15, f: 2, s: 1, sr: '146.7' }
+                  ].map((row, i) => (
+                    <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
+                      <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
+                      <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
+                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
+                        {row.r}
+                      </Text>
+                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
+                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
+                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
+                      <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+
+              {/* Innings 2: VS */}
+              <View style={[styles.inningsHeaderRow, { marginTop: 18 }]}>
+                <Text style={styles.inningsTitle}>2nd Innings: Virudhunagar Strikers</Text>
+                <Text style={styles.inningsScoreBadge}>164/5 (18.2 Ov)</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tableScrollWrapper}>
+                <View style={styles.scoreTable}>
+                  <View style={styles.scoreTableHeader}>
+                    <Text style={[styles.scoreTh, { width: 140 }]}>Batter</Text>
+                    <Text style={[styles.scoreTh, { width: 130 }]}>Dismissal</Text>
+                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>R</Text>
+                    <Text style={[styles.scoreTh, { width: 40, textAlign: 'center' }]}>B</Text>
+                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>4s</Text>
+                    <Text style={[styles.scoreTh, { width: 35, textAlign: 'center' }]}>6s</Text>
+                    <Text style={[styles.scoreTh, { width: 55, textAlign: 'right' }]}>SR</Text>
+                  </View>
+                  {[
+                    { name: 'R. Saravanan', dis: 'c Karthik b Vignesh', r: 68, b: 42, f: 7, s: 3, sr: '161.9' },
+                    { name: 'P. Muthukumar', dis: 'b Aravind', r: 34, b: 26, f: 3, s: 1, sr: '130.8' },
+                    { name: 'S. Balaji (WK)', dis: 'lbw b Vignesh', r: 12, b: 10, f: 1, s: 0, sr: '120.0' },
+                    { name: 'T. Manikandan (C)', dis: 'not out', r: 28, b: 18, f: 3, s: 1, sr: '155.6' },
+                    { name: 'K. Ganesan', dis: 'not out', r: 14, b: 8, f: 1, s: 1, sr: '175.0' }
+                  ].map((row, i) => (
+                    <View key={i} style={[styles.scoreTableRow, i % 2 === 1 && styles.scoreTableRowAlt]}>
+                      <Text style={[styles.scoreTd, { width: 140, fontWeight: '700', color: '#0f172a' }]}>{row.name}</Text>
+                      <Text style={[styles.scoreTd, { width: 130, color: '#64748b' }]}>{row.dis}</Text>
+                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', fontWeight: '800', color: '#b45309' }]}>
+                        {row.r}
+                      </Text>
+                      <Text style={[styles.scoreTd, { width: 40, textAlign: 'center', color: '#334155' }]}>{row.b}</Text>
+                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.f}</Text>
+                      <Text style={[styles.scoreTd, { width: 35, textAlign: 'center', color: '#334155' }]}>{row.s}</Text>
+                      <Text style={[styles.scoreTd, { width: 55, textAlign: 'right', fontWeight: '600', color: '#0f172a' }]}>{row.sr}</Text>
+                    </View>
+                  ))}
+                </View>
+              </ScrollView>
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
             </ScrollView>
 
-            <TouchableOpacity style={styles.btnGoldSm} onPress={() => setScorecardModalVisible(false)}>
-              <Text style={styles.btnGoldSmText}>Close Scorecard</Text>
+            <TouchableOpacity style={styles.btnActionPrimary} onPress={() => setScorecardModalVisible(false)}>
+              <Text style={styles.btnActionPrimaryText}>Close Scorecard</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -3899,238 +4418,441 @@ const styles = StyleSheet.create({
     lineHeight: 18
   },
 
-  // Match Centre
+  // Match Centre Filter Tabs
   filterTabsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16
+    gap: 10,
+    marginBottom: 20,
+    justifyContent: 'center'
   },
   filterTabBtn: {
-    backgroundColor: 'rgba(10, 24, 56, 0.75)',
-    borderColor: 'rgba(212, 175, 55, 0.25)',
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 6
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 24,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2
   },
   filterTabBtnActive: {
-    backgroundColor: '#d4af37',
-    borderColor: '#fed966'
+    backgroundColor: '#0f2452',
+    borderColor: '#0f2452',
+    shadowColor: '#0f2452',
+    shadowOpacity: 0.25
   },
   filterTabBtnText: {
-    color: '#c0d1eb',
-    fontSize: 12,
+    color: '#475569',
+    fontSize: 12.5,
     fontWeight: '700'
   },
   filterTabBtnTextActive: {
-    color: '#020612',
-    fontWeight: '900'
+    color: '#ffffff',
+    fontWeight: '800'
   },
+
+  // Match Cards (Clean Crisp White Theme with Rich Color Accents)
   matchCard: {
     flex: 1,
-    minWidth: 320,
-    backgroundColor: 'rgba(10, 24, 56, 0.88)',
-    borderColor: 'rgba(212, 175, 55, 0.25)',
+    minWidth: 290,
+    maxWidth: 620,
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 14
+    borderTopWidth: 4,
+    borderTopColor: '#94a3b8',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+    justifyContent: 'space-between',
+    marginBottom: 8
   },
   matchCardLive: {
-    borderColor: 'rgba(220, 38, 38, 0.7)',
-    backgroundColor: 'rgba(15, 30, 68, 0.95)'
+    borderTopColor: '#ef4444',
+    borderColor: '#fca5a5',
+    shadowColor: '#ef4444',
+    shadowOpacity: 0.12
+  },
+  matchCardUpcoming: {
+    borderTopColor: '#3b82f6',
+    borderColor: '#bfdbfe',
+    shadowColor: '#3b82f6',
+    shadowOpacity: 0.1
+  },
+  matchCardResult: {
+    borderTopColor: '#10b981',
+    borderColor: '#a7f3d0',
+    shadowColor: '#10b981',
+    shadowOpacity: 0.1
   },
   matchCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10
+    gap: 8,
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9'
   },
   liveIndicatorPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(220, 38, 38, 0.2)',
-    borderColor: '#dc2626',
+    backgroundColor: '#fee2e2',
+    borderColor: '#fca5a5',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 20,
     paddingHorizontal: 8,
-    paddingVertical: 2
+    paddingVertical: 3
   },
   pulseRedDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: '#ef4444',
-    marginRight: 4
+    marginRight: 5
   },
   liveIndicatorText: {
-    color: '#ef4444',
-    fontSize: 10,
-    fontWeight: '900'
+    color: '#dc2626',
+    fontSize: 10.5,
+    fontWeight: '900',
+    letterSpacing: 0.4
   },
   upcomingIndicatorPill: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    borderColor: '#3b82f6',
+    backgroundColor: '#eff6ff',
+    borderColor: '#bfdbfe',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 20,
     paddingHorizontal: 8,
-    paddingVertical: 2
+    paddingVertical: 3
   },
   upcomingIndicatorText: {
-    color: '#93c5fd',
-    fontSize: 9.5,
+    color: '#1d4ed8',
+    fontSize: 10,
     fontWeight: '800'
   },
   resultIndicatorPill: {
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
-    borderColor: '#22c55e',
+    backgroundColor: '#ecfdf5',
+    borderColor: '#a7f3d0',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 20,
     paddingHorizontal: 8,
-    paddingVertical: 2
+    paddingVertical: 3
   },
   resultIndicatorText: {
-    color: '#4ade80',
-    fontSize: 9.5,
+    color: '#059669',
+    fontSize: 10,
     fontWeight: '800'
   },
   matchTournament: {
-    color: '#ffffff',
-    fontSize: 11.5,
-    fontWeight: '700',
+    color: '#0f172a',
+    fontSize: 12.5,
+    fontWeight: '800',
     flex: 1,
-    marginHorizontal: 8
+    textAlign: 'left'
   },
   formatBadgeT20: {
-    backgroundColor: 'rgba(212, 175, 55, 0.2)',
-    borderColor: '#d4af37',
+    backgroundColor: '#fef3c7',
+    borderColor: '#fde68a',
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2
   },
-  formatBadgeMulti: {
-    backgroundColor: 'rgba(220, 38, 38, 0.2)',
-    borderColor: '#dc2626',
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1
-  },
-  formatBadgeOneDay: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-    borderColor: '#3b82f6',
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 1
-  },
-  formatBadgeText: {
-    color: '#ffffff',
-    fontSize: 9.5,
+  formatBadgeT20Text: {
+    color: '#b45309',
+    fontSize: 10,
     fontWeight: '800'
   },
-  logisticsBox: {
-    backgroundColor: 'rgba(5, 13, 34, 0.65)',
+  formatBadgeMulti: {
+    backgroundColor: '#f3e8ff',
+    borderColor: '#e9d5ff',
+    borderWidth: 1,
     borderRadius: 6,
-    padding: 8,
-    marginBottom: 10
+    paddingHorizontal: 7,
+    paddingVertical: 2
+  },
+  formatBadgeMultiText: {
+    color: '#7e22ce',
+    fontSize: 10,
+    fontWeight: '800'
+  },
+  formatBadgeOneDay: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#bfdbfe',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2
+  },
+  formatBadgeOneDayText: {
+    color: '#1d4ed8',
+    fontSize: 10,
+    fontWeight: '800'
+  },
+  formatBadgeText: {
+    color: '#334155',
+    fontSize: 10,
+    fontWeight: '800'
+  },
+
+  // Logistics Box: Spaced out, clean white/slate card
+  logisticsBox: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#e2e8f0',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 12
+  },
+  logisticsMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 4
+  },
+  logisticsMetaItem: {
+    color: '#334155',
+    fontSize: 11.5,
+    fontWeight: '700'
+  },
+  logisticsDot: {
+    color: '#94a3b8',
+    fontSize: 12
+  },
+  logisticsVenueText: {
+    color: '#475569',
+    fontSize: 11.5,
+    fontWeight: '600',
+    marginBottom: 4
+  },
+  logisticsOfficialsText: {
+    color: '#64748b',
+    fontSize: 10.5,
+    lineHeight: 15
   },
   logisticsItem: {
-    color: '#c0d1eb',
+    color: '#475569',
     fontSize: 10.5,
     lineHeight: 16
   },
+
+  // Teams Box
   matchTeamsBox: {
-    marginBottom: 8
+    marginBottom: 10,
+    gap: 6
   },
   matchTeamRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 5
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#f1f5f9'
   },
   battingNowRow: {
-    backgroundColor: 'rgba(212, 175, 55, 0.08)',
-    borderRadius: 6,
-    paddingHorizontal: 4
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd'
   },
   winnerRow: {
-    backgroundColor: 'rgba(34, 197, 94, 0.08)',
-    borderRadius: 6,
-    paddingHorizontal: 4
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0'
   },
   teamMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1
+    flex: 1,
+    marginRight: 8
   },
   teamMiniCrest: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#16336e',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+    elevation: 2
   },
   teamMiniCrestText: {
     color: '#ffffff',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '900'
   },
   teamNameText: {
-    color: '#ffffff',
-    fontSize: 12.5,
-    fontWeight: '700'
+    color: '#0f172a',
+    fontSize: 13.5,
+    fontWeight: '700',
+    flexShrink: 1
   },
   battingIcon: {
-    fontSize: 13,
-    marginLeft: 6
-  },
-  winnerTrophyIcon: {
     fontSize: 14,
     marginLeft: 6
   },
+  winnerTrophyIcon: {
+    fontSize: 15,
+    marginLeft: 6
+  },
   teamScores: {
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
+    flexShrink: 0
   },
   runsText: {
-    color: '#ffffff',
-    fontSize: 13.5,
+    color: '#0f172a',
+    fontSize: 15.5,
     fontWeight: '900'
   },
   oversText: {
-    color: '#9bb0cf',
-    fontSize: 11
+    color: '#64748b',
+    fontSize: 11,
+    fontWeight: '600'
   },
   yetToBatText: {
-    color: '#62799c',
-    fontSize: 11.5,
-    fontStyle: 'italic'
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '700',
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+
+  // Status Note Banners
+  statusNoteLiveBox: {
+    backgroundColor: '#fff1f2',
+    borderColor: '#fecdd3',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12
+  },
+  statusNoteLiveText: {
+    color: '#be123c',
+    fontSize: 12,
+    fontWeight: '800'
+  },
+  statusNoteUpcomingBox: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12
+  },
+  statusNoteUpcomingText: {
+    color: '#0369a1',
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  statusNoteResultBox: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 12
+  },
+  statusNoteResultText: {
+    color: '#047857',
+    fontSize: 12,
+    fontWeight: '800'
   },
   matchStatusNote: {
-    color: '#c0d1eb',
+    color: '#475569',
     fontSize: 11,
     marginBottom: 10,
     fontStyle: 'italic'
   },
   matchStatusNoteGold: {
-    color: '#fed966',
+    color: '#b45309',
     fontSize: 11,
     marginBottom: 10,
     fontWeight: '700'
   },
-  btnOutlineGoldBlock: {
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-    borderColor: '#d4af37',
+
+  // Action Buttons
+  btnActionPrimary: {
+    backgroundColor: '#0f2452',
+    borderColor: '#1e3a8a',
     borderWidth: 1,
-    borderRadius: 6,
-    paddingVertical: 8,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0f2452',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2
+  },
+  btnActionPrimaryText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '800',
+    letterSpacing: 0.2
+  },
+  btnActionSecondary: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#cbd5e1',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  btnActionSecondaryText: {
+    color: '#1e293b',
+    fontSize: 12.5,
+    fontWeight: '800'
+  },
+  btnActionSuccess: {
+    backgroundColor: '#065f46',
+    borderColor: '#047857',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#065f46',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2
+  },
+  btnActionSuccessText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '800',
+    letterSpacing: 0.2
+  },
+  btnOutlineGoldBlock: {
+    backgroundColor: '#0f2452',
+    borderColor: '#1e3a8a',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
     alignItems: 'center'
   },
   btnOutlineGoldBlockText: {
-    color: '#f5c43d',
+    color: '#ffffff',
     fontSize: 12,
     fontWeight: '800'
   },
@@ -4958,14 +5680,19 @@ const styles = StyleSheet.create({
     padding: 16
   },
   scorecardModalBox: {
-    backgroundColor: '#07132c',
-    borderColor: '#d4af37',
+    backgroundColor: '#ffffff',
+    borderColor: '#cbd5e1',
     borderWidth: 1.5,
-    borderRadius: 12,
-    padding: 16,
-    width: '100%',
-    maxWidth: 680,
-    maxHeight: '90%'
+    borderRadius: 16,
+    padding: 20,
+    width: '95%',
+    maxWidth: 720,
+    maxHeight: '90%',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 8
   },
   playerModalBox: {
     backgroundColor: '#07132c',
@@ -4990,38 +5717,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12
+    marginBottom: 14
+  },
+  modalCloseCircleBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   modalTitle: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '800'
+    color: '#0f172a',
+    fontSize: 17,
+    fontWeight: '900',
+    marginTop: 2
   },
   modalSub: {
-    color: '#9bb0cf',
-    fontSize: 11.5,
+    color: '#64748b',
+    fontSize: 12,
     marginTop: 2
   },
   modalCloseBtn: {
-    color: '#f5c43d',
-    fontSize: 20,
-    fontWeight: '800',
-    paddingHorizontal: 8
+    color: '#475569',
+    fontSize: 16,
+    fontWeight: '800'
   },
   badgeGoldText: {
-    color: '#f5c43d',
-    fontSize: 10,
+    color: '#b45309',
+    fontSize: 10.5,
     fontWeight: '800',
     letterSpacing: 0.6
   },
   badgeBlueText: {
-    color: '#93c5fd',
+    color: '#1d4ed8',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6
   },
   badgeRedText: {
-    color: '#fca5a5',
+    color: '#dc2626',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.6
@@ -5029,49 +5764,75 @@ const styles = StyleSheet.create({
 
   // Scorecard Modal Internal
   scorecardTossBanner: {
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    borderColor: 'rgba(212, 175, 55, 0.3)',
+    backgroundColor: '#fefce8',
+    borderColor: '#fef08a',
     borderWidth: 1,
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 12
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 14
   },
   scorecardTossText: {
-    color: '#fed966',
-    fontSize: 11.5,
+    color: '#854d0e',
+    fontSize: 12,
     fontWeight: '700'
   },
+  inningsHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
+  },
   inningsTitle: {
-    color: '#f5c43d',
-    fontSize: 13,
+    color: '#0f172a',
+    fontSize: 13.5,
+    fontWeight: '800'
+  },
+  inningsScoreBadge: {
+    backgroundColor: '#0f2452',
+    color: '#ffffff',
+    fontSize: 11,
     fontWeight: '800',
-    marginBottom: 6
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  tableScrollWrapper: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 4
   },
   scoreTable: {
-    backgroundColor: 'rgba(5, 13, 34, 0.7)',
-    borderRadius: 6,
-    padding: 6
+    backgroundColor: '#ffffff',
+    minWidth: 470
   },
   scoreTableHeader: {
     flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    paddingBottom: 4
+    borderBottomColor: '#e2e8f0',
+    paddingVertical: 8,
+    paddingHorizontal: 8
   },
   scoreTh: {
-    color: '#9bb0cf',
-    fontSize: 10.5,
-    fontWeight: '700'
+    color: '#334155',
+    fontSize: 11,
+    fontWeight: '800'
   },
   scoreTableRow: {
     flexDirection: 'row',
-    paddingVertical: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)'
+    borderBottomColor: '#f8fafc',
+    alignItems: 'center'
+  },
+  scoreTableRowAlt: {
+    backgroundColor: '#f8fafc'
   },
   scoreTd: {
-    color: '#ffffff',
-    fontSize: 11
+    color: '#1e293b',
+    fontSize: 11.5
   },
 
   // Player Profile Modal Internal

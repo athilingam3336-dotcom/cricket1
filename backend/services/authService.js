@@ -320,7 +320,16 @@ class AuthService {
     });
 
     if (mailResult && !mailResult.success && mailResult.smtpError) {
-      throw { status: 500, message: `Failed to deliver email: ${mailResult.smtpError}. Please check your SMTP settings.` };
+      console.warn(`⚠️ [SMTP DELIVERY WARNING] Could not send OTP email to ${user.email}: ${mailResult.smtpError}`);
+      console.warn(`🔑 [DEV FALLBACK OTP] Active OTP for ${user.email} is: ${rawOtp}`);
+      return {
+        success: true,
+        message: `OTP generated successfully! (SMTP Notice: Email delivery failed [${mailResult.smtpError}]. For testing/dev use OTP: ${rawOtp})`,
+        email: user.email,
+        otp: rawOtp,
+        devOtp: rawOtp,
+        smtpError: mailResult.smtpError
+      };
     }
 
     return {
@@ -735,7 +744,9 @@ class AuthService {
 
   /**
    * Register Scorer (Strictly PENDING Admin approval - Requirement 1)
+   * Accepts: name, email, mobile, taluk, certificationLevel, pin
    */
+<<<<<<< HEAD
   
   /**
    * Request OTP code for registration email verification
@@ -822,6 +833,10 @@ class AuthService {
   async registerScorer({ name, full_name, email, mobile, association }) {
     const scorerName = (name || full_name || '').trim();
     if (!scorerName) {
+=======
+  async registerScorer({ name, email, mobile, taluk, certificationLevel, pin }) {
+    if (!name || !name.trim()) {
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       throw { status: 400, message: 'Scorer name is required.' };
     }
     if (!email || !email.trim()) {
@@ -861,7 +876,11 @@ class AuthService {
       email: cleanEmail,
       mobile: mobile || null,
       role: 'SCORER',
-      status: initialStatus
+      status: initialStatus,
+      // Extended scorer fields
+      taluk: taluk || null,
+      certificationLevel: certificationLevel || 'Club Scorer',
+      scoringPin: pin || '1234'
     });
 
     try {
@@ -877,11 +896,18 @@ class AuthService {
 
     await notificationModel.create({
       type: 'SCORER_REGISTRATION',
+<<<<<<< HEAD
       title: `New Scorer Registration: ${scorerName}`,
       message: `Scorer ${scorerName} (${cleanEmail}) submitted registration. Status: PENDING admin approval.`,
+=======
+      title: `New Scorer Registration: ${name.trim()}`,
+      message: `Scorer ${name.trim()} (${cleanEmail}) — Level: ${certificationLevel || 'Club Scorer'}, Taluk: ${taluk || 'Not specified'} — submitted registration. Status: PENDING admin approval.`,
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       reference_id: userId,
       status: 'UNREAD'
     });
+
+    console.log(`\n🏏 [SCORER REGISTRATION SUBMITTED] ID: ${userId} | Name: "${name.trim()}" | Email: ${cleanEmail} | Level: ${certificationLevel || 'Club Scorer'} | Taluk: ${taluk || 'N/A'} | Status: PENDING\n`);
 
     return {
       success: true,
@@ -891,6 +917,8 @@ class AuthService {
         id: user.id,
         name: user.name,
         email: user.email,
+        taluk: taluk || null,
+        certificationLevel: certificationLevel || 'Club Scorer',
         status: initialStatus
       }
     };

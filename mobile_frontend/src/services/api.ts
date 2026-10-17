@@ -118,6 +118,19 @@ async function request(endpoint: string, options: RequestInit = {}) {
     return data;
   } catch (err: any) {
     console.error(`API Error on ${endpoint}:`, err.message);
+    // Convert cryptic browser fetch errors into user-friendly messages
+    if (
+      err.message === 'Failed to fetch' ||
+      err.message === 'Network request failed' ||
+      err.message?.includes('ERR_CONNECTION_REFUSED') ||
+      err.message?.includes('ECONNREFUSED')
+    ) {
+      const friendly = new Error(
+        'Cannot connect to the backend server (port 5000). Please make sure the backend is running. Start it with: cd backend && node server.js'
+      );
+      (friendly as any).isNetworkError = true;
+      throw friendly;
+    }
     throw err;
   }
 }
@@ -319,7 +332,12 @@ export const ScorerApi = {
     players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
     otp?: string;
   }) => {
+<<<<<<< HEAD
     const res = await request('/auth/register-team', {
+=======
+    // NOTE: Team registration lives under /team/register, not /auth/register-team
+    return request('/team/register', {
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       method: 'POST',
       body: JSON.stringify(payload)
     });

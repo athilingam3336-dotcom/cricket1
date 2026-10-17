@@ -1,17 +1,22 @@
 {
   "expo": {
-    "name": "mobile_frontend",
-    "slug": "mobile_frontend",
+    "name": "Cricket Federation of Virudhunagar District",
+    "shortName": "CFVD Cricket",
+    "slug": "cricket-federation-virudhunagar",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "description": "Official cricket federation portal: Live ball-by-ball scorecards, tournament fixtures, team management, and wagon wheel analytics.",
+    "orientation": "default",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#020612",
+    "primaryColor": "#eab308",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "userInterfaceStyle": "dark"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#020612",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -19,7 +24,15 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Cricket Federation of Virudhunagar District",
+      "shortName": "CFVD Cricket",
+      "description": "Live cricket scores, fixtures, wagon wheel analytics, team rosters and tournament standings.",
+      "themeColor": "#020612",
+      "backgroundColor": "#020612",
+      "display": "standalone",
+      "orientation": "any"
     },
     "plugins": [
       "expo-asset"

@@ -27,7 +27,7 @@ import {
   TextInput,
   Modal,
   Platform,
-  Dimensions,
+  useWindowDimensions,
   ActivityIndicator,
   Alert
 } from 'react-native';
@@ -45,6 +45,7 @@ export interface AdminDashboardProps {
 
 type AdminTab = 'overview' | 'teams' | 'scorers' | 'content' | 'schedules';
 type FilterStatus = 'all' | 'Pending' | 'Approved' | 'Rejected';
+<<<<<<< HEAD
 type MatchFilterStatus = 'all' | 'SCHEDULED' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
 
 export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
@@ -72,6 +73,142 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
 
   // Start on 'scorers' tab to immediately match the second screenshot
   const [activeTab, setActiveTab] = useState<AdminTab>(initialParams?.tab || initialParams?.activeTab || 'scorers');
+=======
+
+// Fallback initial scorers data (matching exact counts: 2 Approved, 2 Pending, 1 Rejected = 5 Total)
+const INITIAL_SCORERS_DATA = [
+  {
+    scorerId: 'SCORER-101',
+    scorerName: 'Thiru. ',
+    email: 'sundararajan@cfvd.org',
+    phone: '+91 94431 12345',
+    grade: 'BCCI Level 1 Digital Scorer',
+    taluk: 'Virudhunagar',
+    experienceYears: 8,
+    status: 'Approved',
+    registrationDate: '2026-09-15T10:00:00.000Z',
+    approvedBy: 'admin@cfvd.org',
+    approvedAt: '2026-09-16T11:00:00.000Z',
+    rejectionReason: null
+  },
+  {
+    scorerId: 'SCORER-102',
+    scorerName: 'Thiru. M. Venkatesh',
+    email: 'venkatesh.m@gmail.com',
+    phone: '+91 98422 67890',
+    grade: 'District Senior Panel Scorer',
+    taluk: 'Sivakasi',
+    experienceYears: 5,
+    status: 'Approved',
+    registrationDate: '2026-09-16T11:00:00.000Z',
+    approvedBy: 'admin@cfvd.org',
+    approvedAt: '2026-09-17T09:30:00.000Z',
+    rejectionReason: null
+  },
+  {
+    scorerId: 'SCORER-103',
+    scorerName: 'Thiru. S. Pitchaimuthu',
+    email: 'pitchai.s@yahoo.com',
+    phone: '+91 97890 23456',
+    grade: 'Collegiate League Scorer',
+    taluk: 'Rajapalayam',
+    experienceYears: 3,
+    status: 'Pending',
+    registrationDate: '2026-09-27T08:30:00.000Z',
+    approvedBy: null,
+    approvedAt: null,
+    rejectionReason: null
+  },
+  {
+    scorerId: 'SCORER-104',
+    scorerName: 'Thiru. R. Vignesh Kumar',
+    email: 'vignesh.k@gmail.com',
+    phone: '+91 96555 89012',
+    grade: 'Academy Digital Scorer',
+    taluk: 'Aruppukottai',
+    experienceYears: 2,
+    status: 'Pending',
+    registrationDate: '2026-09-28T14:20:00.000Z',
+    approvedBy: null,
+    approvedAt: null,
+    rejectionReason: null
+  },
+  {
+    scorerId: 'SCORER-105',
+    scorerName: 'Thiru. P. Arumugam',
+    email: 'arumugam.p@gmail.com',
+    phone: '+91 99444 34567',
+    grade: 'Club Panel Scorer',
+    taluk: 'Sattur',
+    experienceYears: 1,
+    status: 'Rejected',
+    registrationDate: '2026-09-19T09:00:00.000Z',
+    approvedBy: 'admin@cfvd.org',
+    approvedAt: null,
+    rejectedAt: '2026-09-20T12:00:00.000Z',
+    rejectedBy: 'admin@cfvd.org',
+    rejectionReason: 'Required scorer certification credentials expired. Renewal required.'
+  }
+];
+
+// Fallback initial teams data (matching exact counts: 1 Pending, 1 Approved = 2 Total)
+const INITIAL_TEAMS_DATA = [
+  {
+    teamId: 'TEAM-VRD-1001',
+    teamName: 'Virudhunagar Strikers CC',
+    coach: { name: 'S. Rajendran', email: 'rajendran@strikerscc.org' },
+    taluk: 'Virudhunagar',
+    status: 'Approved',
+    adminApprovalStatus: 'Approved',
+    registrationDate: '2026-09-15T09:30:00.000Z',
+    approvedBy: 'admin@cfvd.org',
+    approvedAt: '2026-09-16T11:00:00.000Z',
+    rejectionReason: null,
+    members: [
+      { playerId: 'CFVD-PLY-101', playerName: 'R. Saravanan', playerEmail: 'saravanan.r@strikerscc.org', jerseyNumber: '10', role: 'Captain / All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast Medium' },
+      { playerId: 'CFVD-PLY-STR-02', playerName: 'M. Anandhan', playerEmail: 'anandhan.m@strikerscc.org', jerseyNumber: '7', role: 'Opening Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
+      { playerId: 'CFVD-PLY-STR-03', playerName: 'K. Praveen Kumar', playerEmail: 'praveen.k@strikerscc.org', jerseyNumber: '17', role: 'Spin Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' },
+      { playerId: 'CFVD-PLY-STR-04', playerName: 'G. Karthick', playerEmail: 'karthick.g@strikerscc.org', jerseyNumber: '3', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Medium' },
+      { playerId: 'CFVD-PLY-STR-05', playerName: 'S. Balamurugan', playerEmail: 'bala.s@strikerscc.org', jerseyNumber: '9', role: 'Top Order Batsman', battingStyle: 'Left Hand Bat', bowlingStyle: 'None' },
+      { playerId: 'CFVD-PLY-STR-06', playerName: 'N. Muthuraman', playerEmail: 'muthu.n@strikerscc.org', jerseyNumber: '21', role: 'Pace Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
+      { playerId: 'CFVD-PLY-STR-07', playerName: 'P. Sivakumar', playerEmail: 'siva.p@strikerscc.org', jerseyNumber: '28', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
+      { playerId: 'CFVD-PLY-STR-08', playerName: 'V. Prakash', playerEmail: 'prakash.v@strikerscc.org', jerseyNumber: '14', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Medium' },
+      { playerId: 'CFVD-PLY-STR-09', playerName: 'T. Karthick', playerEmail: 'karthick.t@strikerscc.org', jerseyNumber: '99', role: 'Strike Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' },
+      { playerId: 'CFVD-PLY-STR-10', playerName: 'A. Vijay', playerEmail: 'vijay.a@strikerscc.org', jerseyNumber: '45', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Left Arm Fast' },
+      { playerId: 'CFVD-PLY-STR-11', playerName: 'G. Suresh', playerEmail: 'suresh.g@strikerscc.org', jerseyNumber: '22', role: 'Leg Spinner', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Leg Spin' },
+      { playerId: 'CFVD-PLY-STR-12', playerName: 'C. Vignesh', playerEmail: 'vignesh.c@strikerscc.org', jerseyNumber: '12', role: 'Middle Order Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
+      { playerId: 'CFVD-PLY-STR-13', playerName: 'J. Dinesh', playerEmail: 'dinesh.j@strikerscc.org', jerseyNumber: '33', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' },
+      { playerId: 'CFVD-PLY-STR-14', playerName: 'E. Ramesh', playerEmail: 'ramesh.e@strikerscc.org', jerseyNumber: '1', role: 'Wicketkeeper Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
+      { playerId: 'CFVD-PLY-STR-15', playerName: 'D. Kumar', playerEmail: 'kumar.d@strikerscc.org', jerseyNumber: '88', role: 'Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Fast' }
+    ]
+  },
+  {
+    teamId: 'TEAM-VRD-1002',
+    teamName: 'Sivakasi Super Kings',
+    coach: { name: 'K. Meenakshisundaram', email: 'meenakshi@sivakasisk.com' },
+    taluk: 'Sivakasi',
+    status: 'Pending',
+    adminApprovalStatus: 'Pending',
+    registrationDate: '2026-09-28T11:00:00.000Z',
+    approvedBy: null,
+    approvedAt: null,
+    rejectionReason: null,
+    members: [
+      { playerId: 'CFVD-PLY-SSK-01', playerName: 'S. Vigneshwaran', playerEmail: 'vignesh.s@sivakasisk.com', jerseyNumber: '18', role: 'Opening Bowler', battingStyle: 'Right Hand Bat', bowlingStyle: 'Left Arm Fast' },
+      { playerId: 'CFVD-PLY-SSK-02', playerName: 'T. Balamurugan', playerEmail: 'bala.t@sivakasisk.com', jerseyNumber: '5', role: 'Opening Batsman', battingStyle: 'Right Hand Bat', bowlingStyle: 'None' },
+      { playerId: 'CFVD-PLY-SSK-03', playerName: 'N. Muthuraman', playerEmail: 'muthu.n@sivakasisk.com', jerseyNumber: '11', role: 'All-rounder', battingStyle: 'Right Hand Bat', bowlingStyle: 'Right Arm Off Break' }
+    ]
+  }
+];
+
+export default function AdminDashboardScreen({ onExit, initialParams }: AdminDashboardProps) {
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+  const insetsTop = Platform.OS === 'android' ? 40 : Platform.OS === 'ios' ? 50 : 0;
+
+  // Start on 'scorers' tab to immediately match the user's screenshot, or allow 'overview'
+  const [activeTab, setActiveTab] = useState<AdminTab>('scorers');
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -637,27 +774,42 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
   const scorerSegments = getDonutSegments(scorerApproved, scorerPending, scorerRejected, scorerTotal);
   const teamSegments = getDonutSegments(teamApproved, teamPending, teamRejected, teamTotal);
 
+  const totalOverall = scorerTotal + teamTotal;
+  const overallApproved = scorerApproved + teamApproved;
+  const overallPending = scorerPending + teamPending;
+  const overallRejected = scorerRejected + teamRejected;
+  const overallSegments = getDonutSegments(overallApproved, overallPending, overallRejected, totalOverall);
+
   return (
     <View style={styles.rootContainer}>
       {/* ─────────────────────────────────────────────────────────────
           1. DEDICATED ADMIN TOP BAR (Website Navbar Removed)
           ───────────────────────────────────────────────────────────── */}
-      <View style={styles.adminMinimalTopBar}>
+      <View style={[styles.adminMinimalTopBar, { paddingTop: styles.adminMinimalTopBar.paddingVertical + insetsTop }]}>
         <View style={styles.adminMinimalBrandCol}>
           <Image source={IMG_LOGO} style={styles.adminMinimalLogo} resizeMode="contain" />
-          <View style={{ marginLeft: 12 }}>
-            <Text style={styles.adminMinimalTitle}>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</Text>
-            <Text style={styles.adminMinimalSub}>Official Administrator Management Console • Clearance & Operations</Text>
+          <View style={{ marginLeft: 12, flex: 1 }}>
+            <Text style={styles.adminMinimalTitle} numberOfLines={2}>CRICKET FEDERATION OF VIRUDHUNAGAR DISTRICT</Text>
+            <Text style={styles.adminMinimalSub} numberOfLines={1}>Official Administrator Management Console</Text>
           </View>
         </View>
-        <View style={styles.adminMinimalActionRow}>
-          <View style={styles.adminUserBadgePill}>
-            <Text style={styles.adminUserBadgePillText}>👤 {adminEmail}</Text>
+        {isDesktop && (
+          <View style={styles.adminMinimalActionRow}>
+            <View style={styles.adminUserBadgePill}>
+              <Text style={styles.adminUserBadgePillText}>👤 {adminEmail}</Text>
+            </View>
+            <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
+              <Text style={styles.adminExitBtnPillText}>← Exit</Text>
+            </TouchableOpacity>
           </View>
+<<<<<<< HEAD
           <TouchableOpacity style={styles.adminExitBtnPill} onPress={onExit} activeOpacity={0.8}>
             <Text style={styles.adminExitBtnPillText}>— Exit Admin</Text>
           </TouchableOpacity>
         </View>
+=======
+        )}
+>>>>>>> 731452484144e4b9ce61d434eb71c0bbe346741b
       </View>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -763,7 +915,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
           {activeTab === 'scorers' && (
             <View>
               {/* TOP TWO SIDE-BY-SIDE HIGHLIGHT CARDS */}
-              <View style={styles.highlightCardsRow}>
+              <View style={[styles.highlightCardsRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                 {/* Left Card: Scorer Management Stats */}
                 <View style={styles.navyStatCard}>
                   <View style={styles.statCardHeader}>
@@ -823,23 +975,53 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <Text style={styles.statCardTitle}>Status Distribution</Text>
                   </View>
 
-                  {/* Donut Chart with CSS Conic Gradient on Web */}
+                  {/* Donut Chart with CSS Conic Gradient on Web / Multi-border Ring on Native */}
                   <View style={styles.donutWrapper}>
                     <View
                       style={[
                         styles.donutOuterRing,
-                        Platform.OS === 'web' &&
-                          ({
-                            background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
-                            backgroundImage: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`
-                          } as any)
+                        !isDesktop && { width: 140, height: 140, borderRadius: 70 },
+                        Platform.OS === 'web'
+                          ? ({
+                              background: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`,
+                              backgroundImage: `conic-gradient(#10b981 0% ${scorerSegments.appPct}%, #f59e0b ${scorerSegments.appPct}% ${scorerSegments.appPct + scorerSegments.pendPct}%, #ef4444 ${scorerSegments.appPct + scorerSegments.pendPct}% 100%)`
+                            } as any)
+                          : {
+                              borderWidth: 10,
+                              borderColor: '#10b981',
+                              borderTopColor: '#10b981',
+                              borderRightColor: scorerSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                              borderBottomColor: scorerSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                              borderLeftColor: '#10b981',
+                              backgroundColor: '#071026'
+                            }
                       ]}
                     >
                       {/* Center Hole */}
-                      <View style={styles.donutHole}>
-                        <Text style={styles.donutNumber}>{scorerTotal}</Text>
-                        <Text style={styles.donutUnitLabel}>SCORERS</Text>
+                      <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                        <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{scorerTotal}</Text>
+                        <Text style={[styles.donutUnitLabel, !isDesktop && { fontSize: 8 }]}>SCORERS</Text>
                       </View>
+                    </View>
+                  </View>
+
+                  {/* Dynamic Proportional Distribution Bar (drawn dynamically across all platforms) */}
+                  <View style={styles.distributionBarWrapper}>
+                    <View style={styles.distributionBarTrack}>
+                      {scorerSegments.appPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                      )}
+                      {scorerSegments.pendPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                      )}
+                      {scorerSegments.rejPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${scorerSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                      )}
+                    </View>
+                    <View style={styles.distributionPctRow}>
+                      <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{scorerSegments.appPct}% Authorized</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{scorerSegments.pendPct}% Pending</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{scorerSegments.rejPct}% Rejected</Text>
                     </View>
                   </View>
 
@@ -847,15 +1029,15 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                   <View style={styles.donutLegendRow}>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Authorized</Text>
+                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Authorized ({scorerApproved})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending</Text>
+                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending ({scorerPending})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected</Text>
+                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected ({scorerRejected})</Text>
                     </View>
                   </View>
                 </View>
@@ -1044,7 +1226,7 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
           {activeTab === 'teams' && (
             <View>
               {/* TOP TWO SIDE-BY-SIDE HIGHLIGHT CARDS FOR TEAMS */}
-              <View style={styles.highlightCardsRow}>
+              <View style={[styles.highlightCardsRow, { flexDirection: isDesktop ? 'row' : 'column' }]}>
                 {/* Left Card: Team Registrations Stats */}
                 <View style={styles.navyStatCard}>
                   <View style={styles.statCardHeader}>
@@ -1104,32 +1286,62 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                     <View
                       style={[
                         styles.donutOuterRing,
-                        Platform.OS === 'web' &&
-                          ({
-                            background: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`,
-                            backgroundImage: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`
-                          } as any)
+                        !isDesktop && { width: 140, height: 140, borderRadius: 70 },
+                        Platform.OS === 'web'
+                          ? ({
+                              background: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`,
+                              backgroundImage: `conic-gradient(#10b981 0% ${teamSegments.appPct}%, #f59e0b ${teamSegments.appPct}% ${teamSegments.appPct + teamSegments.pendPct}%, #ef4444 ${teamSegments.appPct + teamSegments.pendPct}% 100%)`
+                            } as any)
+                          : {
+                              borderWidth: 10,
+                              borderColor: '#10b981',
+                              borderTopColor: '#10b981',
+                              borderRightColor: teamSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                              borderBottomColor: teamSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                              borderLeftColor: '#10b981',
+                              backgroundColor: '#071026'
+                            }
                       ]}
                     >
-                      <View style={styles.donutHole}>
-                        <Text style={styles.donutNumber}>{teamTotal}</Text>
-                        <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }]}>TEAMS</Text>
+                      <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                        <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{teamTotal}</Text>
+                        <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }, !isDesktop && { fontSize: 8 }]}>TEAMS</Text>
                       </View>
+                    </View>
+                  </View>
+
+                  {/* Dynamic Proportional Distribution Bar */}
+                  <View style={styles.distributionBarWrapper}>
+                    <View style={styles.distributionBarTrack}>
+                      {teamSegments.appPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                      )}
+                      {teamSegments.pendPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                      )}
+                      {teamSegments.rejPct > 0 && (
+                        <View style={[styles.distributionBarSegment, { width: `${teamSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                      )}
+                    </View>
+                    <View style={styles.distributionPctRow}>
+                      <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{teamSegments.appPct}% Approved</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{teamSegments.pendPct}% Pending</Text>
+                      <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{teamSegments.rejPct}% Rejected</Text>
                     </View>
                   </View>
 
                   <View style={styles.donutLegendRow}>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved</Text>
+                      <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved ({teamApproved})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending</Text>
+                      <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending ({teamPending})</Text>
                     </View>
                     <View style={styles.legendItem}>
                       <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
-                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected</Text>
+                      <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected ({teamRejected})</Text>
                     </View>
                   </View>
                 </View>
@@ -1438,6 +1650,77 @@ export default function AdminDashboardScreen({ onExit, initialParams }: AdminDas
                   <Text style={styles.summaryCardTitle}>Rejected Scorers</Text>
                   <Text style={styles.summaryCardDesc}>Non-compliant or expired certification profiles</Text>
                 </TouchableOpacity>
+              </View>
+
+              {/* OVERVIEW STATUS DISTRIBUTION CHART (Responsive & Dynamic for All Members/Admins) */}
+              <View style={[styles.navyStatCard, styles.donutCardAlign, { marginVertical: 20, width: '100%' }]}>
+                <View style={styles.donutHeader}>
+                  <Text style={{ fontSize: 16, marginRight: 6 }}>📊</Text>
+                  <Text style={styles.statCardTitle}>District Registration Status Distribution</Text>
+                </View>
+
+                <View style={styles.donutWrapper}>
+                  <View
+                    style={[
+                      styles.donutOuterRing,
+                      !isDesktop && { width: 140, height: 140, borderRadius: 70 },
+                      Platform.OS === 'web'
+                        ? ({
+                            background: `conic-gradient(#10b981 0% ${overallSegments.appPct}%, #f59e0b ${overallSegments.appPct}% ${overallSegments.appPct + overallSegments.pendPct}%, #ef4444 ${overallSegments.appPct + overallSegments.pendPct}% 100%)`,
+                            backgroundImage: `conic-gradient(#10b981 0% ${overallSegments.appPct}%, #f59e0b ${overallSegments.appPct}% ${overallSegments.appPct + overallSegments.pendPct}%, #ef4444 ${overallSegments.appPct + overallSegments.pendPct}% 100%)`
+                          } as any)
+                        : {
+                            borderWidth: 10,
+                            borderColor: '#10b981',
+                            borderTopColor: '#10b981',
+                            borderRightColor: overallSegments.pendPct > 0 ? '#f59e0b' : '#10b981',
+                            borderBottomColor: overallSegments.rejPct > 0 ? '#ef4444' : '#10b981',
+                            borderLeftColor: '#10b981',
+                            backgroundColor: '#071026'
+                          }
+                    ]}
+                  >
+                    <View style={[styles.donutHole, !isDesktop && { width: 80, height: 80, borderRadius: 40 }]}>
+                      <Text style={[styles.donutNumber, !isDesktop && { fontSize: 24 }]}>{totalOverall}</Text>
+                      <Text style={[styles.donutUnitLabel, { color: 'rgba(254, 215, 102, 0.9)' }, !isDesktop && { fontSize: 8 }]}>TOTAL</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Dynamic Proportional Distribution Bar */}
+                <View style={styles.distributionBarWrapper}>
+                  <View style={styles.distributionBarTrack}>
+                    {overallSegments.appPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.appPct}%`, backgroundColor: '#10b981' }]} />
+                    )}
+                    {overallSegments.pendPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.pendPct}%`, backgroundColor: '#f59e0b' }]} />
+                    )}
+                    {overallSegments.rejPct > 0 && (
+                      <View style={[styles.distributionBarSegment, { width: `${overallSegments.rejPct}%`, backgroundColor: '#ef4444' }]} />
+                    )}
+                  </View>
+                  <View style={styles.distributionPctRow}>
+                    <Text style={[styles.distributionPctText, { color: '#6ee7b7' }]}>{overallSegments.appPct}% Approved ({overallApproved})</Text>
+                    <Text style={[styles.distributionPctText, { color: '#fde68a' }]}>{overallSegments.pendPct}% Pending ({overallPending})</Text>
+                    <Text style={[styles.distributionPctText, { color: '#fca5a5' }]}>{overallSegments.rejPct}% Rejected ({overallRejected})</Text>
+                  </View>
+                </View>
+
+                <View style={styles.donutLegendRow}>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                    <Text style={[styles.legendText, { color: '#6ee7b7' }]}>Approved: {overallApproved}</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+                    <Text style={[styles.legendText, { color: '#fde68a' }]}>Pending: {overallPending}</Text>
+                  </View>
+                  <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: '#ef4444' }]} />
+                    <Text style={[styles.legendText, { color: '#fca5a5' }]}>Rejected: {overallRejected}</Text>
+                  </View>
+                </View>
               </View>
 
               {/* Quick Action Banner */}
@@ -2642,7 +2925,8 @@ const styles = StyleSheet.create({
   },
   scrollContentContainer: {
     paddingVertical: 24,
-    paddingHorizontal: 16
+    paddingHorizontal: 16,
+    paddingBottom: 150
   },
   contentConstrained: {
     maxWidth: 1200,
@@ -2761,13 +3045,15 @@ const styles = StyleSheet.create({
   },
   navyStatCard: {
     flex: 1,
-    minWidth: 320,
+    minWidth: 260,
+    width: '100%',
     backgroundColor: '#0a1432',
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: 'rgba(254, 215, 102, 0.45)',
-    padding: 22,
-    boxShadow: '0 6px 24px rgba(10, 20, 50, 0.15)'
+    padding: 20,
+    boxShadow: '0 6px 24px rgba(10, 20, 50, 0.15)',
+    elevation: 3
   },
   statCardHeader: {
     flexDirection: 'row',
@@ -2876,7 +3162,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 0 30px rgba(59,130,246,0.3)'
+    boxShadow: '0 0 30px rgba(59,130,246,0.3)',
+    elevation: 4
   },
   donutHole: {
     position: 'absolute',
@@ -2902,10 +3189,36 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     marginTop: 2
   },
+  distributionBarWrapper: {
+    width: '100%',
+    marginVertical: 14,
+    paddingHorizontal: 8
+  },
+  distributionBarTrack: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    flexDirection: 'row',
+    overflow: 'hidden'
+  },
+  distributionBarSegment: {
+    height: '100%'
+  },
+  distributionPctRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  distributionPctText: {
+    fontSize: 11.5,
+    fontWeight: '700'
+  },
   donutLegendRow: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 18,
+    marginTop: 10,
     flexWrap: 'wrap',
     justifyContent: 'center'
   },
