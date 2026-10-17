@@ -1,75 +1,75 @@
 /**
  * server.js
  * 
- * Express and Socket.IO Backend Server for Cricket Association Scorer & Management System.
- * Fully powered by pure MongoDB database.
+ * Express backend server for Cricket Federation Full-Stack Management & Scorer REST APIs.
  */
 
 require('dotenv').config();
-const http = require('http');
+
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
-const db = require('./config/db');
-const { initSocket } = require('./services/socketService');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const teamRoutes = require('./routes/teamRoutes');
+const playerRoutes = require('./routes/playerRoutes');
 const scorerRoutes = require('./routes/scorerRoutes');
 const matchRoutes = require('./routes/matchRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const portalRoutes = require('./routes/portalRoutes');
-const playerRoutes = require('./routes/playerRoutes');
-const teamRoutes = require('./routes/teamRoutes');
 
 const app = express();
-const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Initialize Socket.IO on HTTP server
-initSocket(server);
-
-// Middleware
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-
-// Initialize MongoDB connection & default seeding
-db.initDb().catch(err => {
-  console.warn('MongoDB initialization warning:', err.message);
-});
+app.use(cookieParser());
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    database: 'MongoDB',
-    service: 'Cricket Association Management & Scoring API',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ status: 'OK', message: 'Cricket Federation Express Backend API operational' });
 });
 
-// Mount Routes
-app.use('/api/portal', portalRoutes);
-app.use('/api/news', newsRoutes);
+const authController = require('./controllers/authController');
+
+// Direct Admin Login endpoint
+app.post('/api/admin/login', (req, res) => authController.adminLogin(req, res));
+
+// Authentication APIs (Password Auth & Registration Email OTP)
 app.use('/api/auth', authRoutes);
-app.use('/api/matches', matchRoutes);
-app.use('/api/scorer', scorerRoutes);
-app.use('/api/player', playerRoutes);
-app.use('/api/team', teamRoutes);
+
+// Admin Management APIs
 app.use('/api/admin', adminRoutes);
+
+// Team Registration, Login & Management APIs
+app.use('/api/team', teamRoutes);
+app.use('/api/teams', teamRoutes);
+
+// Player Registration, Login & Profile APIs
+app.use('/api/player', playerRoutes);
+app.use('/api/players', playerRoutes);
+
+// Scorer & Live Scoring APIs
+app.use('/api/scorer', scorerRoutes);
+
+// Match & Tournament APIs
+app.use('/api/matches', matchRoutes);
+
+// News & Announcements APIs
+app.use('/api/news', newsRoutes);
+
+// Portal Public APIs
+app.use('/api/portal', portalRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal Server Error'
-  });
+  res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
-if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`🏏 Cricket Express & Socket.IO Server running on http://localhost:${PORT}`);
-  });
-}
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Express Backend Server running on http://localhost:${PORT}`);
+});
 
-module.exports = { app, server };
+module.exports = app;

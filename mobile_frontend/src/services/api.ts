@@ -27,22 +27,46 @@ const getSocketUrl = () => {
 export const API_URL = getBaseUrl();
 export const SOCKET_URL = getSocketUrl();
 
-let token: string | null =
-  Platform.OS === 'web' && typeof window !== 'undefined'
-    ? localStorage.getItem('team_token') || localStorage.getItem('auth_token') || null
-    : null;
+let token: string | null = null;
+let currentUser: any = null;
 
-let currentUser: any =
-  Platform.OS === 'web' && typeof window !== 'undefined'
-    ? (() => {
-        try {
-          const u = localStorage.getItem('auth_user') || localStorage.getItem('team_session');
-          return u ? JSON.parse(u) : null;
-        } catch (e) {
-          return null;
-        }
-      })()
-    : null;
+export const getAuthToken = (): string | null => {
+  if (token) return token;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    return (
+      localStorage.getItem('auth_token') ||
+      localStorage.getItem('team_token') ||
+      localStorage.getItem('cfvd_admin_token') ||
+      sessionStorage.getItem('cfvd_admin_token') ||
+      null
+    );
+  }
+  return null;
+};
+
+export const getCurrentUser = (): any => {
+  if (currentUser) return currentUser;
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    try {
+      const u =
+        localStorage.getItem('auth_user') ||
+        localStorage.getItem('cfvd_admin_user') ||
+        sessionStorage.getItem('cfvd_admin_user') ||
+        localStorage.getItem('team_session');
+      if (u) {
+        currentUser = JSON.parse(u);
+        return currentUser;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
+// Initialize from storage on load
+token = getAuthToken();
+currentUser = getCurrentUser();
 
 let currentSocket: Socket | null = null;
 
@@ -52,20 +76,26 @@ export const setAuthToken = (newToken: string | null) => {
     if (newToken) {
       localStorage.setItem('auth_token', newToken);
       localStorage.setItem('team_token', newToken);
+      localStorage.setItem('cfvd_admin_token', newToken);
     } else {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('team_token');
+      localStorage.removeItem('cfvd_admin_token');
+      try {
+        sessionStorage.removeItem('cfvd_admin_token');
+      } catch (_e) {}
     }
   }
 };
-
-export const getAuthToken = () => token;
 
 export const setCurrentUser = (user: any) => {
   currentUser = user;
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     if (user) {
       localStorage.setItem('auth_user', JSON.stringify(user));
+      if (user.role === 'ADMIN') {
+        localStorage.setItem('cfvd_admin_user', JSON.stringify(user));
+      }
       if (user.role === 'COACH' || user.role === 'TEAM' || user.teamId) {
         localStorage.setItem(
           'team_session',
@@ -80,32 +110,62 @@ export const setCurrentUser = (user: any) => {
       }
     } else {
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('cfvd_admin_user');
+      try {
+        sessionStorage.removeItem('cfvd_admin_user');
+      } catch (_e) {}
       localStorage.removeItem('team_session');
     }
   }
 };
 
-export const getCurrentUser = () => currentUser;
-
 async function request(endpoint: string, options: RequestInit = {}) {
   const url = `${API_URL}${endpoint}`;
+  const activeToken = getAuthToken();
+  const activeUser = getCurrentUser();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : { 'x-user-role': 'ADMIN', 'x-user-email': 'admin@cfvd.org' })
+    ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
+    ...(activeUser?.role
+      ? {
+          'x-user-role': String(activeUser.role).toUpperCase(),
+          'x-user-email': activeUser.email || '',
+          'x-user-id': activeUser.id || activeUser._id || ''
+        }
+      : {})
   };
 
   try {
     const res = await fetch(url, {
+      credentials: 'include',
       ...options,
       headers: { ...headers, ...(options.headers as any) }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (_e) {
+      if (!res.ok) {
+        throw new Error(`Server returned error (${res.status}): ${res.statusText || 'Endpoint unavailable'}`);
+      }
+      throw new Error('Unexpected response format from server');
+    }
+
     if (!res.ok) {
-      throw new Error(data.message || data.error || `Request failed with status ${res.status}`);
+      const err: any = new Error(data.message || data.error || `Request failed with status ${res.status}`);
+      err.status = res.status;
+      err.data = data;
+      throw err;
     }
     return data;
   } catch (err: any) {
+<<<<<<< HEAD
+    // Log as a warning so React Native LogBox does not trigger an intrusive RedBox screen for handled errors
+    console.warn(`API Error on ${endpoint}:`, err?.message || err);
+=======
     console.error(`API Error on ${endpoint}:`, err.message);
     // Convert cryptic browser fetch errors into user-friendly messages
     if (
@@ -120,23 +180,82 @@ async function request(endpoint: string, options: RequestInit = {}) {
       (friendly as any).isNetworkError = true;
       throw friendly;
     }
+>>>>>>> origin/main
     throw err;
   }
 }
 
 export const ScorerApi = {
-  // --- REAL AUTHENTICATION & OTP APIs ---
+  // --- REAL AUTHENTICATION & PASSWORD APIs ---
+  getMe: async () => {
+    const activeToken = getAuthToken();
+    const activeUser = getCurrentUser();
+    if (!activeToken && !activeUser && Platform.OS !== 'web') {
+      return { success: false, message: 'No active session' };
+    }
+    return request('/auth/me');
+  },
+
+  logout: async () => {
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch (_e) {}
+    setAuthToken(null);
+    setCurrentUser(null);
+    return { success: true };
+  },
+
+  checkAuthSession: async () => {
+    try {
+      const res = await request('/auth/me');
+      if (res && res.success && res.user) {
+        setCurrentUser(res.user);
+        return res.user;
+      }
+    } catch (_e) {
+      // Token expired or unauthenticated
+    }
+    return currentUser;
+  },
+
+  sendRegistrationOtp: async (email: string, name?: string, role?: string) => {
+    return request('/auth/send-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, name, role })
+    });
+  },
+
+  verifyRegistrationOtp: async (email: string, otp: string) => {
+    return request('/auth/verify-registration-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  },
+
+  loginWithPassword: async (email: string, password: string, role?: string) => {
+    const res = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, role })
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+
   requestOtp: async (email: string, role?: string) => {
-    return request('/auth/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
       body: JSON.stringify({ email, role })
     });
   },
 
   verifyOtp: async (email: string, otp: string) => {
-    const res = await request('/auth/verify-otp', {
+    const res = await request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, otp })
+      body: JSON.stringify({ email, password: otp })
     });
     if (res.token) {
       setAuthToken(res.token);
@@ -145,48 +264,32 @@ export const ScorerApi = {
     return res;
   },
 
-  login: async (email: string, otp: string) => {
-    return ScorerApi.verifyOtp(email, otp);
+  login: async (email: string, passwordOrOtp: string, role?: string) => {
+    return ScorerApi.loginWithPassword(email, passwordOrOtp, role);
   },
 
-  // Team / Coach OTP
+  // Team / Coach
   requestTeamOtp: async (coachName: string, coachEmail: string) => {
-    return request('/auth/team/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
-      body: JSON.stringify({ coachName, coachEmail })
+      body: JSON.stringify({ name: coachName, email: coachEmail, role: 'COACH' })
     });
   },
 
   verifyTeamOtp: async (coachEmail: string, otp: string) => {
-    const res = await request('/auth/team/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ coachEmail, otp })
-    });
-    if (res.token) {
-      setAuthToken(res.token);
-      if (res.user) setCurrentUser(res.user);
-    }
-    return res;
+    return ScorerApi.loginWithPassword(coachEmail, otp, 'COACH');
   },
 
-  // Player OTP
+  // Player
   requestPlayerOtp: async (nameOrEmail: string) => {
-    return request('/auth/player/request-otp', {
+    return request('/auth/send-registration-otp', {
       method: 'POST',
-      body: JSON.stringify({ nameOrEmail })
+      body: JSON.stringify({ email: nameOrEmail, role: 'PLAYER' })
     });
   },
 
   verifyPlayerOtp: async (nameOrEmail: string, otp: string) => {
-    const res = await request('/auth/player/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ nameOrEmail, otp })
-    });
-    if (res.token) {
-      setAuthToken(res.token);
-      if (res.user) setCurrentUser(res.user);
-    }
-    return res;
+    return ScorerApi.loginWithPassword(nameOrEmail, otp, 'PLAYER');
   },
 
   register: async (payload: any) => {
@@ -205,6 +308,7 @@ export const ScorerApi = {
   registerPlayer: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     role?: string;
     category?: string;
@@ -212,40 +316,82 @@ export const ScorerApi = {
     battingStyle?: string;
     bowlingStyle?: string;
     clubChoice?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-player', {
+    const res = await request('/auth/register-player', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Scorer Registration (PDF Module 5 & 10)
   registerScorer: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     taluk?: string;
     certificationLevel?: string;
     pin?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-scorer', {
+    const res = await request('/auth/register-scorer', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
+  },
+
+  // Umpire Registration
+  registerUmpire: async (payload: {
+    name: string;
+    email: string;
+    password?: string;
+    mobile?: string;
+    taluk?: string;
+    certificationLevel?: string;
+    pin?: string;
+    otp?: string;
+  }) => {
+    const res = await request('/auth/register-umpire', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Content Staff Registration (PDF Module 7 & 10)
   registerContentStaff: async (payload: {
     name: string;
     email: string;
+    password?: string;
     mobile?: string;
     specialization?: string;
     credentials?: string;
+    otp?: string;
   }) => {
-    return request('/auth/register-content', {
+    const res = await request('/auth/register-content', {
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   // Team Registration with 15 Squad Players (PDF Module 3)
@@ -253,15 +399,26 @@ export const ScorerApi = {
     teamName: string;
     coachName: string;
     coachEmail: string;
+    password?: string;
     taluk?: string;
     city?: string;
     players: Array<{ name: string; email: string; role?: string; jerseyNumber?: number }>;
+    otp?: string;
   }) => {
+<<<<<<< HEAD
+    const res = await request('/auth/register-team', {
+=======
     // NOTE: Team registration lives under /team/register, not /auth/register-team
     return request('/team/register', {
+>>>>>>> origin/main
       method: 'POST',
       body: JSON.stringify(payload)
     });
+    if (res.token) {
+      setAuthToken(res.token);
+      if (res.user) setCurrentUser(res.user);
+    }
+    return res;
   },
 
   getTeams: async (status?: string) => {
@@ -414,6 +571,38 @@ export const ScorerApi = {
       method: 'POST',
       body: JSON.stringify(data)
     });
+  },
+
+  updateMatch: async (matchId: string, data: any) => {
+    return request(`/admin/matches/${matchId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  cancelMatch: async (matchId: string, reason?: string) => {
+    return request(`/admin/matches/${matchId}/cancel`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason })
+    });
+  },
+
+  deleteMatch: async (matchId: string) => {
+    return request(`/admin/matches/${matchId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  getTournaments: async () => {
+    return request('/admin/tournaments');
+  },
+
+  getPublicMatches: async () => {
+    return request('/matches');
+  },
+
+  getPublicScorecard: async (matchId: string) => {
+    return request(`/matches/${matchId}/scorecard`);
   },
 
   getAuditLogs: async () => {
@@ -659,6 +848,10 @@ export const PlayerApi = {
 
   getNotifications: async () => {
     return request('/player/notifications');
+  },
+
+  logout: async () => {
+    return ScorerApi.logout();
   }
 };
 

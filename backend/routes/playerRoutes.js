@@ -59,6 +59,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
+const authController = require('../controllers/authController');
+
 /**
  * POST /api/player/verify-otp
  * Step 2: Verify OTP and return authenticated session token
@@ -68,6 +70,9 @@ router.post('/verify-otp', async (req, res) => {
     const { name, email, playerName, nameOrEmail, emailOrPhone, input, otp } = req.body;
     const identifier = playerName || nameOrEmail || emailOrPhone || input || email || name;
     const result = await authService.verifyPlayerOtp(identifier, otp);
+    if (result && result.token) {
+      authController.setAuthCookies(res, result.token);
+    }
     res.status(200).json(result);
   } catch (err) {
     const status = err.status || 401;

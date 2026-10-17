@@ -207,9 +207,18 @@ router.post('/teams', async (req, res) => {
 });
 
 /**
- * POST /api/admin/tournaments
+ * GET /api/admin/tournaments & POST /api/admin/tournaments
  * Create or update tournament
  */
+router.get('/tournaments', async (req, res) => {
+  try {
+    const tournaments = await adminService.getTournaments();
+    res.json({ success: true, tournaments });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.post('/tournaments', async (req, res) => {
   try {
     const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
@@ -221,8 +230,12 @@ router.post('/tournaments', async (req, res) => {
 });
 
 /**
- * GET /api/admin/matches & POST /api/admin/matches/schedule
- * Schedule match fixture
+ * Match Schedule Management APIs
+ * GET /api/admin/matches - List all matches
+ * POST /api/admin/matches/schedule - Create match schedule
+ * PUT /api/admin/matches/:id - Update or reschedule match
+ * PATCH /api/admin/matches/:id/cancel - Cancel match
+ * DELETE /api/admin/matches/:id - Delete match
  */
 router.get('/matches', async (req, res) => {
   try {
@@ -238,6 +251,39 @@ router.post('/matches/schedule', async (req, res) => {
     const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
     const match = await adminService.scheduleMatch(req.body, adminEmail);
     res.json({ success: true, message: 'Match scheduled successfully', match });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+router.put('/matches/:id', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const match = await adminService.updateMatch(req.params.id, req.body, adminEmail);
+    res.json({ success: true, message: 'Match updated successfully', match });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+const handleCancelMatch = async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const reason = req.body?.reason || req.query?.reason;
+    const match = await adminService.cancelMatch(req.params.id, reason, adminEmail);
+    res.json({ success: true, message: 'Match cancelled successfully', match });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+router.patch('/matches/:id/cancel', handleCancelMatch);
+router.post('/matches/:id/cancel', handleCancelMatch);
+
+router.delete('/matches/:id', async (req, res) => {
+  try {
+    const adminEmail = req.adminUser?.email || 'admin@cfvd.org';
+    const result = await adminService.deleteMatch(req.params.id, adminEmail);
+    res.json(result);
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }

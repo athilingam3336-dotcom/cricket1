@@ -4,7 +4,7 @@ import { useScorerNavigation } from '../../navigation/ScorerNavigationContext';
 import MatchCard from '../../components/scorer/MatchCard';
 import { assignedMatches as defaultAssignedMatches, mockScorerProfile } from '../../data/scorerMockData';
 import SharedFooter from '../../components/scorer/SharedFooter';
-import { ScorerApi, getCurrentUser } from '../../services/api';
+import { ScorerApi, getCurrentUser, setAuthToken, setCurrentUser } from '../../services/api';
 
 export default function ScorerDashboardScreen() {
   const { navigate, onExit, params } = useScorerNavigation();
@@ -45,14 +45,33 @@ export default function ScorerDashboardScreen() {
     } catch (e) {}
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const doLogout = async () => {
+      try {
+        await ScorerApi.logout();
+      } catch (_e) {}
+      setAuthToken(null);
+      setCurrentUser(null);
+      if (onExit) {
+        onExit('Registration');
+      }
+    };
+
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm('Are you sure you want to exit the scorer console?');
-      if (confirmed) onExit();
+      const confirmed = window.confirm('Are you sure you want to log out of the official console?');
+      if (confirmed) {
+        await doLogout();
+      }
     } else {
-      Alert.alert('Logout', 'Are you sure you want to exit the scorer console?', [
+      Alert.alert('Log Out', 'Are you sure you want to log out of the official console?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Log Out', onPress: () => onExit() }
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: () => {
+            doLogout();
+          }
+        }
       ]);
     }
   };
@@ -83,6 +102,8 @@ export default function ScorerDashboardScreen() {
     return `conic-gradient(${gradient || '#3b82f6 0% 100%'})`;
   };
 
+  const isUmpire = (profile?.role || '').toUpperCase() === 'UMPIRE';
+
   return (
     <View style={styles.container}>
       {/* PROFESSIONAL HEADER */}
@@ -90,14 +111,14 @@ export default function ScorerDashboardScreen() {
         <View style={styles.headerLeft}>
           <Image source={require('../../../assets/logo_transparent.png')} style={styles.logo} resizeMode="contain" />
           <View>
-            <Text style={styles.title}>Scorer Dashboard</Text>
-            <Text style={styles.subtitle}>Official Match Scoring Console</Text>
+            <Text style={styles.title}>{isUmpire ? 'Umpire Console' : 'Scorer Dashboard'}</Text>
+            <Text style={styles.subtitle}>{isUmpire ? 'Official Match Officiating & Review Console' : 'Official Match Scoring Console'}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.scorerInfo}>
             <Text style={styles.scorerName}>{profile?.name || mockScorerProfile.name}</Text>
-            <Text style={styles.scorerId}>{profile?.id || mockScorerProfile.id}</Text>
+            <Text style={styles.scorerId}>{profile?.id || (isUmpire ? 'UMP-OFFICIAL' : mockScorerProfile.id)} • {isUmpire ? 'UMPIRE' : 'SCORER'}</Text>
           </View>
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
             <Text style={styles.logoutText}>Log Out</Text>

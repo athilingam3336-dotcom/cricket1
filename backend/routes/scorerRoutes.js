@@ -13,6 +13,7 @@ const scoringEngine = require('../services/scoringEngine');
 const matchService = require('../services/matchService');
 const { requireScorerAuth, verifyMatchPermission } = require('../middleware/authMiddleware');
 const { acquireMatchLock } = require('../middleware/concurrencyLock');
+const { broadcastScoreUpdate } = require('../services/socketService');
 
 // ==========================================
 // 1. PUBLIC AUTH ROUTES
